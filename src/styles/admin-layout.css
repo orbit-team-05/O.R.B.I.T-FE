@@ -1,0 +1,125 @@
+.admin-layout {
+    display: flex;
+    min-height: 100vh;
+    background: #f5f7fb;
+}
+
+.admin-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 240px;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 16px;
+    background: #ffffff;
+    border-right: 1px solid #e5e7eb;
+}
+
+.admin-brand {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 24px;
+}
+
+.admin-brand strong {
+    color: #007f5f;
+    font-size: 20px;
+}
+
+.admin-brand span {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.admin-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.admin-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 12px;
+    border-radius: 8px;
+    color: #4b5563;
+}
+
+.admin-nav-item.active {
+    color: #006b4f;
+    background: #baf5db;
+}
+
+.admin-sidebar-footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.admin-sidebar-footer button {
+    padding: 11px;
+    border: 0;
+    border-radius: 8px;
+    color: white;
+    background: #007f5f;
+}
+
+.admin-sidebar-footer div {
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+}
+
+.admin-main {
+    width: calc(100% - 240px);
+    margin-left: 240px;
+}
+
+.admin-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-search {
+    width: min(440px, 55vw);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border: 1px solid #dbe2ea;
+    border-radius: 8px;
+}
+
+.admin-search input {
+    width: 100%;
+    border: 0;
+    outline: none;
+}
+
+.admin-topbar-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.admin-topbar-actions button {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    background: transparent;
+}
+
+.admin-content {
+    padding: 28px;
+}
