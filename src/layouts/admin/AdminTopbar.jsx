@@ -2,7 +2,7 @@ import { Bell, CircleHelp, Search } from "lucide-react";
 
 export function AdminTopbar() {
     return (
-        <header className="sticky top-0 z-30 flex h-[64px] items-center justify-between border-b border-slate-200 bg-white px-6">
+        <header className="sticky top-0 z-30 flex h-[68px] items-center justify-between border-b border-slate-200 bg-white px-6">
             <div className="relative w-full max-w-[520px]">
                 <Search
                     size={18}
