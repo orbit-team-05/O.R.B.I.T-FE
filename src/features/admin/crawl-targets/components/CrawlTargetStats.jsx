@@ -37,7 +37,7 @@ export function CrawlTargetStats({ summary }) {
             />
 
             <StatCard
-                label="Đang active"
+                label="Đang hoạt động"
                 value={summary.activeTargets}
                 description="Có thể crawl"
                 valueClassName="text-[#006948]"

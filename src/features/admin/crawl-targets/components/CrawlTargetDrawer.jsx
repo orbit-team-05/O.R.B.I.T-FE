@@ -53,7 +53,10 @@ export function CrawlTargetDrawer({
                 defaultLocation: target.defaultLocation || "Toàn quốc",
                 defaultSizeCategory: target.defaultSizeCategory ?? "",
                 defaultPriceUnit: target.defaultPriceUnit ?? "đ/kg",
-                configJson: target.configJson ?? "",
+                configJson:
+                    typeof target.configJson === "string"
+                        ? target.configJson
+                        : "",
             });
 
             return;
