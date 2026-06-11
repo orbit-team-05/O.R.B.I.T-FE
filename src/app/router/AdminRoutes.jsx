@@ -5,6 +5,7 @@ import { AdminSpeciesPage } from "../../pages/admin/species/AdminSpeciesPage";
 import { AdminMarketSourcesPage } from "../../pages/admin/market-sources/AdminMarketSourcesPage";
 import { AdminCrawlTargetsPage } from "../../pages/admin/crawl-targets/AdminCrawlTargetsPage";
 import { AdminIotDevicesPage } from "../../pages/admin/devices/AdminIotDevicesPage";
+import { AdminMarketPricesPage } from "../../pages/admin/market-prices/AdminMarketPricesPage";
 
 export function AdminRoutes() {
     return (
@@ -15,6 +16,7 @@ export function AdminRoutes() {
             <Route path="market-sources" element={<AdminMarketSourcesPage />} />
             <Route path="crawl-targets" element={<AdminCrawlTargetsPage />} />
             <Route path="devices" element={<AdminIotDevicesPage />} />
+            <Route path="market-prices" element={<AdminMarketPricesPage />} />
         </Route>
     );
 }
