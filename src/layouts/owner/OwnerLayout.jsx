@@ -1,25 +1,20 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { Outlet } from "react-router-dom";
+
+import { OwnerSidebar } from "./OwnerSidebar";
+import { OwnerTopbar } from "./OwnerTopbar";
 
 export function OwnerLayout() {
     return (
-        <div className="app-layout">
-            <aside className="sidebar">
-                <h2>ORBIT</h2>
+        <div className="min-h-screen bg-slate-50">
+            <OwnerSidebar />
 
-                <nav>
-                    <NavLink to="/owner/dashboard">
-                        Dashboard
-                    </NavLink>
+            <div className="ml-[248px] flex min-h-screen flex-col">
+                <OwnerTopbar />
 
-                    <NavLink to="/owner/products">
-                        Sản phẩm và kho
-                    </NavLink>
-                </nav>
-            </aside>
-
-            <main className="main-content">
-                <Outlet />
-            </main>
+                <main className="flex-1 overflow-y-auto px-6 py-6">
+                    <Outlet />
+                </main>
+            </div>
         </div>
     );
 }
