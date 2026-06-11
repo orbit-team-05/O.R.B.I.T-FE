@@ -3,6 +3,7 @@ import { AdminLayout } from "../../layouts/admin/AdminLayout";
 import { AdminDashboardPage } from "../../pages/admin/dashboard/AdminDashboardPage";
 import { AdminSpeciesPage } from "../../pages/admin/species/AdminSpeciesPage";
 import { AdminMarketSourcesPage } from "../../pages/admin/market-sources/AdminMarketSourcesPage";
+import { AdminCrawlTargetsPage } from "../../pages/admin/crawl-targets/AdminCrawlTargetsPage";
 
 export function AdminRoutes() {
     return (
@@ -11,6 +12,7 @@ export function AdminRoutes() {
             <Route path="dashboard" element={<AdminDashboardPage />} />
             <Route path="species" element={<AdminSpeciesPage />} />
             <Route path="market-sources" element={<AdminMarketSourcesPage />} />
+            <Route path="crawl-targets" element={<AdminCrawlTargetsPage />} />
         </Route>
     );
 }
