@@ -12,7 +12,7 @@ import {
     Warehouse,
 } from "lucide-react";
 
-import orbitLogo from "../../assets/images/orbit-logo.jpg";
+import orbitLogo from "../../assets/images/orbit-logo.png";
 
 const ADMIN_NAV_ITEMS = [
     { label: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
