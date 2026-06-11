@@ -20,23 +20,23 @@ function StatCard({ label, value, description, valueClassName = "" }) {
 
 export function SpeciesStats({ summary }) {
     return (
-        <section className="grid grid-cols-3 gap-4">
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <StatCard
                 label="Tổng Species"
-                value={summary.total}
+                value={summary.totalSpecies}
                 description="Trong hệ thống"
             />
 
             <StatCard
                 label="Đang hoạt động"
-                value={summary.active}
+                value={summary.activeSpecies}
                 description="Có thể sử dụng"
-                valueClassName="text-[#007a55]"
+                valueClassName="text-[#006948]"
             />
 
             <StatCard
                 label="Đã tắt"
-                value={summary.inactive}
+                value={summary.inactiveSpecies}
                 description="Không sử dụng"
                 valueClassName="text-slate-600"
             />

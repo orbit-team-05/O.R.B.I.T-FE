@@ -52,7 +52,7 @@ export function AdminSidebar() {
     const initials = getInitials(adminName);
 
     return (
-        <aside className="flex h-screen w-[248px] shrink-0 flex-col border-r border-slate-200 bg-white">
+        <aside className="fixed left-0 top-0 z-40 flex h-screen w-[248px] shrink-0 flex-col border-r border-slate-200 bg-white">
             <div className="flex h-[68px] items-center gap-3 border-b border-slate-200 px-4">
                 <div className="h-11 w-[120px] shrink-0 overflow-hidden">
                     <img
