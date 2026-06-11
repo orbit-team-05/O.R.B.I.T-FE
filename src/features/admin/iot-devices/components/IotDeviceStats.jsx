@@ -26,7 +26,7 @@ export function IotDeviceStats({ summary }) {
             />
 
             <StatCard
-                label="Đã active"
+                label="Đang hoạt động"
                 value={summary.activeDevices}
                 description="Đang vận hành"
                 valueClassName="text-[#006948]"
@@ -40,10 +40,10 @@ export function IotDeviceStats({ summary }) {
             />
 
             <StatCard
-                label="Mất kết nối"
-                value={summary.lostDevices}
-                description="Cần kiểm tra"
-                valueClassName="text-red-600"
+                label="Đã tắt"
+                value={summary.inactiveDevices}
+                description="Tạm ngưng"
+                valueClassName="text-slate-600"
             />
         </section>
     );
