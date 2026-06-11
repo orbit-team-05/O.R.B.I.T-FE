@@ -12,17 +12,24 @@ export function AppRouter() {
     return (
         <BrowserRouter>
             <Routes>
-                {AdminRoutes()}
-                {OwnerRoutes()}
-
                 <Route
                     path="/"
                     element={<Navigate to="/owner/dashboard" replace />}
                 />
 
                 <Route
+                    path="/admin/*"
+                    element={<AdminRoutes />}
+                />
+
+                <Route
+                    path="/owner/*"
+                    element={<OwnerRoutes />}
+                />
+
+                <Route
                     path="*"
-                    element={<h1>404 - Không tìm thấy trang</h1>}
+                    element={<Navigate to="/owner/dashboard" replace />}
                 />
             </Routes>
         </BrowserRouter>

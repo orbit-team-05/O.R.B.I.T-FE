@@ -12,6 +12,7 @@ import {
     Warehouse,
 } from "lucide-react";
 
+
 import orbitLogo from "../../assets/images/orbit-logo.png";
 
 const ADMIN_NAV_ITEMS = [
@@ -101,13 +102,13 @@ export function AdminSidebar() {
             </nav>
 
             <div className="space-y-3 border-t border-slate-200 p-4">
-                <button
-                    type="button"
-                    className="flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-[#006948] px-3 text-[13px] font-semibold text-white transition-colors hover:bg-[#00583d]"
+                <NavLink
+                    to="/admin/reports"
+                    className="flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-[#006948] px-3 text-[13px] font-semibold !text-white transition-colors hover:bg-[#00583d] hover:!text-white"
                 >
                     <FileText size={15} strokeWidth={1.8} />
                     <span>Tạo Báo Cáo</span>
-                </button>
+                </NavLink>
 
                 <div className="flex h-14 items-center gap-3 rounded-xl bg-slate-50 px-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#006948] text-xs font-bold text-white">

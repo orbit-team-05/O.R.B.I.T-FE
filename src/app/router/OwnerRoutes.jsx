@@ -1,14 +1,31 @@
-import { Route } from "react-router-dom";
-import { OwnerLayout } from "../../layouts/owner/OwnerLayout.jsx";
-import { OwnerDashboardPage } from "../../pages/owner/dashboard/OwnerDashboardPage";
-import { OwnerProductsPage } from "../../pages/owner/products/OwnerProductsPage";
+import { Navigate, Route, Routes } from "react-router-dom";
+
+import { AdminComingSoonPage } from "../../pages/admin/common/AdminComingSoonPage";
 
 export function OwnerRoutes() {
     return (
-        <Route path="/owner" element={<OwnerLayout />}>
-            <Route index element={<OwnerDashboardPage />} />
-            <Route path="dashboard" element={<OwnerDashboardPage />} />
-            <Route path="products" element={<OwnerProductsPage />} />
-        </Route>
+        <Routes>
+            <Route index element={<Navigate to="/owner/dashboard" replace />} />
+
+            <Route
+                path="dashboard"
+                element={
+                    <AdminComingSoonPage
+                        title="Owner Dashboard"
+                        description="Màn hình Owner đang được triển khai sau."
+                    />
+                }
+            />
+
+            <Route
+                path="*"
+                element={
+                    <AdminComingSoonPage
+                        title="Tính năng Owner đang phát triển"
+                        description="Màn hình này chưa được triển khai trong giai đoạn hiện tại."
+                    />
+                }
+            />
+        </Routes>
     );
 }
