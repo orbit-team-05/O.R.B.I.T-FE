@@ -71,10 +71,12 @@ export function AdminSpeciesPage() {
         species,
         summary,
         pageInfo,
-        loading,
         error,
         setPage,
         reload,
+
+        initialLoading,
+        tableLoading,
 
         actionLoading,
         actionError,
@@ -177,7 +179,7 @@ export function AdminSpeciesPage() {
         closeConfirmDialog();
     }
 
-    if (loading) {
+    if (initialLoading) {
         return <AdminSpeciesSkeleton />;
     }
 

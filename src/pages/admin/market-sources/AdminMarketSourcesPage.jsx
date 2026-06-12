@@ -57,10 +57,12 @@ export function AdminMarketSourcesPage() {
         sources,
         summary,
         pageInfo,
-        loading,
         error,
         setPage,
         reload,
+
+        initialLoading,
+        tableLoading,
 
         actionLoading,
         actionError,
@@ -165,7 +167,7 @@ export function AdminMarketSourcesPage() {
         closeConfirmDialog();
     }
 
-    if (loading) {
+    if (initialLoading) {
         return <AdminMarketSourcesSkeleton />;
     }
 
