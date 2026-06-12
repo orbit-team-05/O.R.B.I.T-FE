@@ -74,14 +74,17 @@ export function useOwnerIotImports(farmId, initialPage = 0, initialSize = 10) {
                     setScans((prev) => upsertScan(prev, payload));
                 }
 
-                if (payload.approvalStatus !== "PENDING") {
+                if (payload.approvalStatus === "PENDING") {
+                    setScans((prev) => upsertScan(prev, payload));
+                } else {
                     setScans((prev) =>
                         prev.filter((item) => item.transactionId !== payload.transactionId),
                     );
                 }
 
-                // Reload lại từ BE để đồng bộ chắc chắn
-                loadPendingImports();
+                window.setTimeout(() => {
+                    void loadPendingImports();
+                }, 500);
             },
 
             (message) => {
