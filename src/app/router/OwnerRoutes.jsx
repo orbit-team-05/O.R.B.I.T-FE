@@ -2,6 +2,8 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import { OwnerLayout } from "../../layouts/owner/OwnerLayout";
 import { OwnerComingSoonPage } from "../../pages/owner/common/OwnerComingSoonPage";
+import { OwnerIotDevicesPage } from "../../pages/owner/devices/OwnerIotDevicesPage";
+import { OwnerIotScansPage } from "../../pages/owner/iot-scans/OwnerIotScansPage";
 
 export function OwnerRoutes() {
     return (
@@ -49,15 +51,8 @@ export function OwnerRoutes() {
                     }
                 />
 
-                <Route
-                    path="devices"
-                    element={
-                        <OwnerComingSoonPage
-                            title="Thiết bị IoT"
-                            description="Màn hình theo dõi cân, camera, trạng thái thiết bị và dữ liệu gửi về từ nông trại sẽ được triển khai sau."
-                        />
-                    }
-                />
+                <Route path="devices" element={<OwnerIotDevicesPage />} />
+                <Route path="iot-scans" element={<OwnerIotScansPage />} />
 
                 <Route
                     path="market-prices"

@@ -6,6 +6,7 @@ import {
     Home,
     LayoutDashboard,
     PackageSearch,
+    QrCode,
     Settings,
     Sprout,
     Warehouse,
@@ -38,6 +39,11 @@ const OWNER_NAV_ITEMS = [
         label: "Thiết bị IoT",
         path: "/owner/devices",
         icon: Cpu,
+    },
+    {
+        label: "Lịch sử Scan",
+        path: "/owner/iot-scans",
+        icon: QrCode,
     },
     {
         label: "Dữ liệu giá",
