@@ -210,6 +210,7 @@ export function AdminCrawlTargetsPage() {
                 <CrawlTargetTable
                     targets={targets}
                     pageInfo={pageInfo}
+                    loading={tableLoading}
                     onPageChange={setPage}
                     onEdit={openEditDrawer}
                     onToggleStatus={handleToggleStatus}

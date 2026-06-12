@@ -5,10 +5,13 @@ import { useToast } from "../../../components/common/toast/ToastProvider";
 import { IotDeviceDrawer } from "../../../features/admin/iot-devices/components/IotDeviceDrawer";
 import { IotDeviceStats } from "../../../features/admin/iot-devices/components/IotDeviceStats";
 import { IotDeviceTable } from "../../../features/admin/iot-devices/components/IotDeviceTable";
-import { useAdminIotDevices } from "../../../features/admin/iot-devices/hooks/useAdminIotDevices";
 import { IotDeviceReplaceDrawer } from "../../../features/admin/iot-devices/components/IotDeviceReplaceDrawer";
 import { UnassignedIotDeviceTable } from "../../../features/admin/iot-devices/components/UnassignedIotDeviceTable";
 import { IotDeviceDetailDrawer } from "../../../features/admin/iot-devices/components/IotDeviceDetailDrawer";
+import {
+    DEVICE_TABLE_VIEW,
+    useAdminIotDevices,
+} from "../../../features/admin/iot-devices/hooks/useAdminIotDevices";
 
 const STATUS_ACTION_LABELS = {
     ACTIVE: "bật lại",
@@ -58,19 +61,57 @@ function AdminIotDevicesSkeleton() {
     );
 }
 
+function DeviceTableTabs({ activeView, onChange }) {
+    const tabs = [
+        {
+            label: "Tất cả thiết bị",
+            value: DEVICE_TABLE_VIEW.ALL,
+        },
+        {
+            label: "Chưa gắn farm",
+            value: DEVICE_TABLE_VIEW.UNASSIGNED,
+        },
+    ];
+
+    return (
+        <div className="flex items-center gap-2">
+            {tabs.map((tab) => {
+                const active = activeView === tab.value;
+
+                return (
+                    <button
+                        key={tab.value}
+                        type="button"
+                        onClick={() => onChange(tab.value)}
+                        className={[
+                            "h-9 rounded-lg px-4 text-sm font-medium transition-colors",
+                            active
+                                ? "bg-[#006948] text-white"
+                                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
+                        ].join(" ")}
+                    >
+                        {tab.label}
+                    </button>
+                );
+            })}
+        </div>
+    );
+}
+
 export function AdminIotDevicesPage() {
     const toast = useToast();
 
     const {
+        activeView,
+        setActiveView,
+
         devices,
-        unassignedDevices,
         summary,
         pageInfo,
-        unassignedPageInfo,
-        loading,
+        initialLoading,
+        tableLoading,
         error,
         setPage,
-        setUnassignedPage,
         reload,
 
         actionLoading,
@@ -81,12 +122,12 @@ export function AdminIotDevicesPage() {
         replaceComponent,
     } = useAdminIotDevices();
 
+    const [drawerOpen, setDrawerOpen] = useState(false);
+
     const [detailDrawerState, setDetailDrawerState] = useState({
         open: false,
         device: null,
     });
-
-    const [drawerOpen, setDrawerOpen] = useState(false);
 
     const [confirmState, setConfirmState] = useState({
         open: false,
@@ -99,6 +140,35 @@ export function AdminIotDevicesPage() {
         device: null,
     });
 
+    function resetOverlayState() {
+        setDrawerOpen(false);
+
+        setDetailDrawerState({
+            open: false,
+            device: null,
+        });
+
+        setConfirmState({
+            open: false,
+            device: null,
+            nextStatus: "",
+        });
+
+        setReplaceDrawerState({
+            open: false,
+            device: null,
+        });
+
+        clearActionError();
+    }
+
+    function handleChangeTableView(nextView) {
+        if (actionLoading) return;
+
+        resetOverlayState();
+        setActiveView(nextView);
+    }
+
     function openCreateDrawer() {
         clearActionError();
         setDrawerOpen(true);
@@ -108,6 +178,26 @@ export function AdminIotDevicesPage() {
         if (actionLoading) return;
 
         setDrawerOpen(false);
+        clearActionError();
+    }
+
+    function openDetailDrawer(device) {
+        clearActionError();
+
+        setDetailDrawerState({
+            open: true,
+            device,
+        });
+    }
+
+    function closeDetailDrawer() {
+        if (actionLoading) return;
+
+        setDetailDrawerState({
+            open: false,
+            device: null,
+        });
+
         clearActionError();
     }
 
@@ -129,26 +219,6 @@ export function AdminIotDevicesPage() {
         if (actionLoading) return;
 
         setReplaceDrawerState({
-            open: false,
-            device: null,
-        });
-
-        clearActionError();
-    }
-
-    function openDetailDrawer(device) {
-        clearActionError();
-
-        setDetailDrawerState({
-            open: true,
-            device,
-        });
-    }
-
-    function closeDetailDrawer() {
-        if (actionLoading) return;
-
-        setDetailDrawerState({
             open: false,
             device: null,
         });
@@ -238,7 +308,7 @@ export function AdminIotDevicesPage() {
         toast.success(`Đã copy mã kích hoạt ${device.activationCode}.`);
     }
 
-    if (loading) {
+    if (initialLoading) {
         return <AdminIotDevicesSkeleton />;
     }
 
@@ -283,23 +353,42 @@ export function AdminIotDevicesPage() {
 
                 <IotDeviceStats summary={summary} />
 
-                <IotDeviceTable
-                    devices={devices}
-                    pageInfo={pageInfo}
-                    onPageChange={setPage}
-                    onToggleStatus={handleToggleStatus}
-                    onCopyActivationCode={handleCopyActivationCode}
-                    onViewDetail={openDetailDrawer}
+                <DeviceTableTabs
+                    activeView={activeView}
+                    onChange={handleChangeTableView}
                 />
 
-                <UnassignedIotDeviceTable
-                    devices={unassignedDevices}
-                    pageInfo={unassignedPageInfo}
-                    onPageChange={setUnassignedPage}
-                    onCopyActivationCode={handleCopyActivationCode}
-                    onViewDetail={openDetailDrawer}
-                />
+                {activeView === DEVICE_TABLE_VIEW.ALL && (
+                    <IotDeviceTable
+                        devices={devices}
+                        pageInfo={pageInfo}
+                        loading={tableLoading}
+                        onPageChange={setPage}
+                        onToggleStatus={handleToggleStatus}
+                        onCopyActivationCode={handleCopyActivationCode}
+                        onViewDetail={openDetailDrawer}
+                    />
+                )}
+
+                {activeView === DEVICE_TABLE_VIEW.UNASSIGNED && (
+                    <UnassignedIotDeviceTable
+                        devices={devices}
+                        pageInfo={pageInfo}
+                        loading={tableLoading}
+                        onPageChange={setPage}
+                        onCopyActivationCode={handleCopyActivationCode}
+                        onViewDetail={openDetailDrawer}
+                    />
+                )}
             </section>
+
+            <IotDeviceDrawer
+                open={drawerOpen}
+                submitting={actionLoading}
+                error={actionError}
+                onClose={closeDrawer}
+                onSubmit={handleSubmitDevice}
+            />
 
             <IotDeviceDetailDrawer
                 open={detailDrawerState.open}

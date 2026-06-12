@@ -1,3 +1,5 @@
+import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
+
 const STATUS_LABELS = {
     UNASSIGNED: "Chưa gắn farm",
     ACTIVE: "Đang hoạt động",
@@ -74,6 +76,7 @@ function formatDateTime(value) {
 export function IotDeviceTable({
                                    devices,
                                    pageInfo,
+                                   loading = false,
                                    onPageChange,
                                    onToggleStatus,
                                    onCopyActivationCode,
@@ -91,7 +94,11 @@ export function IotDeviceTable({
                 </p>
             </header>
 
-            <div className="overflow-x-auto">
+            {loading ? (
+                <TableLoadingOverlay />
+            ) : (
+                <>
+                <div className="overflow-x-auto">
                 <table className="w-full min-w-[1100px] border-collapse text-left">
                     <thead className="bg-slate-50">
                     <tr className="text-[11px] font-medium uppercase text-slate-600">
@@ -205,7 +212,7 @@ export function IotDeviceTable({
                 </table>
             </div>
 
-            <footer className="flex items-center justify-between border-t border-slate-200 px-5 py-3">
+                <footer className="flex items-center justify-between border-t border-slate-200 px-5 py-3">
                 <p className="text-xs text-slate-500">
                     Tổng {pageInfo.totalElements} thiết bị
                 </p>
@@ -234,6 +241,8 @@ export function IotDeviceTable({
                     </button>
                 </div>
             </footer>
+                </>
+            )}
         </section>
     );
 }

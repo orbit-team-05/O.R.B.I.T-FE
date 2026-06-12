@@ -1,3 +1,5 @@
+import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
+
 function SourceStatusBadge({ active }) {
     return (
         <span
@@ -47,6 +49,7 @@ export function MarketSourceTable({
                                       sources,
                                       pageInfo,
                                       onPageChange,
+                                      loading = false,
                                       onEdit,
                                       onToggleStatus,
                                   }) {
@@ -62,7 +65,11 @@ export function MarketSourceTable({
                 </p>
             </header>
 
-            <div className="overflow-x-auto">
+            {loading ? (
+                <TableLoadingOverlay />
+            ) : (
+                <>
+                <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-left">
                     <thead className="bg-slate-50">
                     <tr className="text-[11px] font-medium uppercase text-slate-600">
@@ -181,6 +188,8 @@ export function MarketSourceTable({
                     </button>
                 </div>
             </footer>
+                </>
+            )}
         </section>
     );
 }

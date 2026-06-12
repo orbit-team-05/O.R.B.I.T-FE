@@ -125,6 +125,8 @@ export function useAdminSpecies(initialPage = 0, initialSize = 10) {
         page,
         setPage,
         loading,
+        initialLoading: loading && speciesPage === null,
+        tableLoading: loading && speciesPage !== null,
         error,
         reload: loadSpecies,
 

@@ -220,6 +220,7 @@ export function AdminSpeciesPage() {
                 <SpeciesTable
                     species={species}
                     pageInfo={pageInfo}
+                    loading={tableLoading}
                     onPageChange={setPage}
                     onEdit={openEditDrawer}
                     onToggleStatus={handleToggleStatus}

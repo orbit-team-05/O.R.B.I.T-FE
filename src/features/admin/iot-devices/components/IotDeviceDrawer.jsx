@@ -48,8 +48,16 @@ export function IotDeviceDrawer({
         const payload = {
             deviceName: form.deviceName.trim(),
             deviceType: form.deviceType,
-            macScale: form.macScale.trim(),
-            macCam: form.macCam.trim(),
+            macScale:
+                form.deviceType === "ESP32_SCALE" ||
+                form.deviceType === "ESP32_CAM_SCALE"
+                    ? form.macScale.trim()
+                    : "",
+            macCam:
+                form.deviceType === "ESP32_CAM" ||
+                form.deviceType === "ESP32_CAM_SCALE"
+                    ? form.macCam.trim()
+                    : "",
         };
 
         if (!payload.deviceName) {
@@ -62,20 +70,38 @@ export function IotDeviceDrawer({
             return;
         }
 
-        if (!payload.macScale) {
-            setLocalError("MAC cân không được để trống.");
-            return;
+        if (
+            payload.deviceType === "ESP32_SCALE" ||
+            payload.deviceType === "ESP32_CAM_SCALE"
+        ) {
+            if (!payload.macScale) {
+                setLocalError("MAC cân không được để trống với thiết bị có cân.");
+                return;
+            }
         }
 
-        if (!payload.macCam) {
-            setLocalError("MAC camera không được để trống.");
-            return;
+        if (
+            payload.deviceType === "ESP32_CAM" ||
+            payload.deviceType === "ESP32_CAM_SCALE"
+        ) {
+            if (!payload.macCam) {
+                setLocalError("MAC camera không được để trống với thiết bị có camera.");
+                return;
+            }
         }
 
         onSubmit(payload);
     }
 
     if (!open) return null;
+
+    const scaleRequired =
+        form.deviceType === "ESP32_SCALE" ||
+        form.deviceType === "ESP32_CAM_SCALE";
+
+    const camRequired =
+        form.deviceType === "ESP32_CAM" ||
+        form.deviceType === "ESP32_CAM_SCALE";
 
     return (
         <div className="fixed inset-0 z-50">
@@ -151,8 +177,18 @@ export function IotDeviceDrawer({
                                 name="macScale"
                                 value={form.macScale}
                                 onChange={handleChange}
-                                placeholder="VD: AA:BB:CC:DD:EE:01"
-                                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15"
+                                disabled={!scaleRequired}
+                                placeholder={
+                                    scaleRequired
+                                        ? "VD: AA:BB:CC:DD:EE:01"
+                                        : "Không dùng cho thiết bị chỉ camera"
+                                }
+                                className={[
+                                    "h-10 w-full rounded-lg border px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15",
+                                    scaleRequired
+                                        ? "border-slate-300 bg-white"
+                                        : "border-slate-200 bg-slate-100 text-slate-400",
+                                ].join(" ")}
                             />
                         </div>
 
@@ -165,8 +201,18 @@ export function IotDeviceDrawer({
                                 name="macCam"
                                 value={form.macCam}
                                 onChange={handleChange}
-                                placeholder="VD: AA:BB:CC:DD:EE:02"
-                                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15"
+                                disabled={!camRequired}
+                                placeholder={
+                                    camRequired
+                                        ? "VD: AA:BB:CC:DD:EE:02"
+                                        : "Không dùng cho thiết bị chỉ cân"
+                                }
+                                className={[
+                                    "h-10 w-full rounded-lg border px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15",
+                                    camRequired
+                                        ? "border-slate-300 bg-white"
+                                        : "border-slate-200 bg-slate-100 text-slate-400",
+                                ].join(" ")}
                             />
                         </div>
                     </div>

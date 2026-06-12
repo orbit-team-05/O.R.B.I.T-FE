@@ -57,10 +57,12 @@ export function AdminMarketSourcesPage() {
         sources,
         summary,
         pageInfo,
-        loading,
         error,
         setPage,
         reload,
+
+        initialLoading,
+        tableLoading,
 
         actionLoading,
         actionError,
@@ -163,7 +165,7 @@ export function AdminMarketSourcesPage() {
         closeConfirmDialog();
     }
 
-    if (loading) {
+    if (initialLoading) {
         return <AdminMarketSourcesSkeleton />;
     }
 
@@ -206,6 +208,7 @@ export function AdminMarketSourcesPage() {
                 <MarketSourceTable
                     sources={sources}
                     pageInfo={pageInfo}
+                    loading={tableLoading}
                     onPageChange={setPage}
                     onEdit={openEditDrawer}
                     onToggleStatus={handleToggleStatus}
