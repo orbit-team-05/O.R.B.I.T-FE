@@ -8,6 +8,16 @@ function formatPrice(value) {
     return new Intl.NumberFormat("vi-VN").format(Number(value));
 }
 
+function formatDate(value) {
+    if (!value) return "-";
+
+    return new Intl.DateTimeFormat("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+    }).format(new Date(value));
+}
+
 function PriceChangeBadge({ value }) {
     if (value === null || value === undefined) {
         return <span className="text-slate-400">-</span>;
@@ -23,9 +33,9 @@ function PriceChangeBadge({ value }) {
                 positive ? "bg-emerald-50 text-[#006948]" : "bg-red-50 text-red-600",
             ].join(" ")}
         >
-      {positive ? "+" : ""}
+            {positive ? "+" : ""}
             {numberValue.toFixed(2)}%
-    </span>
+        </span>
     );
 }
 
@@ -40,6 +50,11 @@ export function MarketPriceTable({
                                      onResetFilters,
                                      onPageChange,
                                  }) {
+    const currentPage = Math.max(Number(pageInfo?.number ?? 0), 0);
+    const totalPages = Math.max(Number(pageInfo?.totalPages ?? 1), 1);
+    const isFirstPage = currentPage <= 0 || pageInfo?.first;
+    const isLastPage = currentPage >= totalPages - 1 || pageInfo?.last;
+
     return (
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
             <MarketPriceFilters
@@ -49,6 +64,10 @@ export function MarketPriceTable({
                 onFilterChange={onFilterChange}
                 onReset={onResetFilters}
             />
+
+            <div className="border-b border-slate-200 bg-slate-50 px-5 py-2 text-xs text-slate-600">
+                Bảng hiển thị dữ liệu giá đã crawl. Cột biến động là phần trăm lấy từ nguồn, không phải hệ thống tự tính.
+            </div>
 
             {loading && (
                 <div className="border-b border-slate-200 bg-emerald-50 px-5 py-2 text-xs font-medium text-[#006948]">
@@ -66,8 +85,8 @@ export function MarketPriceTable({
                         <th className="px-5 py-3">Khu vực</th>
                         <th className="px-5 py-3">Size</th>
                         <th className="px-5 py-3">Giá</th>
-                        <th className="px-5 py-3">Thay đổi</th>
-                        <th className="px-5 py-3">Cập nhật</th>
+                        <th className="px-5 py-3">Biến động nguồn</th>
+                        <th className="px-5 py-3">Ngày crawl</th>
                         <th className="px-5 py-3">Nguồn</th>
                         <th className="px-5 py-3">Link</th>
                     </tr>
@@ -100,22 +119,22 @@ export function MarketPriceTable({
                             <td className="px-5 py-4 font-semibold text-slate-900">
                                 {formatPrice(item.price)}
                                 <span className="ml-1 text-xs font-normal text-slate-500">
-                    {item.priceUnit}
-                  </span>
+                                        {item.priceUnit}
+                                    </span>
                             </td>
 
                             <td className="px-5 py-4">
                                 <PriceChangeBadge value={item.priceChange} />
                             </td>
 
-                            <td className="px-5 py-4">
-                                {item.updatedLabel || item.scrapedDate || "-"}
+                            <td className="px-5 py-4 font-medium text-slate-900">
+                                {formatDate(item.scrapedDate)}
                             </td>
 
                             <td className="px-5 py-4">
-                  <span className="rounded bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600">
-                    {item.sourceCode}
-                  </span>
+                                    <span className="rounded bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600">
+                                        {item.sourceCode}
+                                    </span>
                             </td>
 
                             <td className="px-5 py-4">
@@ -158,21 +177,27 @@ export function MarketPriceTable({
                 <div className="flex items-center gap-2">
                     <button
                         type="button"
-                        disabled={pageInfo.first}
-                        onClick={() => onPageChange(pageInfo.number - 1)}
+                        disabled={isFirstPage}
+                        onClick={() => {
+                            if (isFirstPage) return;
+                            onPageChange(currentPage - 1);
+                        }}
                         className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40"
                     >
                         Trước
                     </button>
 
                     <span className="text-xs text-slate-600">
-            Trang {pageInfo.number + 1} / {Math.max(pageInfo.totalPages, 1)}
-          </span>
+                        Trang {currentPage + 1} / {totalPages}
+                    </span>
 
                     <button
                         type="button"
-                        disabled={pageInfo.last}
-                        onClick={() => onPageChange(pageInfo.number + 1)}
+                        disabled={isLastPage}
+                        onClick={() => {
+                            if (isLastPage) return;
+                            onPageChange(currentPage + 1);
+                        }}
                         className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40"
                     >
                         Sau

@@ -99,6 +99,10 @@ export function useAdminMarketPrices(initialPage = 0, initialSize = 10) {
         });
     }
 
+    function handleSetPage(nextPage) {
+        setPage(Math.max(Number(nextPage) || 0, 0));
+    }
+
     return {
         prices: pricePage?.content ?? [],
         summary,
@@ -118,7 +122,7 @@ export function useAdminMarketPrices(initialPage = 0, initialSize = 10) {
         },
 
         page,
-        setPage,
+        setPage: handleSetPage,
 
         loading,
         initialLoading: loading && pricePage === null,
