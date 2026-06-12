@@ -6,6 +6,9 @@ import { IotDeviceDrawer } from "../../../features/admin/iot-devices/components/
 import { IotDeviceStats } from "../../../features/admin/iot-devices/components/IotDeviceStats";
 import { IotDeviceTable } from "../../../features/admin/iot-devices/components/IotDeviceTable";
 import { useAdminIotDevices } from "../../../features/admin/iot-devices/hooks/useAdminIotDevices";
+import { IotDeviceReplaceDrawer } from "../../../features/admin/iot-devices/components/IotDeviceReplaceDrawer";
+import { UnassignedIotDeviceTable } from "../../../features/admin/iot-devices/components/UnassignedIotDeviceTable";
+import { IotDeviceDetailDrawer } from "../../../features/admin/iot-devices/components/IotDeviceDetailDrawer";
 
 const STATUS_ACTION_LABELS = {
     ACTIVE: "bật lại",
@@ -60,11 +63,14 @@ export function AdminIotDevicesPage() {
 
     const {
         devices,
+        unassignedDevices,
         summary,
         pageInfo,
+        unassignedPageInfo,
         loading,
         error,
         setPage,
+        setUnassignedPage,
         reload,
 
         actionLoading,
@@ -72,7 +78,13 @@ export function AdminIotDevicesPage() {
         clearActionError,
         createDevice,
         updateStatus,
+        replaceComponent,
     } = useAdminIotDevices();
+
+    const [detailDrawerState, setDetailDrawerState] = useState({
+        open: false,
+        device: null,
+    });
 
     const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -80,6 +92,11 @@ export function AdminIotDevicesPage() {
         open: false,
         device: null,
         nextStatus: "",
+    });
+
+    const [replaceDrawerState, setReplaceDrawerState] = useState({
+        open: false,
+        device: null,
     });
 
     function openCreateDrawer() {
@@ -92,6 +109,69 @@ export function AdminIotDevicesPage() {
 
         setDrawerOpen(false);
         clearActionError();
+    }
+
+    function openReplaceDrawer(device) {
+        clearActionError();
+
+        setDetailDrawerState({
+            open: false,
+            device: null,
+        });
+
+        setReplaceDrawerState({
+            open: true,
+            device,
+        });
+    }
+
+    function closeReplaceDrawer() {
+        if (actionLoading) return;
+
+        setReplaceDrawerState({
+            open: false,
+            device: null,
+        });
+
+        clearActionError();
+    }
+
+    function openDetailDrawer(device) {
+        clearActionError();
+
+        setDetailDrawerState({
+            open: true,
+            device,
+        });
+    }
+
+    function closeDetailDrawer() {
+        if (actionLoading) return;
+
+        setDetailDrawerState({
+            open: false,
+            device: null,
+        });
+
+        clearActionError();
+    }
+
+    async function handleReplaceComponent(device, payload) {
+        const success = await replaceComponent(device.deviceId, payload);
+
+        if (!success) {
+            toast.error(`Không thể thay linh kiện thiết bị "${device.deviceId}".`);
+            return;
+        }
+
+        const componentText =
+            payload.componentType === "CAM" ? "camera" : "cân";
+
+        toast.success(
+            `Đã thay ${componentText} cho thiết bị "${device.deviceId}".`,
+        );
+
+        closeReplaceDrawer();
     }
 
     async function handleSubmitDevice(payload) {
@@ -191,11 +271,15 @@ export function AdminIotDevicesPage() {
             <section className="space-y-5">
                 <AdminIotDevicesHeader onCreate={openCreateDrawer} />
 
-                {actionError && !drawerOpen && !confirmState.open && (
-                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                        {actionError}
-                    </div>
-                )}
+                {actionError &&
+                    !drawerOpen &&
+                    !confirmState.open &&
+                    !detailDrawerState.open &&
+                    !replaceDrawerState.open && (
+                        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                            {actionError}
+                        </div>
+                    )}
 
                 <IotDeviceStats summary={summary} />
 
@@ -205,15 +289,32 @@ export function AdminIotDevicesPage() {
                     onPageChange={setPage}
                     onToggleStatus={handleToggleStatus}
                     onCopyActivationCode={handleCopyActivationCode}
+                    onViewDetail={openDetailDrawer}
+                />
+
+                <UnassignedIotDeviceTable
+                    devices={unassignedDevices}
+                    pageInfo={unassignedPageInfo}
+                    onPageChange={setUnassignedPage}
+                    onCopyActivationCode={handleCopyActivationCode}
+                    onViewDetail={openDetailDrawer}
                 />
             </section>
 
-            <IotDeviceDrawer
-                open={drawerOpen}
+            <IotDeviceDetailDrawer
+                open={detailDrawerState.open}
+                device={detailDrawerState.device}
+                onClose={closeDetailDrawer}
+                onReplaceComponent={openReplaceDrawer}
+            />
+
+            <IotDeviceReplaceDrawer
+                open={replaceDrawerState.open}
+                device={replaceDrawerState.device}
                 submitting={actionLoading}
                 error={actionError}
-                onClose={closeDrawer}
-                onSubmit={handleSubmitDevice}
+                onClose={closeReplaceDrawer}
+                onSubmit={handleReplaceComponent}
             />
 
             <ConfirmDialog

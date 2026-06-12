@@ -4,6 +4,8 @@ import {
     createIotDevice,
     getIotDeviceSummary,
     getIotDevices,
+    getUnassignedIotDevices,
+    replaceIotDeviceComponent,
     updateIotDeviceStatus,
 } from "../services/iotDeviceApi";
 
@@ -22,6 +24,10 @@ export function useAdminIotDevices(initialPage = 0, initialSize = 10) {
         brokenDevices: 0,
     });
 
+    const [unassignedDevicePage, setUnassignedDevicePage] = useState(null);
+    const [unassignedPage, setUnassignedPage] = useState(0);
+    const [unassignedSize] = useState(5);
+
     const [page, setPage] = useState(initialPage);
     const [size] = useState(initialSize);
 
@@ -36,19 +42,21 @@ export function useAdminIotDevices(initialPage = 0, initialSize = 10) {
             setLoading(true);
             setError("");
 
-            const [devicesData, summaryData] = await Promise.all([
+            const [devicesData, unassignedDevicesData, summaryData] = await Promise.all([
                 getIotDevices(page, size),
+                getUnassignedIotDevices(unassignedPage, unassignedSize),
                 getIotDeviceSummary(),
             ]);
 
             setDevicePage(devicesData);
+            setUnassignedDevicePage(unassignedDevicesData);
             setSummary(summaryData);
         } catch (err) {
             setError(getErrorMessage(err, "Không thể tải danh sách thiết bị IoT."));
         } finally {
             setLoading(false);
         }
-    }, [page, size]);
+    }, [page, size, unassignedPage, unassignedSize]);
 
     useEffect(() => {
         loadDevices();
@@ -90,9 +98,31 @@ export function useAdminIotDevices(initialPage = 0, initialSize = 10) {
         }
     }
 
+    async function handleReplaceComponent(deviceId, payload) {
+        try {
+            setActionLoading(true);
+            setActionError("");
+
+            await replaceIotDeviceComponent(deviceId, payload);
+            await loadDevices();
+
+            return true;
+        } catch (err) {
+            setActionError(
+                getErrorMessage(err, "Không thể thay linh kiện thiết bị."),
+            );
+            return false;
+        } finally {
+            setActionLoading(false);
+        }
+    }
+
     return {
         devices: devicePage?.content ?? [],
+        unassignedDevices: unassignedDevicePage?.content ?? [],
+
         summary,
+
         pageInfo: {
             number: devicePage?.number ?? page,
             size: devicePage?.size ?? size,
@@ -101,8 +131,20 @@ export function useAdminIotDevices(initialPage = 0, initialSize = 10) {
             first: devicePage?.first ?? true,
             last: devicePage?.last ?? true,
         },
+
+        unassignedPageInfo: {
+            number: unassignedDevicePage?.number ?? unassignedPage,
+            size: unassignedDevicePage?.size ?? unassignedSize,
+            totalPages: unassignedDevicePage?.totalPages ?? 0,
+            totalElements: unassignedDevicePage?.totalElements ?? 0,
+            first: unassignedDevicePage?.first ?? true,
+            last: unassignedDevicePage?.last ?? true,
+        },
+
         page,
         setPage,
+        setUnassignedPage,
+
         loading,
         error,
         reload: loadDevices,
@@ -112,5 +154,6 @@ export function useAdminIotDevices(initialPage = 0, initialSize = 10) {
         clearActionError: () => setActionError(""),
         createDevice: handleCreateDevice,
         updateStatus: handleUpdateStatus,
+        replaceComponent: handleReplaceComponent,
     };
 }

@@ -48,7 +48,7 @@ function ActionButton({ children, variant = "default", ...props }) {
         <button
             type="button"
             className={[
-                "inline-flex h-8 min-w-[58px] items-center justify-center rounded-lg px-3",
+                "inline-flex h-8 w-[84px] items-center justify-center rounded-lg px-3",
                 "text-xs font-medium transition-colors duration-150",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006948]/30",
                 variantClass,
@@ -77,6 +77,7 @@ export function IotDeviceTable({
                                    onPageChange,
                                    onToggleStatus,
                                    onCopyActivationCode,
+                                   onViewDetail,
                                }) {
     return (
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
@@ -101,7 +102,7 @@ export function IotDeviceTable({
                         <th className="px-5 py-3">Trạng thái</th>
                         <th className="px-5 py-3">Last seen</th>
                         <th className="px-5 py-3">Activation code</th>
-                        <th className="w-[170px] px-5 py-3 text-center">Hành động</th>
+                        <th className="w-[210px] px-5 py-3 text-left">Hành động</th>
                     </tr>
                     </thead>
 
@@ -157,8 +158,12 @@ export function IotDeviceTable({
                                     )}
                                 </td>
 
-                                <td className="w-[170px] px-5 py-4">
-                                    <div className="flex items-center justify-center gap-2">
+                                <td className="w-[210px] px-5 py-4">
+                                    <div className="grid grid-cols-[84px_84px] items-center gap-2">
+                                        <ActionButton onClick={() => onViewDetail?.(item)}>
+                                            Chi tiết
+                                        </ActionButton>
+
                                         {isActive && (
                                             <ActionButton
                                                 variant="danger"
@@ -175,6 +180,10 @@ export function IotDeviceTable({
                                             >
                                                 Bật lại
                                             </ActionButton>
+                                        )}
+
+                                        {!isActive && !isInactive && (
+                                            <span className="h-8 w-[84px]" />
                                         )}
                                     </div>
                                 </td>
