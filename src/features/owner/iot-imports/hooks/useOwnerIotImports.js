@@ -1,24 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
     confirmImportScan,
-    connectIotImportSocket,
     getPendingImportScans,
 } from "../services/ownerIotImportApi";
 
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
-}
-
-function upsertScan(list, scan) {
-    const exists = list.some((item) => item.transactionId === scan.transactionId);
-
-    if (!exists) {
-        return [scan, ...list];
-    }
-
-    return list.map((item) =>
-        item.transactionId === scan.transactionId ? scan : item,
-    );
 }
 
 export function useOwnerIotImports(farmId, initialPage = 0, initialSize = 10) {
@@ -28,12 +15,10 @@ export function useOwnerIotImports(farmId, initialPage = 0, initialSize = 10) {
     const [page, setPage] = useState(initialPage);
     const [size] = useState(initialSize);
 
-    const [connected, setConnected] = useState(false);
     const [loading, setLoading] = useState(true);
     const [submittingId, setSubmittingId] = useState(null);
 
     const [error, setError] = useState("");
-    const [socketError, setSocketError] = useState("");
     const [actionError, setActionError] = useState("");
     const [actionSuccess, setActionSuccess] = useState("");
 
@@ -56,57 +41,8 @@ export function useOwnerIotImports(farmId, initialPage = 0, initialSize = 10) {
     }, [farmId, page, size]);
 
     useEffect(() => {
-        loadPendingImports();
+        void loadPendingImports();
     }, [loadPendingImports]);
-
-    useEffect(() => {
-        if (!farmId) return undefined;
-
-        setSocketError("");
-
-        const disconnect = connectIotImportSocket(
-            farmId,
-
-            (payload) => {
-                console.log("IOT IMPORT SOCKET MESSAGE:", payload);
-
-                if (payload.approvalStatus === "PENDING") {
-                    setScans((prev) => upsertScan(prev, payload));
-                }
-
-                if (payload.approvalStatus === "PENDING") {
-                    setScans((prev) => upsertScan(prev, payload));
-                } else {
-                    setScans((prev) =>
-                        prev.filter((item) => item.transactionId !== payload.transactionId),
-                    );
-                }
-
-                window.setTimeout(() => {
-                    void loadPendingImports();
-                }, 500);
-            },
-
-            (message) => {
-                console.error("IOT IMPORT SOCKET ERROR:", message);
-                setConnected(false);
-                setSocketError(message);
-            },
-
-            () => {
-                console.log("IOT IMPORT SOCKET CONNECTED");
-                setConnected(true);
-                setSocketError("");
-            },
-
-            () => {
-                console.log("IOT IMPORT SOCKET DISCONNECTED");
-                setConnected(false);
-            },
-        );
-
-        return disconnect;
-    }, [farmId, loadPendingImports]);
 
     async function confirmImport(transactionId, totalImportCost) {
         try {
@@ -158,14 +94,12 @@ export function useOwnerIotImports(farmId, initialPage = 0, initialSize = 10) {
             last: scanPage?.last ?? true,
         },
 
-        connected,
         loading,
         initialLoading: loading && scanPage === null,
         tableLoading: loading && scanPage !== null,
         submittingId,
 
         error,
-        socketError,
         actionError,
         actionSuccess,
 

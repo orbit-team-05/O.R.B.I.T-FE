@@ -1,17 +1,17 @@
 import { useState } from "react";
-import { RefreshCcw, Wifi, WifiOff } from "lucide-react";
+import { RefreshCcw } from "lucide-react";
 import { IotImportConfirmDrawer } from "../../../features/owner/iot-imports/components/IotImportConfirmDrawer";
 import { IotImportPendingTable } from "../../../features/owner/iot-imports/components/IotImportPendingTable";
 import { useOwnerIotImports } from "../../../features/owner/iot-imports/hooks/useOwnerIotImports";
 
 const CURRENT_FARM_ID = 1;
 
-function PageHeader({ connected, onRefresh }) {
+function PageHeader({ onRefresh }) {
     return (
         <header className="flex flex-col gap-3 border-b border-slate-200 bg-white px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <p className="text-sm font-medium text-[#006948]">
-                    Owner / Nhập kho realtime
+                    Owner / Nhập kho thủ công
                 </p>
 
                 <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
@@ -19,32 +19,18 @@ function PageHeader({ connected, onRefresh }) {
                 </h1>
 
                 <p className="mt-1 text-sm text-slate-600">
-                    Scan từ thiết bị sẽ hiện realtime để Owner nhập giá và xác nhận nhập kho.
+                    Dữ liệu scan từ thiết bị sẽ được tải khi Owner bấm làm mới.
                 </p>
             </div>
 
-            <div className="flex items-center gap-2">
-                <div
-                    className={[
-                        "inline-flex h-10 items-center gap-2 rounded-lg border px-3 text-sm font-medium",
-                        connected
-                            ? "border-emerald-100 bg-emerald-50 text-[#006948]"
-                            : "border-slate-200 bg-slate-50 text-slate-500",
-                    ].join(" ")}
-                >
-                    {connected ? <Wifi size={16} /> : <WifiOff size={16} />}
-                    {connected ? "Realtime online" : "Đang kết nối"}
-                </div>
-
-                <button
-                    type="button"
-                    onClick={onRefresh}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                >
-                    <RefreshCcw size={16} />
-                    Làm mới
-                </button>
-            </div>
+            <button
+                type="button"
+                onClick={onRefresh}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+                <RefreshCcw size={16} />
+                Làm mới
+            </button>
         </header>
     );
 }
@@ -81,12 +67,10 @@ export function OwnerIotImportsPage() {
         scans,
         summary,
         pageInfo,
-        connected,
         initialLoading,
         tableLoading,
         submittingId,
         error,
-        socketError,
         actionError,
         actionSuccess,
         setPage,
@@ -117,15 +101,9 @@ export function OwnerIotImportsPage() {
 
     return (
         <div className="min-h-screen bg-slate-50">
-            <PageHeader connected={connected} onRefresh={reload} />
+            <PageHeader onRefresh={reload} />
 
             <main className="space-y-5 px-6 py-6">
-                {socketError && (
-                    <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                        {socketError}
-                    </div>
-                )}
-
                 {actionSuccess && (
                     <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-[#006948]">
                         {actionSuccess}
