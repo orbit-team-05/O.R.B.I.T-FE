@@ -9,12 +9,20 @@ import {
     updateIotDeviceStatus,
 } from "../services/iotDeviceApi";
 
+export const DEVICE_TABLE_VIEW = {
+    ALL: "ALL",
+    UNASSIGNED: "UNASSIGNED",
+};
+
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
 }
 
-export function useAdminIotDevices(initialPage = 0, initialSize = 10) {
+export function useAdminIotDevices(initialView = DEVICE_TABLE_VIEW.ALL) {
+    const [activeView, setActiveView] = useState(initialView);
+
     const [devicePage, setDevicePage] = useState(null);
+
     const [summary, setSummary] = useState({
         totalDevices: 0,
         activeDevices: 0,
@@ -24,43 +32,117 @@ export function useAdminIotDevices(initialPage = 0, initialSize = 10) {
         brokenDevices: 0,
     });
 
-    const [unassignedDevicePage, setUnassignedDevicePage] = useState(null);
+    const [allPage, setAllPage] = useState(0);
     const [unassignedPage, setUnassignedPage] = useState(0);
+
+    const [allSize] = useState(10);
     const [unassignedSize] = useState(5);
 
-    const [page, setPage] = useState(initialPage);
-    const [size] = useState(initialSize);
-
-    const [loading, setLoading] = useState(true);
+    const [initialLoading, setInitialLoading] = useState(true);
+    const [tableLoading, setTableLoading] = useState(false);
     const [error, setError] = useState("");
 
     const [actionLoading, setActionLoading] = useState(false);
     const [actionError, setActionError] = useState("");
 
-    const loadDevices = useCallback(async () => {
+    const currentPage =
+        activeView === DEVICE_TABLE_VIEW.UNASSIGNED ? unassignedPage : allPage;
+
+    const currentSize =
+        activeView === DEVICE_TABLE_VIEW.UNASSIGNED ? unassignedSize : allSize;
+
+    const loadDeviceTable = useCallback(async () => {
+        const devicesData =
+            activeView === DEVICE_TABLE_VIEW.UNASSIGNED
+                ? await getUnassignedIotDevices(unassignedPage, unassignedSize)
+                : await getIotDevices(allPage, allSize);
+
+        setDevicePage(devicesData);
+    }, [activeView, allPage, allSize, unassignedPage, unassignedSize]);
+
+    const loadInitialData = useCallback(async () => {
         try {
-            setLoading(true);
+            setInitialLoading(true);
             setError("");
 
-            const [devicesData, unassignedDevicesData, summaryData] = await Promise.all([
-                getIotDevices(page, size),
-                getUnassignedIotDevices(unassignedPage, unassignedSize),
+            const [devicesData, summaryData] = await Promise.all([
+                activeView === DEVICE_TABLE_VIEW.UNASSIGNED
+                    ? getUnassignedIotDevices(unassignedPage, unassignedSize)
+                    : getIotDevices(allPage, allSize),
                 getIotDeviceSummary(),
             ]);
 
             setDevicePage(devicesData);
-            setUnassignedDevicePage(unassignedDevicesData);
             setSummary(summaryData);
         } catch (err) {
             setError(getErrorMessage(err, "Không thể tải danh sách thiết bị IoT."));
         } finally {
-            setLoading(false);
+            setInitialLoading(false);
         }
-    }, [page, size, unassignedPage, unassignedSize]);
+    }, [activeView, allPage, allSize, unassignedPage, unassignedSize]);
+
+    const reloadTable = useCallback(async () => {
+        try {
+            setTableLoading(true);
+            setError("");
+
+            await loadDeviceTable();
+        } catch (err) {
+            setError(getErrorMessage(err, "Không thể tải danh sách thiết bị IoT."));
+        } finally {
+            setTableLoading(false);
+        }
+    }, [loadDeviceTable]);
+
+    const reloadAll = useCallback(async () => {
+        try {
+            setTableLoading(true);
+            setError("");
+
+            const [devicesData, summaryData] = await Promise.all([
+                activeView === DEVICE_TABLE_VIEW.UNASSIGNED
+                    ? getUnassignedIotDevices(unassignedPage, unassignedSize)
+                    : getIotDevices(allPage, allSize),
+                getIotDeviceSummary(),
+            ]);
+
+            setDevicePage(devicesData);
+            setSummary(summaryData);
+        } catch (err) {
+            setError(getErrorMessage(err, "Không thể tải danh sách thiết bị IoT."));
+        } finally {
+            setTableLoading(false);
+        }
+    }, [activeView, allPage, allSize, unassignedPage, unassignedSize]);
 
     useEffect(() => {
-        loadDevices();
-    }, [loadDevices]);
+        loadInitialData();
+        // chỉ chạy 1 lần lúc vào page
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        if (initialLoading) return;
+
+        reloadTable();
+    }, [activeView, allPage, unassignedPage, initialLoading, reloadTable]);
+
+    function handleChangeView(nextView) {
+        setActionError("");
+        setError("");
+        setActiveView(nextView);
+    }
+
+    function handleSetPage(nextPage) {
+        const safePage = Math.max(Number(nextPage) || 0, 0);
+
+        if (activeView === DEVICE_TABLE_VIEW.UNASSIGNED) {
+            setUnassignedPage(safePage);
+            return;
+        }
+
+        setAllPage(safePage);
+    }
 
     async function handleCreateDevice(payload) {
         try {
@@ -68,7 +150,7 @@ export function useAdminIotDevices(initialPage = 0, initialSize = 10) {
             setActionError("");
 
             const createdDevice = await createIotDevice(payload);
-            await loadDevices();
+            await reloadAll();
 
             return createdDevice;
         } catch (err) {
@@ -85,7 +167,7 @@ export function useAdminIotDevices(initialPage = 0, initialSize = 10) {
             setActionError("");
 
             await updateIotDeviceStatus(deviceId, status);
-            await loadDevices();
+            await reloadAll();
 
             return true;
         } catch (err) {
@@ -104,7 +186,7 @@ export function useAdminIotDevices(initialPage = 0, initialSize = 10) {
             setActionError("");
 
             await replaceIotDeviceComponent(deviceId, payload);
-            await loadDevices();
+            await reloadAll();
 
             return true;
         } catch (err) {
@@ -118,36 +200,30 @@ export function useAdminIotDevices(initialPage = 0, initialSize = 10) {
     }
 
     return {
-        devices: devicePage?.content ?? [],
-        unassignedDevices: unassignedDevicePage?.content ?? [],
+        activeView,
+        setActiveView: handleChangeView,
 
+        devices: devicePage?.content ?? [],
         summary,
 
         pageInfo: {
-            number: devicePage?.number ?? page,
-            size: devicePage?.size ?? size,
+            number: devicePage?.number ?? currentPage,
+            size: devicePage?.size ?? currentSize,
             totalPages: devicePage?.totalPages ?? 0,
             totalElements: devicePage?.totalElements ?? 0,
             first: devicePage?.first ?? true,
             last: devicePage?.last ?? true,
         },
 
-        unassignedPageInfo: {
-            number: unassignedDevicePage?.number ?? unassignedPage,
-            size: unassignedDevicePage?.size ?? unassignedSize,
-            totalPages: unassignedDevicePage?.totalPages ?? 0,
-            totalElements: unassignedDevicePage?.totalElements ?? 0,
-            first: unassignedDevicePage?.first ?? true,
-            last: unassignedDevicePage?.last ?? true,
-        },
+        initialLoading,
+        tableLoading,
 
-        page,
-        setPage,
-        setUnassignedPage,
+        // giữ loading để page cũ không bị vỡ nếu đang dùng
+        loading: initialLoading,
 
-        loading,
         error,
-        reload: loadDevices,
+        setPage: handleSetPage,
+        reload: reloadAll,
 
         actionLoading,
         actionError,

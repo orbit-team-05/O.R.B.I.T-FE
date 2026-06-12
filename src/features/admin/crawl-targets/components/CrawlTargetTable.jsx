@@ -1,3 +1,5 @@
+import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
+
 function StatusBadge({ active }) {
     return (
         <span
@@ -57,6 +59,7 @@ function formatDateTime(value) {
 export function CrawlTargetTable({
                                      targets,
                                      pageInfo,
+                                     loading = false,
                                      onPageChange,
                                      onEdit,
                                      onToggleStatus,
@@ -75,7 +78,11 @@ export function CrawlTargetTable({
                 </div>
             </header>
 
-            <div className="overflow-x-auto">
+            {loading ? (
+                <TableLoadingOverlay />
+            ) : (
+                <>
+                <div className="overflow-x-auto">
                 <table className="w-full min-w-[1100px] border-collapse text-left">
                     <thead className="bg-slate-50">
                     <tr className="text-[11px] font-medium uppercase text-slate-600">
@@ -206,6 +213,8 @@ export function CrawlTargetTable({
                     </button>
                 </div>
             </footer>
+                </>
+            )}
         </section>
     );
 }

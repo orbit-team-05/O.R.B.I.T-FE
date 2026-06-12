@@ -137,6 +137,8 @@ export function useAdminMarketSources(initialPage = 0, initialSize = 10) {
         page,
         setPage,
         loading,
+        initialLoading: loading && sourcePage === null,
+        tableLoading: loading && sourcePage !== null,
         error,
         reload: loadSources,
 

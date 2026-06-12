@@ -59,10 +59,12 @@ export function AdminCrawlTargetsPage() {
         sourceOptions,
         speciesOptions,
         pageInfo,
-        loading,
         error,
         setPage,
         reload,
+
+        initialLoading,
+        tableLoading,
 
         actionLoading,
         actionError,
@@ -167,7 +169,7 @@ export function AdminCrawlTargetsPage() {
         closeConfirmDialog();
     }
 
-    if (loading) {
+    if (initialLoading) {
         return <AdminCrawlTargetsSkeleton />;
     }
 
@@ -210,6 +212,7 @@ export function AdminCrawlTargetsPage() {
                 <CrawlTargetTable
                     targets={targets}
                     pageInfo={pageInfo}
+                    loading={tableLoading}
                     onPageChange={setPage}
                     onEdit={openEditDrawer}
                     onToggleStatus={handleToggleStatus}

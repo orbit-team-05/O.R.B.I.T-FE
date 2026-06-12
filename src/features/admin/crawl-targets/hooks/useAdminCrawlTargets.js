@@ -142,6 +142,10 @@ export function useAdminCrawlTargets(initialPage = 0, initialSize = 10) {
         }
     }
 
+    function handleSetPage(nextPage) {
+        setPage(Math.max(Number(nextPage) || 0, 0));
+    }
+
     return {
         targets,
         summary,
@@ -157,8 +161,10 @@ export function useAdminCrawlTargets(initialPage = 0, initialSize = 10) {
             last: targetPage?.last ?? true,
         },
         page,
-        setPage,
+        setPage: handleSetPage,
         loading,
+        initialLoading: loading && targetPage === null,
+        tableLoading: loading && targetPage !== null,
         error,
         reload: loadTargets,
 

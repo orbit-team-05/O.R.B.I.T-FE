@@ -111,6 +111,10 @@ export function useAdminSpecies(initialPage = 0, initialSize = 10) {
         }
     }
 
+    function handleSetPage(nextPage) {
+        setPage(Math.max(Number(nextPage) || 0, 0));
+    }
+
     return {
         species: speciesPage?.content ?? [],
         summary,
@@ -123,8 +127,10 @@ export function useAdminSpecies(initialPage = 0, initialSize = 10) {
             last: speciesPage?.last ?? true,
         },
         page,
-        setPage,
+        setPage: handleSetPage,
         loading,
+        initialLoading: loading && speciesPage === null,
+        tableLoading: loading && speciesPage !== null,
         error,
         reload: loadSpecies,
 

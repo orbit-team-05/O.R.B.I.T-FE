@@ -1,4 +1,5 @@
 import { ExternalLink } from "lucide-react";
+import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
 
 import { MarketPriceFilters } from "./MarketPriceFilters";
 
@@ -75,7 +76,11 @@ export function MarketPriceTable({
                 </div>
             )}
 
-            <div className="overflow-x-auto">
+            {loading ? (
+                <TableLoadingOverlay />
+            ) : (
+                <>
+                <div className="overflow-x-auto">
                 <table className="w-full min-w-[1180px] border-collapse text-left">
                     <thead className="bg-slate-50">
                     <tr className="text-[11px] font-medium uppercase text-slate-600">
@@ -204,6 +209,8 @@ export function MarketPriceTable({
                     </button>
                 </div>
             </footer>
+                </>
+            )}
         </section>
     );
 }
