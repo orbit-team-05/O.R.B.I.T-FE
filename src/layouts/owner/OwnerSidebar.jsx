@@ -10,6 +10,7 @@ import {
     Settings,
     Sprout,
     Warehouse,
+    BrainCircuit
 } from "lucide-react";
 
 import orbitLogo from "../../assets/images/orbit-logo.png";
@@ -44,6 +45,11 @@ const OWNER_NAV_ITEMS = [
         label: "Lịch sử Scan",
         path: "/owner/iot-scans",
         icon: QrCode,
+    },
+    {
+        label: "Duyệt AI",
+        path: "/owner/ai-reviews",
+        icon: BrainCircuit,
     },
     {
         label: "Dữ liệu giá",
