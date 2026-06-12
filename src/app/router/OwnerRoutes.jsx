@@ -6,6 +6,7 @@ import { OwnerIotDevicesPage } from "../../pages/owner/devices/OwnerIotDevicesPa
 import { OwnerIotScansPage } from "../../pages/owner/iot-scans/OwnerIotScansPage";
 import { OwnerAiReviewsPage } from "../../pages/owner/ai-reviews/OwnerAiReviewsPage";
 import { OwnerProductsPage } from "../../pages/owner/products/OwnerProductsPage";
+import { OwnerIotImportsPage } from "../../pages/owner/iot-imports/OwnerIotImportsPage";
 
 export function OwnerRoutes() {
     return (
@@ -56,6 +57,7 @@ export function OwnerRoutes() {
                 <Route path="devices" element={<OwnerIotDevicesPage />} />
                 <Route path="iot-scans" element={<OwnerIotScansPage />} />
                 <Route path="ai-reviews" element={<OwnerAiReviewsPage />} />
+                <Route path="iot-imports" element={<OwnerIotImportsPage />} />
 
                 <Route
                     path="market-prices"

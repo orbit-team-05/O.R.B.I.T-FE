@@ -10,7 +10,8 @@ import {
     Settings,
     Sprout,
     Warehouse,
-    BrainCircuit
+    BrainCircuit,
+    PackagePlus
 } from "lucide-react";
 
 import orbitLogo from "../../assets/images/orbit-logo.png";
@@ -45,6 +46,11 @@ const OWNER_NAV_ITEMS = [
         label: "Thiết bị IoT",
         path: "/owner/devices",
         icon: Cpu,
+    },
+    {
+        label: "Nhập kho IoT",
+        path: "/owner/iot-imports",
+        icon: PackagePlus,
     },
     {
         label: "Lịch sử Scan",
