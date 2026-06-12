@@ -37,6 +37,11 @@ const OWNER_NAV_ITEMS = [
         icon: Warehouse,
     },
     {
+        label: "Sản phẩm",
+        path: "/owner/products",
+        icon: PackageSearch,
+    },
+    {
         label: "Thiết bị IoT",
         path: "/owner/devices",
         icon: Cpu,
@@ -55,11 +60,6 @@ const OWNER_NAV_ITEMS = [
         label: "Dữ liệu giá",
         path: "/owner/market-prices",
         icon: ChartNoAxesCombined,
-    },
-    {
-        label: "Giao dịch kho",
-        path: "/owner/transactions",
-        icon: PackageSearch,
     },
     {
         label: "Cài đặt",
