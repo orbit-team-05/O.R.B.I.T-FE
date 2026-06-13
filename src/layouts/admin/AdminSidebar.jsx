@@ -10,9 +10,10 @@ import {
     SlidersHorizontal,
     Users,
     Warehouse,
+    LogOut,
 } from "lucide-react";
 
-
+import { useAuth } from "../../features/auth/context/AuthContext";
 import orbitLogo from "../../assets/images/orbit-logo.png";
 
 const ADMIN_NAV_ITEMS = [
@@ -49,7 +50,8 @@ function getInitials(fullName = "") {
 }
 
 export function AdminSidebar() {
-    const adminName = "Admin System";
+    const { user, logout } = useAuth();
+    const adminName = user?.fullName || "Admin System";
     const initials = getInitials(adminName);
 
     return (
@@ -64,8 +66,8 @@ export function AdminSidebar() {
                 </div>
 
                 <span className="text-[22px] font-semibold leading-none text-[#006948]">
-          Admin
-        </span>
+                    Admin
+                </span>
             </div>
 
             <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-5">
@@ -93,8 +95,8 @@ export function AdminSidebar() {
                                 />
 
                                 <span className={isActive ? "!text-white" : "text-current"}>
-        {label}
-      </span>
+                                    {label}
+                                </span>
                             </>
                         )}
                     </NavLink>
@@ -110,14 +112,22 @@ export function AdminSidebar() {
                     <span>Tạo Báo Cáo</span>
                 </NavLink>
 
-                <div className="flex h-14 items-center gap-3 rounded-xl bg-slate-50 px-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#006948] text-xs font-bold text-white">
-                        {initials}
+                <div className="flex h-14 items-center justify-between rounded-xl bg-slate-50 px-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#006948] text-xs font-bold text-white">
+                            {initials}
+                        </div>
+                        <span className="truncate text-[13px] font-semibold text-slate-900">
+                            {adminName}
+                        </span>
                     </div>
-
-                    <span className="truncate text-[13px] font-semibold text-slate-900">
-            {adminName}
-          </span>
+                    <button
+                        onClick={logout}
+                        title="Đăng xuất"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
+                    >
+                        <LogOut size={16} strokeWidth={1.8} />
+                    </button>
                 </div>
             </div>
         </aside>

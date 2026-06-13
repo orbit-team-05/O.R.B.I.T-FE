@@ -11,9 +11,11 @@ import {
     Sprout,
     Warehouse,
     BrainCircuit,
-    PackagePlus
+    PackagePlus,
+    LogOut
 } from "lucide-react";
 
+import { useAuth } from "../../features/auth/context/AuthContext";
 import orbitLogo from "../../assets/images/orbit-logo.png";
 
 const OWNER_NAV_ITEMS = [
@@ -84,7 +86,8 @@ function getInitials(fullName = "") {
 }
 
 export function OwnerSidebar() {
-    const ownerName = "Farm Owner";
+    const { user, logout } = useAuth();
+    const ownerName = user?.fullName || "Farm Owner";
     const initials = getInitials(ownerName);
 
     return (
@@ -145,19 +148,28 @@ export function OwnerSidebar() {
                     <span>Báo cáo nông trại</span>
                 </NavLink>
 
-                <div className="flex h-14 items-center gap-3 rounded-xl bg-slate-50 px-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#006948] text-xs font-bold text-white">
-                        {initials}
-                    </div>
+                <div className="flex h-14 items-center justify-between rounded-xl bg-slate-50 px-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#006948] text-xs font-bold text-white">
+                            {initials}
+                        </div>
 
-                    <div className="min-w-0">
-                        <p className="truncate text-[13px] font-semibold text-slate-900">
-                            {ownerName}
-                        </p>
-                        <p className="truncate text-[11px] text-slate-500">
-                            Chủ nông trại
-                        </p>
+                        <div className="min-w-0">
+                            <p className="truncate text-[13px] font-semibold text-slate-900">
+                                {ownerName}
+                            </p>
+                            <p className="truncate text-[11px] text-slate-500">
+                                Chủ nông trại
+                            </p>
+                        </div>
                     </div>
+                    <button
+                        onClick={logout}
+                        title="Đăng xuất"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
+                    >
+                        <LogOut size={16} strokeWidth={1.8} />
+                    </button>
                 </div>
             </div>
         </aside>
