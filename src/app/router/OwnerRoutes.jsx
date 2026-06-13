@@ -7,6 +7,8 @@ import { OwnerIotScansPage } from "../../pages/owner/iot-scans/OwnerIotScansPage
 import { OwnerAiReviewsPage } from "../../pages/owner/ai-reviews/OwnerAiReviewsPage";
 import { OwnerProductsPage } from "../../pages/owner/products/OwnerProductsPage";
 import { OwnerIotImportsPage } from "../../pages/owner/iot-imports/OwnerIotImportsPage";
+import { OwnerMarketPricesPage } from "../../pages/owner/market-prices/OwnerMarketPricesPage";
+import OwnerDashboardPage from "../../pages/owner/dashboard/OwnerDashboardPage";
 
 export function OwnerRoutes() {
     return (
@@ -16,12 +18,7 @@ export function OwnerRoutes() {
 
                 <Route
                     path="dashboard"
-                    element={
-                        <OwnerComingSoonPage
-                            title="Owner Dashboard"
-                            description="Màn hình tổng quan nông trại sẽ được triển khai trong giai đoạn tiếp theo."
-                        />
-                    }
+                    element={<OwnerDashboardPage />}
                 />
 
                 <Route
@@ -61,14 +58,8 @@ export function OwnerRoutes() {
 
                 <Route
                     path="market-prices"
-                    element={
-                        <OwnerComingSoonPage
-                            title="Dữ liệu giá thị trường"
-                            description="Màn hình xem giá thị trường theo loài, khu vực và nguồn dữ liệu sẽ được triển khai sau."
-                        />
-                    }
+                    element={<OwnerMarketPricesPage />}
                 />
-
                 <Route
                     path="transactions"
                     element={
