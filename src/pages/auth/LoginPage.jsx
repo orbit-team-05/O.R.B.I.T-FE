@@ -68,9 +68,9 @@ export function LoginPage() {
 
                     <div className="mt-10 flex gap-8">
                         {[
-                            { value: "99.9%", label: "Uptime" },
+                            // { value: "99.9%", label: "Uptime" },
                             { value: "24/7", label: "Giám sát" },
-                            { value: "AI", label: "Phân tích" },
+                            // { value: "AI", label: "Phân tích" },
                         ].map((stat) => (
                             <div key={stat.label} className="text-center">
                                 <p className="text-2xl font-bold text-white">{stat.value}</p>

@@ -11,7 +11,6 @@ export const httpClient = axios.create({
     timeout: 15000,
 });
 
-// ── Request interceptor: gắn JWT token vào header ──
 httpClient.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem(STORAGE_TOKEN_KEY);
@@ -25,14 +24,13 @@ httpClient.interceptors.request.use(
     (error) => Promise.reject(error),
 );
 
-// ── Response interceptor: tự động logout khi nhận 401 ──
+
 httpClient.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error?.response?.status === 401) {
             const token = localStorage.getItem(STORAGE_TOKEN_KEY);
 
-            // Chỉ redirect nếu user đang có token (tránh loop khi login thất bại)
             if (token) {
                 localStorage.removeItem(STORAGE_TOKEN_KEY);
                 localStorage.removeItem(STORAGE_USER_KEY);
