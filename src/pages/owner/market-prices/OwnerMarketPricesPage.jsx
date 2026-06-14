@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../../features/auth/context/AuthContext";
-import { OwnerMarketPriceInsights } from "../../../features/owner/market-prices/components/OwnerMarketPriceInsights";
 import { OwnerMarketPriceStats } from "../../../features/owner/market-prices/components/OwnerMarketPriceStats";
 import { OwnerMarketPriceTable } from "../../../features/owner/market-prices/components/OwnerMarketPriceTable";
 import { useOwnerMarketPrices } from "../../../features/owner/market-prices/hooks/useOwnerMarketPrices";
@@ -63,8 +62,6 @@ export function OwnerMarketPricesPage() {
     const {
         prices,
         summary,
-        notableChanges,
-        dataSources,
         speciesOptions,
         sourceOptions,
         filters,
@@ -129,11 +126,6 @@ export function OwnerMarketPricesPage() {
                 onResetFilters={resetFilters}
                 onRefresh={reload}
                 onPageChange={setPage}
-            />
-
-            <OwnerMarketPriceInsights
-                notableChanges={notableChanges}
-                dataSources={dataSources}
             />
         </section>
     );
