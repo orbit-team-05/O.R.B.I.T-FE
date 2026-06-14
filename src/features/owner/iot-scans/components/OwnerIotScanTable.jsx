@@ -1,17 +1,39 @@
 import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
 
 const AI_STATUS_LABELS = {
-    SUCCESS: "Thành công",
+    SUCCESS: "Nhận diện QR",
     LOW_CONFIDENCE: "Độ tin cậy thấp",
     UNRECOGNIZED: "Không nhận diện",
+    CORRECTED: "Không nhận diện QR - đã nhập mã",
 };
 
 const AI_STATUS_CLASSES = {
     SUCCESS: "bg-[#006948] text-white",
     LOW_CONFIDENCE: "bg-amber-50 text-amber-700",
     UNRECOGNIZED: "bg-red-50 text-red-600",
+    CORRECTED: "bg-blue-50 text-blue-700",
 };
 
+function getScanDisplayStatus(item) {
+    if (item?.aiStatus === "CORRECTED") {
+        return {
+            label: "Không nhận diện QR - đã nhập mã",
+            className: AI_STATUS_CLASSES.CORRECTED,
+        };
+    }
+
+    if (item?.needKeypadInput) {
+        return {
+            label: "Cần nhập mã keypad",
+            className: "bg-amber-50 text-amber-700",
+        };
+    }
+
+    return {
+        label: AI_STATUS_LABELS[item?.aiStatus] ?? item?.aiStatus ?? "Chưa có",
+        className: AI_STATUS_CLASSES[item?.aiStatus] ?? "bg-slate-100 text-slate-600",
+    };
+}
 function formatDateTime(value) {
     if (!value) return "Chưa có";
 
@@ -34,15 +56,17 @@ function formatWeight(value) {
     return `${numberValue.toLocaleString("vi-VN")} g`;
 }
 
-function AiStatusBadge({ status }) {
+function AiStatusBadge({ item }) {
+    const status = getScanDisplayStatus(item);
+
     return (
         <span
             className={[
                 "inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium",
-                AI_STATUS_CLASSES[status] ?? "bg-slate-100 text-slate-600",
+                status.className,
             ].join(" ")}
         >
-            {AI_STATUS_LABELS[status] ?? status ?? "Chưa có"}
+            {status.label}
         </span>
     );
 }
@@ -130,7 +154,7 @@ export function OwnerIotScanTable({
                                     </td>
 
                                     <td className="px-5 py-4">
-                                        <AiStatusBadge status={item.aiStatus} />
+                                        <AiStatusBadge item={item} />
                                     </td>
 
                                     <td className="px-5 py-4">

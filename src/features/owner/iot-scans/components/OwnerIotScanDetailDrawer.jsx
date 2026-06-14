@@ -12,6 +12,70 @@ function formatDateTime(value) {
     }).format(new Date(value));
 }
 
+function formatConfidence(value) {
+    if (value === null || value === undefined || value === "") {
+        return "Chưa có";
+    }
+
+    const numberValue = Number(value);
+
+    if (Number.isNaN(numberValue)) {
+        return "Chưa có";
+    }
+
+    if (numberValue <= 1) {
+        return `${Math.round(numberValue * 100)}%`;
+    }
+
+    return `${Math.round(numberValue)}%`;
+}
+
+function getScanStatusLabel(scan) {
+    if (!scan) return "Chưa có";
+
+    if (scan.aiStatus === "CORRECTED") {
+        return "Không nhận diện QR - đã nhập mã thủ công";
+    }
+
+    if (scan.needKeypadInput) {
+        return "Không nhận diện QR - cần nhập mã keypad";
+    }
+
+    if (scan.aiStatus === "SUCCESS") {
+        return "Nhận diện QR thành công";
+    }
+
+    if (scan.aiStatus === "UNRECOGNIZED") {
+        return "Không nhận diện được QR";
+    }
+
+    if (scan.aiStatus === "LOW_CONFIDENCE") {
+        return "Độ tin cậy thấp";
+    }
+
+    return scan.aiStatus || "Chưa có";
+}
+
+function getNextActionLabel(value) {
+    const labels = {
+        ENTER_KEYPAD_CODE: "Thiết bị cần nhập mã keypad",
+        WAIT_OWNER_CONFIRM: "Chờ owner nhập giá tiền lô hàng",
+        DONE: "Đã hoàn tất",
+    };
+
+    return labels[value] || value || "Chưa có";
+}
+
+function getKeypadLabel(scan) {
+    if (!scan) return "Chưa có";
+
+    if (scan.aiStatus === "CORRECTED") {
+        return "Đã nhập mã keypad";
+    }
+
+    return scan.needKeypadInput ? "Có" : "Không";
+}
+
 function formatWeight(value) {
     const numberValue = Number(value || 0);
 
@@ -116,27 +180,23 @@ export function OwnerIotScanDetailDrawer({
                             />
 
                             <DetailItem
-                                label="AI Status"
-                                value={scan?.aiStatus}
+                                label="Trạng thái nhận diện"
+                                value={getScanStatusLabel(scan)}
                             />
 
                             <DetailItem
-                                label="Confidence"
-                                value={
-                                    scan?.aiConfidence != null
-                                        ? `${scan.aiConfidence}%`
-                                        : "Chưa có"
-                                }
+                                label="Độ tin cậy"
+                                value={formatConfidence(scan?.aiConfidence)}
                             />
 
                             <DetailItem
-                                label="Cần keypad"
-                                value={scan?.needKeypadInput ? "Có" : "Không"}
+                                label="Keypad"
+                                value={getKeypadLabel(scan)}
                             />
 
                             <DetailItem
-                                label="Next action"
-                                value={scan?.nextAction}
+                                label="Hành động tiếp theo"
+                                value={getNextActionLabel(scan?.nextAction)}
                             />
 
                             <DetailItem label="Audio message">
