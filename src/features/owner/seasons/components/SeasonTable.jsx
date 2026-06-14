@@ -108,11 +108,11 @@ export function SeasonTable({
                                             <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
                                                 <div
                                                     className="h-full rounded-full bg-[#006948]"
-                                                    style={{ width: `${item.progress ?? 0}%` }}
+                                                    style={{ width: `${item.progressPercent ?? 0}%` }}
                                                 />
                                             </div>
                                             <span className="text-xs font-semibold text-slate-700 min-w-[32px]">
-                                                {item.progress ?? 0}%
+                                                {item.progressPercent ?? 0}%
                                             </span>
                                         </div>
                                     </td>
