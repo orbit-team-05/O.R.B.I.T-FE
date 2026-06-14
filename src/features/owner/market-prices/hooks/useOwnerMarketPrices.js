@@ -202,29 +202,6 @@ export function useOwnerMarketPrices(farmId, initialPage = 0, initialSize = 8) {
         [summaryPricePage, summaryPrices, watchlistSummary],
     );
 
-    const notableChanges = useMemo(
-        () =>
-            [...summaryPrices]
-                .filter((item) => item.priceChangeValue !== null)
-                .sort(
-                    (a, b) =>
-                        Math.abs(b.priceChangeValue) -
-                        Math.abs(a.priceChangeValue),
-                )
-                .slice(0, 3),
-        [summaryPrices],
-    );
-
-    const dataSources = useMemo(
-        () =>
-            uniqueBy(summaryPrices, (item) => item.sourceLabel).map((item) => ({
-                label: item.sourceLabel,
-                updatedLabel: item.updatedLabel,
-                sourceUrl: item.sourceUrl,
-            })),
-        [summaryPrices],
-    );
-
     function updateFilter(name, value) {
         setFilters((prev) => ({
             ...prev,
@@ -247,8 +224,6 @@ export function useOwnerMarketPrices(farmId, initialPage = 0, initialSize = 8) {
         prices: filteredPrices,
         rawPrices: prices,
         summary,
-        notableChanges,
-        dataSources,
         speciesOptions,
         sourceOptions,
         filters,
