@@ -1,9 +1,21 @@
 import {
   AlertTriangle,
+  ChartNoAxesCombined,
   Cpu,
   Package,
   Warehouse,
 } from "lucide-react";
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
+
+import { useAuth } from "../../../features/auth/context/AuthContext";
+import { useOwnerDashboardMarketPrices } from "../../../features/owner/market-prices/hooks/useOwnerMarketPrices";
+import {
+  formatPrice,
+  formatPriceChange,
+} from "../../../features/owner/market-prices/utils/marketPriceUtils";
+
+const FALLBACK_FARM_ID = 1;
 
 const stats = [
   {
@@ -95,27 +107,6 @@ const inventoryAlerts = [
   },
 ];
 
-const watchlistPrices = [
-  {
-    item: "Tôm thẻ chân trắng",
-    size: "20 con/kg",
-    price: "150.000",
-    change: "-4.2%",
-  },
-  {
-    item: "Tôm thẻ chân trắng",
-    size: "30 con/kg",
-    price: "120.000",
-    change: "+23.4%",
-  },
-  {
-    item: "Cá tra",
-    size: "Nguyên liệu",
-    price: "28.000",
-    change: "+1.2%",
-  },
-];
-
 function StatusBadge({ status }) {
   const styles = {
     success: "bg-green-100 text-green-700",
@@ -136,7 +127,100 @@ function StatusBadge({ status }) {
   );
 }
 
+function DashboardMarketPriceTable({ prices, loading, error }) {
+  if (loading) {
+    return (
+      <div className="flex min-h-[160px] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-[#006948]" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+        {error}
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[560px]">
+        <thead>
+          <tr className="text-left text-xs uppercase text-slate-500">
+            <th className="pb-3">Mặt hàng</th>
+            <th className="pb-3">Size</th>
+            <th className="pb-3">Giá</th>
+            <th className="pb-3">Thay đổi</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {prices.map((item) => {
+            const positive = Number(item.priceChangeValue) >= 0;
+
+            return (
+              <tr
+                key={item.marketCode}
+                className="border-t border-slate-100"
+              >
+                <td className="max-w-[220px] py-3 pr-3 text-sm font-medium text-slate-800">
+                  <div className="line-clamp-2">
+                    {item.speciesName || item.marketName || "-"}
+                  </div>
+                </td>
+
+                <td className="py-3 pr-3 text-sm text-slate-600">
+                  {item.sizeCategory || "DEFAULT"}
+                </td>
+
+                <td className="py-3 pr-3 text-sm font-semibold text-slate-900">
+                  {formatPrice(item.price)}
+                  {item.priceUnit?.startsWith("đ") ? "đ" : ""}
+                </td>
+
+                <td
+                  className={`py-3 text-sm font-semibold ${
+                    positive ? "text-[#006948]" : "text-red-600"
+                  }`}
+                >
+                  {formatPriceChange(item.priceChangeValue)}
+                </td>
+              </tr>
+            );
+          })}
+
+          {prices.length === 0 && (
+            <tr>
+              <td
+                colSpan={4}
+                className="py-8 text-center text-sm text-slate-500"
+              >
+                Chưa có mặt hàng nào trong watchlist.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function OwnerDashboardPage() {
+  const { user } = useAuth();
+  const farmId = user?.farmId ?? FALLBACK_FARM_ID;
+  const {
+    prices: watchlistPrices,
+    loading: marketPriceLoading,
+    error: marketPriceError,
+    reload: reloadMarketPrices,
+  } = useOwnerDashboardMarketPrices(farmId, 3);
+
+  useEffect(() => {
+    reloadMarketPrices();
+  }, [reloadMarketPrices]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -294,47 +378,25 @@ export default function OwnerDashboardPage() {
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold">
-            Giá thị trường theo Watchlist
-          </h2>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="inline-flex items-center gap-2 text-lg font-semibold">
+              <ChartNoAxesCombined size={19} className="text-[#006948]" />
+              Giá thị trường theo Watchlist
+            </h2>
 
-          <table className="w-full">
-            <thead>
-              <tr className="text-left text-xs uppercase text-slate-500">
-                <th>Mặt hàng</th>
-                <th>Size</th>
-                <th>Giá</th>
-                <th>Thay đổi</th>
-              </tr>
-            </thead>
+            <Link
+              to="/owner/market-prices"
+              className="text-sm font-semibold text-[#006948] hover:underline"
+            >
+              Xem tất cả
+            </Link>
+          </div>
 
-            <tbody>
-              {watchlistPrices.map((item) => (
-                <tr
-                  key={`${item.item}-${item.size}`}
-                  className="border-t border-slate-100"
-                >
-                  <td className="py-3 text-sm">{item.item}</td>
-
-                  <td className="py-3 text-sm">{item.size}</td>
-
-                  <td className="py-3 font-medium">
-                    {item.price}
-                  </td>
-
-                  <td
-                    className={`py-3 font-medium ${
-                      item.change.includes("+")
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {item.change}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DashboardMarketPriceTable
+            prices={watchlistPrices}
+            loading={marketPriceLoading}
+            error={marketPriceError}
+          />
         </div>
       </div>
     </div>

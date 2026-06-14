@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import {
     ChartNoAxesCombined,
     Cpu,
+    Eye,
     FileText,
     Home,
     LayoutDashboard,
@@ -65,9 +66,14 @@ const OWNER_NAV_ITEMS = [
         icon: BrainCircuit,
     },
     {
-        label: "Dữ liệu giá",
+        label: "Giá thị trường",
         path: "/owner/market-prices",
         icon: ChartNoAxesCombined,
+    },
+    {
+        label: "Watchlist Farm",
+        path: "/owner/market-watchlist",
+        icon: Eye,
     },
     {
         label: "Cài đặt",

@@ -60,6 +60,16 @@ export function OwnerRoutes() {
                     path="market-prices"
                     element={<OwnerMarketPricesPage />}
                 />
+
+                <Route
+                    path="market-watchlist"
+                    element={
+                        <OwnerComingSoonPage
+                            title="Watchlist Farm"
+                            description="Màn hình quản lý danh sách species farm theo dõi giá thị trường sẽ được triển khai ở bước tiếp theo."
+                        />
+                    }
+                />
                 <Route
                     path="transactions"
                     element={
