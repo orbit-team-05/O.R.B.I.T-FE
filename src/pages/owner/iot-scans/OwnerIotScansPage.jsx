@@ -4,14 +4,19 @@ import { OwnerIotScanDetailDrawer } from "../../../features/owner/iot-scans/comp
 import { OwnerIotScanStats } from "../../../features/owner/iot-scans/components/OwnerIotScanStats";
 import { OwnerIotScanTable } from "../../../features/owner/iot-scans/components/OwnerIotScanTable";
 import { useOwnerIotScans } from "../../../features/owner/iot-scans/hooks/useOwnerIotScans";
+import { useAuth } from "../../../features/auth/context/AuthContext";
 
 const CURRENT_FARM_ID = 1;
 
 function OwnerIotScansHeader() {
     return (
-        <header className="flex items-start justify-between gap-4">
+        <header className="flex flex-col gap-3 border-b border-slate-200 bg-white px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-                <h1 className="text-2xl font-semibold text-slate-900">
+                <p className="text-sm font-medium text-[#006948]">
+                    Owner / Lịch sử cân
+                </p>
+
+                <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
                     Lịch sử Scan IoT
                 </h1>
 
@@ -43,6 +48,9 @@ function OwnerIotScansSkeleton() {
 }
 
 export function OwnerIotScansPage() {
+    const { user } = useAuth();
+    const farmId = user?.farmId;
+
     const {
         scans,
         selectedScan,
@@ -60,13 +68,21 @@ export function OwnerIotScansPage() {
         reload,
         setPage,
         loadScanDetail,
-    } = useOwnerIotScans(CURRENT_FARM_ID);
+    } = useOwnerIotScans(farmId);
 
     const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
 
     useEffect(() => {
         reload();
     }, [reload]);
+
+    if (!farmId) {
+        return (
+            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+                Tài khoản OWNER chưa có farmId. Vui lòng kiểm tra dữ liệu user/farm.
+            </div>
+        );
+    }
 
     async function openDetailDrawer(scan) {
         clearActionError();

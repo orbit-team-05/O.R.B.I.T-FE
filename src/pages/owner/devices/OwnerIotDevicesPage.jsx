@@ -7,14 +7,19 @@ import { OwnerIotDeviceDetailDrawer } from "../../../features/owner/iot-devices/
 import { OwnerIotDeviceStats } from "../../../features/owner/iot-devices/components/OwnerIotDeviceStats";
 import { OwnerIotDeviceTable } from "../../../features/owner/iot-devices/components/OwnerIotDeviceTable";
 import { useOwnerIotDevices } from "../../../features/owner/iot-devices/hooks/useOwnerIotDevices";
+import { useAuth } from "../../../features/auth/context/AuthContext";
 
 const CURRENT_FARM_ID = 1;
 
 function OwnerIotDevicesHeader() {
     return (
-        <header className="flex items-start justify-between gap-4">
+        <header className="flex flex-col gap-3 border-b border-slate-200 bg-white px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-                <h1 className="text-2xl font-semibold text-slate-900">
+                <p className="text-sm font-medium text-[#006948]">
+                    Owner / Thiết bị IoT
+                </p>
+
+                <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
                     Thiết bị IoT
                 </h1>
 
@@ -47,6 +52,8 @@ function OwnerIotDevicesSkeleton() {
 
 export function OwnerIotDevicesPage() {
     const toast = useToast();
+    const { user } = useAuth();
+    const farmId = user?.farmId;
 
     const {
         devices,
@@ -70,7 +77,7 @@ export function OwnerIotDevicesPage() {
 
         activateDevice,
         loadDeviceDetail,
-    } = useOwnerIotDevices(CURRENT_FARM_ID);
+    } = useOwnerIotDevices(farmId);
 
     const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
     const [apiKeyDevice, setApiKeyDevice] = useState(null);
@@ -78,6 +85,15 @@ export function OwnerIotDevicesPage() {
     useEffect(() => {
         reload();
     }, [reload]);
+
+    if (!farmId) {
+        return (
+            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+                Tài khoản OWNER chưa có farmId. Vui lòng kiểm tra dữ liệu user/farm.
+            </div>
+        );
+    }
+
 
     async function handleActivateDevice(payload) {
         const activatedDevice = await activateDevice(payload);

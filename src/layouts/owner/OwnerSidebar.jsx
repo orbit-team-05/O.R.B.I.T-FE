@@ -50,11 +50,6 @@ const OWNER_NAV_ITEMS = [
         icon: Cpu,
     },
     {
-        label: "Nhập kho IoT",
-        path: "/owner/iot-imports",
-        icon: PackagePlus,
-    },
-    {
         label: "Lịch sử Scan",
         path: "/owner/iot-scans",
         icon: QrCode,

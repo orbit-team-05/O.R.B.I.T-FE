@@ -3,6 +3,7 @@ import { OwnerAiReviewDrawer } from "../../../features/owner/ai-reviews/componen
 import { OwnerAiReviewStats } from "../../../features/owner/ai-reviews/components/OwnerAiReviewStats";
 import { OwnerAiReviewTable } from "../../../features/owner/ai-reviews/components/OwnerAiReviewTable";
 import { useOwnerAiReviews } from "../../../features/owner/ai-reviews/hooks/useOwnerAiReviews";
+import { useAuth } from "../../../features/auth/context/AuthContext";
 
 const CURRENT_FARM_ID = 1;
 
@@ -52,6 +53,9 @@ function PageSkeleton() {
 }
 
 export function OwnerAiReviewsPage() {
+    const { user } = useAuth();
+    const farmId = user?.farmId;
+
     const {
         reviews,
         products,
@@ -69,7 +73,7 @@ export function OwnerAiReviewsPage() {
         setPage,
         reviewTransaction,
         clearActionMessages,
-    } = useOwnerAiReviews(CURRENT_FARM_ID);
+    } = useOwnerAiReviews(farmId);
 
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedReview, setSelectedReview] = useState(null);
@@ -81,6 +85,15 @@ export function OwnerAiReviewsPage() {
     useEffect(() => {
         loadProducts();
     }, [loadProducts]);
+
+    if (!farmId) {
+        return (
+            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+                Tài khoản OWNER chưa có farmId. Vui lòng kiểm tra dữ liệu user/farm.
+            </div>
+        );
+    }
+
 
     function openReviewDrawer(review) {
         clearActionMessages();

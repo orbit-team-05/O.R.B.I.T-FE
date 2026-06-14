@@ -1,21 +1,45 @@
 import { httpClient } from "../../../../services/httpClient.js";
 
-function getOwnerIotScanEndpoint(farmId) {
-    return `/farms/${farmId}/iot-scans`;
+function getOwnerIotImportEndpoint(farmId) {
+    return `/farms/${farmId}/iot-imports`;
+}
+
+function normalizeImportScan(item) {
+    return {
+        ...item,
+
+        // Giữ tên field cũ để table/detail cũ không vỡ
+        aiPredictedName: item.productName,
+        aiConfidence: item.productId ? 1 : 0,
+
+        needKeypadInput: item.needKeypadInput ?? !item.productId,
+        nextAction:
+            item.nextAction ??
+            (item.productId ? "WAIT_OWNER_CONFIRM" : "ENTER_KEYPAD_CODE"),
+
+        hasAudio: item.hasAudio ?? Boolean(item.audioUrl),
+    };
+}
+
+function normalizePage(pageData) {
+    return {
+        ...pageData,
+        content: (pageData?.content ?? []).map(normalizeImportScan),
+    };
 }
 
 export async function getOwnerIotScans(farmId, page = 0, size = 10) {
-    const response = await httpClient.get(getOwnerIotScanEndpoint(farmId), {
+    const response = await httpClient.get(getOwnerIotImportEndpoint(farmId), {
         params: { page, size },
     });
 
-    return response.data.data;
+    return normalizePage(response.data.data);
 }
 
 export async function getOwnerIotScanDetail(farmId, transactionId) {
     const response = await httpClient.get(
-        `${getOwnerIotScanEndpoint(farmId)}/${transactionId}`,
+        `${getOwnerIotImportEndpoint(farmId)}/${transactionId}`,
     );
 
-    return response.data.data;
+    return normalizeImportScan(response.data.data);
 }

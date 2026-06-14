@@ -4,8 +4,8 @@ import { OwnerProductCreateDrawer } from "../../../features/owner/products/compo
 import { OwnerProductDetailDrawer } from "../../../features/owner/products/components/OwnerProductDetailDrawer";
 import { OwnerProductTable } from "../../../features/owner/products/components/OwnerProductTable";
 import { useOwnerProducts } from "../../../features/owner/products/hooks/useOwnerProducts";
+import { useAuth } from "../../../features/auth/context/AuthContext";
 
-const CURRENT_FARM_ID = 1;
 
 function PageHeader({ onCreate, onRefresh }) {
     return (
@@ -92,6 +92,9 @@ function PageSkeleton() {
 }
 
 export function OwnerProductsPage() {
+    const { user } = useAuth();
+    const farmId = user?.farmId;
+
     const {
         products,
         createdProduct,
@@ -108,7 +111,7 @@ export function OwnerProductsPage() {
         setPage,
         createProduct,
         clearActionMessages,
-    } = useOwnerProducts(CURRENT_FARM_ID);
+    } = useOwnerProducts(farmId);
 
     const [createOpen, setCreateOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -116,6 +119,14 @@ export function OwnerProductsPage() {
     useEffect(() => {
         reload();
     }, [reload]);
+
+    if (!farmId) {
+        return (
+            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+                Tài khoản OWNER chưa có farmId. Vui lòng kiểm tra dữ liệu user/farm.
+            </div>
+        );
+    }
 
     function openProductDetail(product) {
         setSelectedProduct(product);

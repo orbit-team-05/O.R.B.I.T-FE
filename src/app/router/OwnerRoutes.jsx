@@ -41,20 +41,12 @@ export function OwnerRoutes() {
                     }
                 />
 
-                <Route
-                    path="inventory"
-                    element={
-                        <OwnerComingSoonPage
-                            title="Kho vật tư"
-                            description="Màn hình quản lý tồn kho, nhập kho, xuất kho và cảnh báo vật tư sẽ được triển khai sau."
-                        />
-                    }
-                />
+                <Route path="inventory" element={<OwnerIotImportsPage />} />
                 <Route path="products" element={<OwnerProductsPage />} />
                 <Route path="devices" element={<OwnerIotDevicesPage />} />
                 <Route path="iot-scans" element={<OwnerIotScansPage />} />
                 <Route path="ai-reviews" element={<OwnerAiReviewsPage />} />
-                <Route path="iot-imports" element={<OwnerIotImportsPage />} />
+                <Route path="iot-imports" element={<Navigate to="/owner/inventory" replace />} />
 
                 <Route
                     path="market-prices"
