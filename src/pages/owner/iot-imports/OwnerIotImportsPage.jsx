@@ -97,6 +97,11 @@ export function OwnerIotImportsPage() {
     }
 
     async function openStockDetail(stock) {
+        setSelectedStockDetail({
+            stock,
+            batches: [],
+        });
+
         await loadStockDetail(stock.stockId);
     }
 
