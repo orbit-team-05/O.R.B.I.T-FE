@@ -9,6 +9,7 @@ import { OwnerProductsPage } from "../../pages/owner/products/OwnerProductsPage"
 import { OwnerIotImportsPage } from "../../pages/owner/iot-imports/OwnerIotImportsPage";
 import { OwnerMarketPricesPage } from "../../pages/owner/market-prices/OwnerMarketPricesPage";
 import OwnerDashboardPage from "../../pages/owner/dashboard/OwnerDashboardPage";
+import { OwnerSeasonsPage } from "../../pages/owner/seasons/OwnerSeasonsPage";
 
 export function OwnerRoutes() {
     return (
@@ -33,12 +34,7 @@ export function OwnerRoutes() {
 
                 <Route
                     path="seasons"
-                    element={
-                        <OwnerComingSoonPage
-                            title="Quản lý Mùa vụ"
-                            description="Màn hình theo dõi mùa vụ, tiến độ sinh trưởng, chi phí và sản lượng dự kiến sẽ được triển khai sau."
-                        />
-                    }
+                    element={<OwnerSeasonsPage />}
                 />
 
                 <Route path="inventory" element={<OwnerIotImportsPage />} />
