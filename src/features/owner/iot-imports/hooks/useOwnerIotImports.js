@@ -44,7 +44,7 @@ export function useOwnerIotImports(farmId, initialPage = 0, initialSize = 10) {
         void loadPendingImports();
     }, [loadPendingImports]);
 
-    async function confirmImport(transactionId, totalImportCost) {
+    async function confirmImport(transactionId, totalImportCost, packageCount = 1) {
         try {
             setSubmittingId(transactionId);
             setActionError("");
@@ -54,6 +54,7 @@ export function useOwnerIotImports(farmId, initialPage = 0, initialSize = 10) {
                 farmId,
                 transactionId,
                 totalImportCost,
+                packageCount,
             );
 
             setScans((prev) =>

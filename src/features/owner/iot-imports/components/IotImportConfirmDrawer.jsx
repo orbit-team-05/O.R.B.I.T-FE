@@ -5,10 +5,10 @@ function formatWeight(value) {
     const numberValue = Number(value || 0);
 
     if (numberValue >= 1000) {
-        return `${(numberValue / 1000).toLocaleString("vi-VN")} kg/ml`;
+        return `${(numberValue / 1000).toLocaleString("vi-VN")} kg`;
     }
 
-    return `${numberValue.toLocaleString("vi-VN")} g/ml`;
+    return `${numberValue.toLocaleString("vi-VN")} g`;
 }
 
 function formatMoney(value) {
@@ -79,9 +79,11 @@ export function IotImportConfirmDrawer({
 
         if (!canConfirm) return;
 
-        // BE hiện tại đang nhận totalImportCost.
-        // packageCount hiện dùng để tự tính tổng tiền trên FE.
-        onConfirm?.(scan.transactionId, totalImportCost);
+        onConfirm?.(
+            scan.transactionId,
+            totalImportCost,
+            Number(packageCount || 1),
+        );
     }
 
     return (
@@ -201,11 +203,6 @@ export function IotImportConfirmDrawer({
                                     </p>
                                 </div>
                             </div>
-
-                            <p className="mt-3 text-xs text-amber-600">
-                                Lưu ý: BE hiện tại mới nhận totalImportCost. Nếu muốn tồn kho cũng nhân theo số lượng,
-                                cần sửa confirm API để nhận thêm packageCount.
-                            </p>
                         </section>
 
                         {actionError && (

@@ -86,8 +86,8 @@ export function OwnerIotImportsPage() {
         setSelectedScan(null);
     }
 
-    async function handleConfirmImport(transactionId, totalImportCost) {
-        const result = await confirmImport(transactionId, totalImportCost);
+    async function handleConfirmImport(transactionId, totalImportCost, packageCount) {
+        const result = await confirmImport(transactionId, totalImportCost, packageCount);
 
         if (result) {
             closeConfirmDrawer();
