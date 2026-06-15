@@ -4,6 +4,7 @@ import {
     activateOwnerIotDevice,
     getOwnerIotDeviceDetail,
     getOwnerIotDevices,
+    updateOwnerIotDeviceWorkMode,
 } from "../services/ownerIotDeviceApi";
 
 function getErrorMessage(error, fallbackMessage) {
@@ -139,6 +140,38 @@ export function useOwnerIotDevices(farmId, initialPage = 0, initialSize = 10) {
         clearActionError: () => setActionError(""),
 
         activateDevice: handleActivateDevice,
+        updateWorkMode: handleUpdateWorkMode,
         loadDeviceDetail,
     };
+
+    async function handleUpdateWorkMode(deviceId, mode, seasonId = null) {
+        if (!farmId || !deviceId) return null;
+
+        try {
+            setActionLoading(true);
+            setActionError("");
+
+            const payload = {
+                mode,
+                seasonId,
+            };
+
+            const data = await updateOwnerIotDeviceWorkMode(
+                farmId,
+                deviceId,
+                payload,
+            );
+
+            await loadDevices();
+
+            return data;
+        } catch (err) {
+            setActionError(
+                getErrorMessage(err, "Không thể cập nhật chế độ thiết bị."),
+            );
+            return null;
+        } finally {
+            setActionLoading(false);
+        }
+    }
 }
