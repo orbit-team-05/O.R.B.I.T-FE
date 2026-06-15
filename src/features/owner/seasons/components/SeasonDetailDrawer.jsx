@@ -46,7 +46,6 @@ export function SeasonDetailDrawer({
         seasonName: "",
         startDate: "",
         plannedEndDate: "",
-        seedCost: "",
         expectedYieldKg: "",
     });
 
@@ -64,7 +63,6 @@ export function SeasonDetailDrawer({
                 seasonName: season.seasonName || "",
                 startDate: season.startDate || "",
                 plannedEndDate: season.plannedEndDate || "",
-                seedCost: season.seedCost || "",
                 expectedYieldKg: season.expectedYieldKg || "",
             });
             setIsEditing(false);
@@ -82,7 +80,7 @@ export function SeasonDetailDrawer({
     const isFieldDisabled = (fieldName) => {
         if (!isEditing) return true;
         if (isCompleted) return true;
-        if (fieldName === "startDate" || fieldName === "seedCost") {
+        if (fieldName === "startDate") {
             return !isPlanning; // locked for ACTIVE and HARVESTING
         }
         return false;
@@ -93,7 +91,6 @@ export function SeasonDetailDrawer({
             seasonName: form.seasonName.trim(),
             startDate: isFieldDisabled("startDate") ? undefined : form.startDate,
             plannedEndDate: form.plannedEndDate,
-            seedCost: isFieldDisabled("seedCost") ? undefined : Number(form.seedCost),
             expectedYieldKg: Number(form.expectedYieldKg),
         }).then((res) => {
             if (res) {
@@ -204,7 +201,6 @@ export function SeasonDetailDrawer({
                                             seasonName: season.seasonName || "",
                                             startDate: season.startDate || "",
                                             plannedEndDate: season.plannedEndDate || "",
-                                            seedCost: season.seedCost || "",
                                             expectedYieldKg: season.expectedYieldKg || "",
                                         });
                                     }}
@@ -298,27 +294,15 @@ export function SeasonDetailDrawer({
                             </h3>
 
                             <div className="space-y-3">
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="text-xs font-semibold text-slate-500">Chi phí giống (VNĐ)</label>
-                                        <input
-                                            type="number"
-                                            value={form.seedCost}
-                                            onChange={(e) => setForm({ ...form, seedCost: e.target.value })}
-                                            disabled={isFieldDisabled("seedCost")}
-                                            className={inputClass(isFieldDisabled("seedCost"))}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-semibold text-slate-500">Sản lượng dự kiến (kg)</label>
-                                        <input
-                                            type="number"
-                                            value={form.expectedYieldKg}
-                                            onChange={(e) => setForm({ ...form, expectedYieldKg: e.target.value })}
-                                            disabled={isFieldDisabled("expectedYieldKg")}
-                                            className={inputClass(isFieldDisabled("expectedYieldKg"))}
-                                        />
-                                    </div>
+                                <div>
+                                    <label className="text-xs font-semibold text-slate-500">Sản lượng dự kiến (kg)</label>
+                                    <input
+                                        type="number"
+                                        value={form.expectedYieldKg}
+                                        onChange={(e) => setForm({ ...form, expectedYieldKg: e.target.value })}
+                                        disabled={isFieldDisabled("expectedYieldKg")}
+                                        className={inputClass(isFieldDisabled("expectedYieldKg"))}
+                                    />
                                 </div>
 
                                 {!isEditing && (

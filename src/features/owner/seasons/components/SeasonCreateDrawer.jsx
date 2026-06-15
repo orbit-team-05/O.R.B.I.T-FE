@@ -6,7 +6,6 @@ const INITIAL_FORM = {
     speciesId: "",
     startDate: "",
     endDate: "",
-    seedCost: "",
     expectedYieldKg: "",
 };
 
@@ -81,9 +80,6 @@ export function SeasonCreateDrawer({
             }
         }
 
-        if (!form.seedCost || Number(form.seedCost) <= 0) {
-            tempErrors.seedCost = "Chi phí giống phải lớn hơn 0";
-        }
         if (!form.expectedYieldKg || Number(form.expectedYieldKg) <= 0) {
             tempErrors.expectedYieldKg = "Sản lượng dự kiến phải lớn hơn 0";
         }
@@ -101,7 +97,6 @@ export function SeasonCreateDrawer({
             speciesId: Number(form.speciesId),
             startDate: form.startDate,
             endDate: form.endDate,
-            seedCost: Number(form.seedCost),
             expectedYieldKg: Number(form.expectedYieldKg),
         });
     }
@@ -181,38 +176,21 @@ export function SeasonCreateDrawer({
                             </Field>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <Field
-                                label="Chi phí giống ban đầu (VNĐ)"
-                                error={errors.seedCost}
-                                helper="Chi phí mua con giống ban đầu"
-                            >
-                                <input
-                                    type="number"
-                                    min="0"
-                                    value={form.seedCost}
-                                    onChange={(e) => updateField("seedCost", e.target.value)}
-                                    className={inputClass(!!errors.seedCost)}
-                                    placeholder="Ví dụ: 15000000"
-                                />
-                            </Field>
-
-                            <Field
-                                label="Sản lượng dự kiến (kg)"
-                                error={errors.expectedYieldKg}
-                                helper="Sản lượng kỳ vọng thu hoạch"
-                            >
-                                <input
-                                    type="number"
-                                    min="0.1"
-                                    step="any"
-                                    value={form.expectedYieldKg}
-                                    onChange={(e) => updateField("expectedYieldKg", e.target.value)}
-                                    className={inputClass(!!errors.expectedYieldKg)}
-                                    placeholder="Ví dụ: 5000"
-                                />
-                            </Field>
-                        </div>
+                        <Field
+                            label="Sản lượng dự kiến (kg)"
+                            error={errors.expectedYieldKg}
+                            helper="Sản lượng kỳ vọng thu hoạch"
+                        >
+                            <input
+                                type="number"
+                                min="0.1"
+                                step="any"
+                                value={form.expectedYieldKg}
+                                onChange={(e) => updateField("expectedYieldKg", e.target.value)}
+                                className={inputClass(!!errors.expectedYieldKg)}
+                                placeholder="Ví dụ: 5000"
+                            />
+                        </Field>
 
                         {actionError && (
                             <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
