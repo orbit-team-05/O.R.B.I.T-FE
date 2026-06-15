@@ -100,6 +100,14 @@ function DetailItem({ label, value, children }) {
     );
 }
 
+function getBrowserAudioUrl(audioUrl) {
+    if (!audioUrl) return "";
+
+    return audioUrl
+        .replace("http://98.86.116.216:8080/api", "/api")
+        .replace("https://98.86.116.216:8080/api", "/api");
+}
+
 export function OwnerIotScanDetailDrawer({
                                              open,
                                              scan,
@@ -214,7 +222,7 @@ export function OwnerIotScanDetailDrawer({
                             {scan?.audioUrl ? (
                                 <audio
                                     controls
-                                    src={scan.audioUrl}
+                                    src={getBrowserAudioUrl(scan.audioUrl)}
                                     className="mt-3 w-full"
                                 />
                             ) : (
