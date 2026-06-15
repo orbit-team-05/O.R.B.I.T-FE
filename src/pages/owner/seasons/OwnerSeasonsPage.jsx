@@ -95,11 +95,13 @@ export function OwnerSeasonsPage() {
             toast.success(actionSuccess);
             clearActionMessages();
         }
-        if (actionError) {
+        // Only toast errors when the detail drawer is NOT open.
+        // When the drawer is open, errors display inline inside the drawer.
+        if (actionError && !selectedDetail) {
             toast.error(actionError);
             clearActionMessages();
         }
-    }, [actionSuccess, actionError, toast, clearActionMessages]);
+    }, [actionSuccess, actionError, selectedDetail, toast, clearActionMessages]);
 
     function handleOpenDetail(item) {
         loadDetail(item.id);

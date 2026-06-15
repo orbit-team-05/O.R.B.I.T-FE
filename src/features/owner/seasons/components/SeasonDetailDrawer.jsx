@@ -86,7 +86,25 @@ export function SeasonDetailDrawer({
         return false;
     };
 
+    const [fieldErrors, setFieldErrors] = useState({});
+
+    function validate() {
+        const errors = {};
+        if (!form.seasonName.trim()) {
+            errors.seasonName = "Tên mùa vụ không được để trống.";
+        }
+        if (form.plannedEndDate && form.startDate && form.plannedEndDate < form.startDate) {
+            errors.plannedEndDate = "Ngày kết thúc dự kiến phải sau ngày bắt đầu.";
+        }
+        if (form.expectedYieldKg !== "" && Number(form.expectedYieldKg) <= 0) {
+            errors.expectedYieldKg = "Sản lượng dự kiến phải lớn hơn 0.";
+        }
+        setFieldErrors(errors);
+        return Object.keys(errors).length === 0;
+    }
+
     function handleSave() {
+        if (!validate()) return;
         onUpdateSeason?.(season.id, {
             seasonName: form.seasonName.trim(),
             startDate: isFieldDisabled("startDate") ? undefined : form.startDate,
@@ -156,6 +174,7 @@ export function SeasonDetailDrawer({
                                         if (isEditing) {
                                             handleSave();
                                         } else {
+                                            setFieldErrors({});
                                             setIsEditing(true);
                                         }
                                     }}
@@ -197,6 +216,7 @@ export function SeasonDetailDrawer({
                                     type="button"
                                     onClick={() => {
                                         setIsEditing(false);
+                                        setFieldErrors({});
                                         setForm({
                                             seasonName: season.seasonName || "",
                                             startDate: season.startDate || "",
@@ -259,8 +279,11 @@ export function SeasonDetailDrawer({
                                         value={form.seasonName}
                                         onChange={(e) => setForm({ ...form, seasonName: e.target.value })}
                                         disabled={isFieldDisabled("seasonName")}
-                                        className={inputClass(isFieldDisabled("seasonName"))}
+                                        className={`${inputClass(isFieldDisabled("seasonName"))} ${fieldErrors.seasonName ? "!border-red-400 !ring-red-100" : ""}`}
                                     />
+                                    {fieldErrors.seasonName && (
+                                        <p className="mt-1 text-xs text-red-500">{fieldErrors.seasonName}</p>
+                                    )}
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
@@ -281,8 +304,11 @@ export function SeasonDetailDrawer({
                                             value={form.plannedEndDate}
                                             onChange={(e) => setForm({ ...form, plannedEndDate: e.target.value })}
                                             disabled={isFieldDisabled("plannedEndDate")}
-                                            className={inputClass(isFieldDisabled("plannedEndDate"))}
+                                            className={`${inputClass(isFieldDisabled("plannedEndDate"))} ${fieldErrors.plannedEndDate ? "!border-red-400 !ring-red-100" : ""}`}
                                         />
+                                        {fieldErrors.plannedEndDate && (
+                                            <p className="mt-1 text-xs text-red-500">{fieldErrors.plannedEndDate}</p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -301,8 +327,11 @@ export function SeasonDetailDrawer({
                                         value={form.expectedYieldKg}
                                         onChange={(e) => setForm({ ...form, expectedYieldKg: e.target.value })}
                                         disabled={isFieldDisabled("expectedYieldKg")}
-                                        className={inputClass(isFieldDisabled("expectedYieldKg"))}
+                                        className={`${inputClass(isFieldDisabled("expectedYieldKg"))} ${fieldErrors.expectedYieldKg ? "!border-red-400 !ring-red-100" : ""}`}
                                     />
+                                    {fieldErrors.expectedYieldKg && (
+                                        <p className="mt-1 text-xs text-red-500">{fieldErrors.expectedYieldKg}</p>
+                                    )}
                                 </div>
 
                                 {!isEditing && (

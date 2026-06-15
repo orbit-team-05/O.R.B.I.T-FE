@@ -125,7 +125,9 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
             await reload();
             return data;
         } catch (err) {
-            setActionError(getErrorMessage(err, "Không thể cập nhật mùa vụ."));
+            const msg = getErrorMessage(err, "Không thể cập nhật mùa vụ.");
+            setActionError(msg);
+            // Keep drawer open so the user can see the inline error
             return null;
         } finally {
             setSubmitting(false);

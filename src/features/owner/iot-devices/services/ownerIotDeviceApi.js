@@ -28,3 +28,16 @@ export async function activateOwnerIotDevice(farmId, payload) {
 
     return response.data.data;
 }
+
+export async function updateOwnerIotDeviceWorkMode(
+    farmId,
+    deviceId,
+    payload,
+) {
+    const response = await httpClient.patch(
+        `${getOwnerIotDeviceEndpoint(farmId)}/${deviceId}/work-mode`,
+        payload,
+    );
+
+    return response.data.data;
+}
