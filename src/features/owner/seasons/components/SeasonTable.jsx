@@ -27,6 +27,7 @@ export function SeasonTable({
                                 seasons,
                                 pageInfo,
                                 loading = false,
+                                loadingDetailId = null,
                                 onViewDetail,
                                 onPageChange,
                             }) {
@@ -136,9 +137,10 @@ export function SeasonTable({
                                         <button
                                             type="button"
                                             onClick={() => onViewDetail?.(item)}
-                                            className="inline-flex h-8 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                                            disabled={loadingDetailId !== null}
+                                            className="inline-flex h-8 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
-                                            Chi tiết
+                                            {loadingDetailId === item.id ? "Đang tải..." : "Chi tiết"}
                                         </button>
                                     </td>
                                 </tr>

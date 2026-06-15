@@ -171,8 +171,20 @@ export function SeasonDetailDrawer({
                                 >
                                     {isEditing ? (
                                         <>
-                                            <Check size={14} />
-                                            Lưu thay đổi
+                                            {submitting ? (
+                                                <>
+                                                    <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                                    </svg>
+                                                    Đang lưu...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Check size={14} />
+                                                    Lưu thay đổi
+                                                </>
+                                            )}
                                         </>
                                     ) : (
                                         <>
@@ -361,10 +373,9 @@ export function SeasonDetailDrawer({
                                             type="button"
                                             onClick={() => triggerStatusChange("ACTIVE", "Bắt đầu nuôi")}
                                             disabled={submitting}
-                                            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#006948] px-4 text-xs font-semibold text-white hover:bg-[#00583d]"
+                                            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#006948] px-4 text-xs font-semibold text-white hover:bg-[#00583d] disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
-                                            <ArrowLeftRight size={14} />
-                                            Bắt đầu nuôi
+                                            {submitting ? "Đang xử lý..." : (<><ArrowLeftRight size={14} /> Bắt đầu nuôi</>)}
                                         </button>
                                     )}
 
@@ -373,10 +384,9 @@ export function SeasonDetailDrawer({
                                             type="button"
                                             onClick={() => triggerStatusChange("HARVESTING", "Bắt đầu thu hoạch")}
                                             disabled={submitting}
-                                            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-amber-600 px-4 text-xs font-semibold text-white hover:bg-amber-700"
+                                            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-amber-600 px-4 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
-                                            <ArrowLeftRight size={14} />
-                                            Bắt đầu thu hoạch
+                                            {submitting ? "Đang xử lý..." : (<><ArrowLeftRight size={14} /> Bắt đầu thu hoạch</>)}
                                         </button>
                                     )}
 
@@ -386,17 +396,17 @@ export function SeasonDetailDrawer({
                                                 type="button"
                                                 onClick={() => triggerStatusChange("ACTIVE", "Quay lại nuôi")}
                                                 disabled={submitting}
-                                                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                Quay lại nuôi
+                                                {submitting ? "Đang xử lý..." : "Quay lại nuôi"}
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={() => triggerStatusChange("COMPLETED", "Hoàn thành")}
                                                 disabled={submitting}
-                                                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-4 text-xs font-semibold text-white hover:bg-blue-700"
+                                                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-4 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                Hoàn thành mùa vụ
+                                                {submitting ? "Đang xử lý..." : "Hoàn thành mùa vụ"}
                                             </button>
                                         </>
                                     )}
@@ -405,10 +415,9 @@ export function SeasonDetailDrawer({
                                         type="button"
                                         onClick={triggerCancel}
                                         disabled={submitting}
-                                        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-4 text-xs font-semibold text-red-600 hover:bg-red-100 hover:text-red-700 ml-auto"
+                                        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-4 text-xs font-semibold text-red-600 hover:bg-red-100 hover:text-red-700 ml-auto disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        <Trash2 size={14} />
-                                        Hủy mùa vụ
+                                        {submitting ? "Đang xử lý..." : (<><Trash2 size={14} /> Hủy mùa vụ</>)}
                                     </button>
                                 </div>
                             </div>

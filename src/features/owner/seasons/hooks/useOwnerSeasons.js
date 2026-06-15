@@ -25,6 +25,7 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
 
     const [loading, setLoading] = useState(true);
     const [detailLoading, setDetailLoading] = useState(false);
+    const [loadingDetailId, setLoadingDetailId] = useState(null);
     const [submitting, setSubmitting] = useState(false);
 
     const [error, setError] = useState("");
@@ -83,6 +84,7 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
         if (!id) return;
         try {
             setDetailLoading(true);
+            setLoadingDetailId(id);
             setActionError("");
             const data = await getSeasonDetail(id);
             setSelectedDetail(data);
@@ -91,6 +93,7 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
             setActionError(getErrorMessage(err, "Không thể tải chi tiết mùa vụ."));
         } finally {
             setDetailLoading(false);
+            setLoadingDetailId(null);
         }
     }, []);
 
@@ -117,8 +120,8 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
             setActionError("");
             setActionSuccess("");
             const data = await apiUpdateSeason(id, payload);
-            setSelectedDetail(data);
             setActionSuccess("Cập nhật thông tin mùa vụ thành công.");
+            setSelectedDetail(null);
             await reload();
             return data;
         } catch (err) {
@@ -136,7 +139,7 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
             setActionSuccess("");
             await updateSeasonStatus(id, status);
             setActionSuccess("Chuyển trạng thái mùa vụ thành công.");
-            await loadDetail(id);
+            setSelectedDetail(null);
             await reload();
             return true;
         } catch (err) {
@@ -189,6 +192,7 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
         initialLoading: loading && seasonPage === null,
         tableLoading: loading && seasonPage !== null,
         detailLoading,
+        loadingDetailId,
         submitting,
 
         error,

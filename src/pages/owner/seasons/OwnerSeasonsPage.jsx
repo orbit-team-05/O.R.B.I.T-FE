@@ -73,6 +73,7 @@ export function OwnerSeasonsPage() {
         pageInfo,
         initialLoading,
         tableLoading,
+        loadingDetailId,
         submitting,
         error,
         actionError,
@@ -147,6 +148,7 @@ export function OwnerSeasonsPage() {
                         seasons={seasons}
                         pageInfo={pageInfo}
                         loading={tableLoading}
+                        loadingDetailId={loadingDetailId}
                         onPageChange={setPage}
                         onViewDetail={handleOpenDetail}
                     />
