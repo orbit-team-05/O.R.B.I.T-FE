@@ -38,3 +38,9 @@ export async function updateUserStatus(userId, isActive) {
     });
     return response.data.data;
 }
+
+export async function getUserDetail(userId) {
+    const response = await httpClient.get(`/admin/users/${userId}`);
+    return response.data.data;
+}
+

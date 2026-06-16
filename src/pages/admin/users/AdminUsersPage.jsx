@@ -5,6 +5,7 @@ import { UserStats } from "../../../features/admin/users/components/UserStats";
 import { UserTable } from "../../../features/admin/users/components/UserTable";
 import { UserDrawer } from "../../../features/admin/users/components/UserDrawer";
 import { useAdminUsers } from "../../../features/admin/users/hooks/useAdminUsers";
+import { getUserDetail } from "../../../features/admin/users/services/userApi";
 
 function AdminUsersHeader({ onCreate }) {
     return (
@@ -86,11 +87,33 @@ export function AdminUsersPage() {
         setDrawerOpen(true);
     }
 
-    function openEditDrawer(user) {
+    async function openViewDrawer(user) {
+        clearActionError();
+        setDrawerMode("view");
+        setSelectedUser(user);
+        setDrawerOpen(true);
+
+        try {
+            const detail = await getUserDetail(user.id);
+            setSelectedUser(detail);
+        } catch (err) {
+            console.error("Không thể tải thông tin chi tiết người dùng:", err);
+            toast.error("Không thể tải thông tin chi tiết người dùng.");
+        }
+    }
+
+    async function openEditDrawer(user) {
         clearActionError();
         setDrawerMode("edit");
         setSelectedUser(user);
         setDrawerOpen(true);
+
+        try {
+            const detail = await getUserDetail(user.id);
+            setSelectedUser(detail);
+        } catch (err) {
+            console.error("Không thể tải thông tin chi tiết người dùng:", err);
+        }
     }
 
     function closeDrawer() {
@@ -174,6 +197,7 @@ export function AdminUsersPage() {
                     pageInfo={pageInfo}
                     loading={tableLoading}
                     onPageChange={setPage}
+                    onView={openViewDrawer}
                     onEdit={openEditDrawer}
                     onToggleStatus={handleOpenConfirm}
                 />

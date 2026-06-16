@@ -50,6 +50,7 @@ export function UserTable({
     pageInfo,
     onPageChange,
     loading = false,
+    onView,
     onEdit,
     onToggleStatus,
 }) {
@@ -80,7 +81,7 @@ export function UserTable({
                                     <th className="px-5 py-3">Vai trò</th>
                                     <th className="px-5 py-3">Trạng thái</th>
                                     <th className="px-5 py-3">Ngày tạo</th>
-                                    <th className="w-[180px] px-5 py-3 text-center">Hành động</th>
+                                    <th className="w-[200px] px-5 py-3 text-center">Hành động</th>
                                 </tr>
                             </thead>
 
@@ -142,10 +143,14 @@ export function UserTable({
                                                 : "—"}
                                         </td>
 
-                                        <td className="w-[180px] px-5 py-4">
+                                        <td className="w-[200px] px-5 py-4">
                                             <div className="flex items-center justify-center gap-2">
+                                                <ActionButton onClick={() => onView?.(item)}>
+                                                    Xem
+                                                </ActionButton>
+
                                                 <ActionButton onClick={() => onEdit?.(item)}>
-                                                    Xem/Sửa
+                                                    Sửa
                                                 </ActionButton>
 
                                                 <ActionButton
