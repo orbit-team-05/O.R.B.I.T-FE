@@ -52,7 +52,7 @@ function AdminUsersSkeleton() {
 }
 
 export function AdminUsersPage() {
-    const { toast } = useToast();
+    const toast = useToast();
     const { user: currentUser } = useAuth();
     const currentUserId = currentUser?.userId;
 
