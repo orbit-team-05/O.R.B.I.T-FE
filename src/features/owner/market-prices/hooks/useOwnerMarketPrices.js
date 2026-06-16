@@ -115,7 +115,6 @@ export function useOwnerMarketPrices(farmId, initialPage = 0, initialSize = 8) {
 
     const [filters, setFilters] = useState({
         speciesName: "",
-        sourceLabel: "",
     });
     const [page, setPage] = useState(initialPage);
     const [size] = useState(initialSize);
@@ -167,14 +166,10 @@ export function useOwnerMarketPrices(farmId, initialPage = 0, initialSize = 8) {
     const filteredPrices = useMemo(
         () =>
             prices.filter((item) => {
-                const matchSpecies =
+                return (
                     !filters.speciesName ||
-                    item.speciesName === filters.speciesName;
-                const matchSource =
-                    !filters.sourceLabel ||
-                    item.sourceLabel === filters.sourceLabel;
-
-                return matchSpecies && matchSource;
+                    item.speciesName === filters.speciesName
+                );
             }),
         [filters, prices],
     );
@@ -184,15 +179,6 @@ export function useOwnerMarketPrices(farmId, initialPage = 0, initialSize = 8) {
             uniqueBy(summaryPrices, (item) => item.speciesName).map((item) => ({
                 value: item.speciesName,
                 label: item.speciesName,
-            })),
-        [summaryPrices],
-    );
-
-    const sourceOptions = useMemo(
-        () =>
-            uniqueBy(summaryPrices, (item) => item.sourceLabel).map((item) => ({
-                value: item.sourceLabel,
-                label: item.sourceLabel,
             })),
         [summaryPrices],
     );
@@ -212,7 +198,6 @@ export function useOwnerMarketPrices(farmId, initialPage = 0, initialSize = 8) {
     function resetFilters() {
         setFilters({
             speciesName: "",
-            sourceLabel: "",
         });
     }
 
@@ -225,7 +210,6 @@ export function useOwnerMarketPrices(farmId, initialPage = 0, initialSize = 8) {
         rawPrices: prices,
         summary,
         speciesOptions,
-        sourceOptions,
         filters,
         updateFilter,
         resetFilters,

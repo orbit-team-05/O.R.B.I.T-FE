@@ -1,4 +1,4 @@
-import { ExternalLink, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
 import {
@@ -35,7 +35,6 @@ export function OwnerMarketPriceTable({
     pageInfo,
     filters,
     speciesOptions,
-    sourceOptions,
     loading = false,
     onFilterChange,
     onResetFilters,
@@ -76,22 +75,7 @@ export function OwnerMarketPriceTable({
                         ))}
                     </select>
 
-                    <select
-                        value={filters.sourceLabel}
-                        onChange={(event) =>
-                            onFilterChange("sourceLabel", event.target.value)
-                        }
-                        className="h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/10"
-                    >
-                        <option value="">Tất cả nguồn</option>
-                        {sourceOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </select>
-
-                    {(filters.speciesName || filters.sourceLabel) && (
+                    {filters.speciesName && (
                         <button
                             type="button"
                             onClick={onResetFilters}
@@ -117,7 +101,7 @@ export function OwnerMarketPriceTable({
             ) : (
                 <>
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[980px] border-collapse text-left">
+                        <table className="w-full min-w-[860px] border-collapse text-left">
                             <thead className="bg-slate-50">
                                 <tr className="text-[11px] font-semibold uppercase text-slate-600">
                                     <th className="px-5 py-3">Mặt hàng</th>
@@ -128,7 +112,6 @@ export function OwnerMarketPriceTable({
                                     <th className="px-5 py-3">Đơn vị</th>
                                     <th className="px-5 py-3">Thay đổi</th>
                                     <th className="px-5 py-3">Cập nhật</th>
-                                    <th className="px-5 py-3">Nguồn</th>
                                 </tr>
                             </thead>
 
@@ -175,34 +158,16 @@ export function OwnerMarketPriceTable({
                                         <td className="px-5 py-4">
                                             {item.updatedLabel || "-"}
                                         </td>
-
-                                        <td className="px-5 py-4">
-                                            {item.sourceUrl ? (
-                                                <a
-                                                    href={item.sourceUrl}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700 hover:border-[#006948] hover:text-[#006948]"
-                                                >
-                                                    {item.sourceLabel}
-                                                    <ExternalLink size={12} />
-                                                </a>
-                                            ) : (
-                                                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                                                    {item.sourceLabel}
-                                                </span>
-                                            )}
-                                        </td>
                                     </tr>
                                 ))}
 
                                 {prices.length === 0 && (
                                     <tr>
                                         <td
-                                            colSpan={9}
+                                            colSpan={8}
                                             className="px-5 py-10 text-center text-sm text-slate-500"
                                         >
-                                            Chưa có dữ liệu giá thị trường phù hợp.
+                                            Không hiển thị dữ liệu giá thị trường.
                                         </td>
                                     </tr>
                                 )}

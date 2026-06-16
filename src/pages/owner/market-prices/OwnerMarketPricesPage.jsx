@@ -63,7 +63,6 @@ export function OwnerMarketPricesPage() {
         prices,
         summary,
         speciesOptions,
-        sourceOptions,
         filters,
         updateFilter,
         resetFilters,
@@ -120,7 +119,6 @@ export function OwnerMarketPricesPage() {
                 pageInfo={pageInfo}
                 filters={filters}
                 speciesOptions={speciesOptions}
-                sourceOptions={sourceOptions}
                 loading={tableLoading}
                 onFilterChange={updateFilter}
                 onResetFilters={resetFilters}
