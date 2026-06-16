@@ -108,6 +108,7 @@ export function OwnerSeasonsPage() {
     }
 
     function handleCloseDetail() {
+        clearActionMessages();
         setSelectedDetail(null);
     }
 
