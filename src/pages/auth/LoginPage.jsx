@@ -2,16 +2,15 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { User, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 
 import orbitLogo from "../../assets/images/orbit-logo.png";
 import { useAuth } from "../../features/auth/context/AuthContext";
 
 const loginSchema = z.object({
-    email: z
+    identifier: z
         .string()
-        .min(1, "Email không được để trống")
-        .email("Email không hợp lệ"),
+        .min(1, "Email hoặc tên đăng nhập không được để trống"),
     password: z
         .string()
         .min(1, "Mật khẩu không được để trống"),
@@ -28,13 +27,13 @@ export function LoginPage() {
         formState: { errors },
     } = useForm({
         resolver: zodResolver(loginSchema),
-        defaultValues: { email: "", password: "" },
+        defaultValues: { identifier: "", password: "" },
     });
 
     async function onSubmit(data) {
         setApiError("");
 
-        const result = await login(data.email, data.password);
+        const result = await login(data.identifier, data.password);
 
         if (!result.success) {
             setApiError(result.error);
@@ -111,43 +110,43 @@ export function LoginPage() {
                         )}
 
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                            {/* Email */}
+                             {/* Email or Username */}
                             <div>
                                 <label
-                                    htmlFor="login-email"
+                                    htmlFor="login-identifier"
                                     className="mb-1.5 block text-sm font-medium text-slate-700"
                                 >
-                                    Email
+                                    Email hoặc Username
                                 </label>
 
                                 <div className="relative">
-                                    <Mail
+                                    <User
                                         size={18}
                                         className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
                                     />
 
                                     <input
-                                        id="login-email"
-                                        type="email"
-                                        autoComplete="email"
-                                        placeholder="email@example.com"
+                                        id="login-identifier"
+                                        type="text"
+                                        autoComplete="username"
+                                        placeholder="Nhập email hoặc username"
                                         disabled={loading}
-                                        {...register("email")}
+                                        {...register("identifier")}
                                         className={[
                                             "h-11 w-full rounded-lg border bg-slate-50 pl-10 pr-4 text-sm text-slate-700 outline-none transition",
                                             "placeholder:text-slate-400",
                                             "focus:border-[#006948] focus:bg-white focus:ring-2 focus:ring-[#006948]/10",
                                             "disabled:cursor-not-allowed disabled:opacity-60",
-                                            errors.email
+                                            errors.identifier
                                                 ? "border-red-300 focus:border-red-500 focus:ring-red-500/10"
                                                 : "border-slate-200",
                                         ].join(" ")}
                                     />
                                 </div>
 
-                                {errors.email && (
+                                {errors.identifier && (
                                     <p className="mt-1.5 text-xs text-red-600">
-                                        {errors.email.message}
+                                        {errors.identifier.message}
                                     </p>
                                 )}
                             </div>

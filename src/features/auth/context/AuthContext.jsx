@@ -58,11 +58,11 @@ export function AuthProvider({ children }) {
         return () => window.removeEventListener("storage", handleStorageChange);
     }, []);
 
-    const login = useCallback(async (email, password) => {
+    const login = useCallback(async (identifier, password) => {
         try {
             setLoading(true);
 
-            const data = await loginApi({ email, password });
+            const data = await loginApi({ identifier, password });
 
             // Lưu vào localStorage
             localStorage.setItem(STORAGE_TOKEN_KEY, data.token);

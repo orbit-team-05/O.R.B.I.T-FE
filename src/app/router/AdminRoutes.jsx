@@ -7,6 +7,7 @@ import { AdminMarketSourcesPage } from "../../pages/admin/market-sources/AdminMa
 import { AdminCrawlTargetsPage } from "../../pages/admin/crawl-targets/AdminCrawlTargetsPage";
 import { AdminIotDevicesPage } from "../../pages/admin/devices/AdminIotDevicesPage";
 import { AdminMarketPricesPage } from "../../pages/admin/market-prices/AdminMarketPricesPage";
+import { AdminUsersPage } from "../../pages/admin/users/AdminUsersPage";
 import { AdminComingSoonPage } from "../../pages/admin/common/AdminComingSoonPage";
 
 export function AdminRoutes() {
@@ -22,15 +23,7 @@ export function AdminRoutes() {
                 <Route path="devices" element={<AdminIotDevicesPage />} />
                 <Route path="market-prices" element={<AdminMarketPricesPage />} />
 
-                <Route
-                    path="users"
-                    element={
-                        <AdminComingSoonPage
-                            title="Quản lý Người dùng"
-                            description="Màn hình quản lý tài khoản, vai trò và quyền truy cập sẽ được triển khai sau."
-                        />
-                    }
-                />
+                <Route path="users" element={<AdminUsersPage />} />
 
                 <Route
                     path="farms"
