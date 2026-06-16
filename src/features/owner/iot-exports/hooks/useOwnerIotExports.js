@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
     confirmExportScan,
+    getExportScanDetail,
     getExportScans,
     getPendingExportScans,
 } from "../services/ownerIotExportApi";
@@ -15,6 +16,9 @@ export function useOwnerIotExports(farmId, initialPage = 0, initialSize = 10) {
 
     const [pendingScans, setPendingScans] = useState([]);
     const [historyScans, setHistoryScans] = useState([]);
+
+    const [selectedExport, setSelectedExport] = useState(null);
+    const [detailLoading, setDetailLoading] = useState(false);
 
     const [pendingPageNumber, setPendingPageNumber] = useState(initialPage);
     const [historyPageNumber, setHistoryPageNumber] = useState(initialPage);
@@ -90,6 +94,27 @@ export function useOwnerIotExports(farmId, initialPage = 0, initialSize = 10) {
         void loadExportHistory();
     }, [loadExportHistory]);
 
+    async function loadExportDetail(transactionId) {
+        if (!farmId || !transactionId) return null;
+
+        try {
+            setDetailLoading(true);
+            setActionError("");
+
+            const data = await getExportScanDetail(farmId, transactionId);
+            setSelectedExport(data);
+
+            return data;
+        } catch (err) {
+            setActionError(
+                getErrorMessage(err, "Không thể tải chi tiết xuất vật tư."),
+            );
+            return null;
+        } finally {
+            setDetailLoading(false);
+        }
+    }
+
     async function confirmExport(transactionId) {
         try {
             setSubmittingId(transactionId);
@@ -120,10 +145,6 @@ export function useOwnerIotExports(farmId, initialPage = 0, initialSize = 10) {
     }
 
     const summary = useMemo(() => {
-        const approvedToday = historyScans.filter(
-            (item) => item.approvalStatus === "APPROVED",
-        ).length;
-
         const totalExportCost = historyScans.reduce(
             (sum, item) => sum + Number(item.totalAmount || 0),
             0,
@@ -133,7 +154,7 @@ export function useOwnerIotExports(farmId, initialPage = 0, initialSize = 10) {
             pending: pendingScans.length,
             recognized: pendingScans.filter((item) => item.productId).length,
             unrecognized: pendingScans.filter((item) => !item.productId).length,
-            approved: approvedToday,
+            approved: historyScans.filter((item) => item.approvalStatus === "APPROVED").length,
             totalExportCost,
         };
     }, [pendingScans, historyScans]);
@@ -141,6 +162,9 @@ export function useOwnerIotExports(farmId, initialPage = 0, initialSize = 10) {
     return {
         pendingScans,
         historyScans,
+        selectedExport,
+        setSelectedExport,
+        detailLoading,
         summary,
 
         pendingPageInfo: {
@@ -179,6 +203,7 @@ export function useOwnerIotExports(farmId, initialPage = 0, initialSize = 10) {
             ]);
         },
 
+        loadExportDetail,
         confirmExport,
 
         clearActionMessages: () => {

@@ -4,6 +4,7 @@ import { RefreshCcw } from "lucide-react";
 import { useAuth } from "../../../features/auth/context/AuthContext";
 import { useToast } from "../../../components/common/toast/ToastProvider";
 import { IotExportTable } from "../../../features/owner/iot-exports/components/IotExportTable";
+import { IotExportDetailDrawer } from "../../../features/owner/iot-exports/components/IotExportDetailDrawer";
 import { useOwnerIotExports } from "../../../features/owner/iot-exports/hooks/useOwnerIotExports";
 
 function PageHeader({ onRefresh }) {
@@ -41,10 +42,14 @@ export function OwnerIotExportsPage() {
     const farmId = user?.farmId;
 
     const [activeTab, setActiveTab] = useState("pending");
+    const [detailOpen, setDetailOpen] = useState(false);
 
     const {
         pendingScans,
         historyScans,
+        selectedExport,
+        setSelectedExport,
+        detailLoading,
         summary,
 
         pendingPageInfo,
@@ -62,12 +67,26 @@ export function OwnerIotExportsPage() {
         setHistoryPage,
 
         reload,
+        loadExportDetail,
         confirmExport,
         clearActionMessages,
     } = useOwnerIotExports(farmId);
 
     async function handleRefresh() {
         await reload();
+    }
+
+    async function handleOpenDetail(scan) {
+        clearActionMessages();
+        setSelectedExport(scan);
+        setDetailOpen(true);
+        await loadExportDetail(scan.transactionId);
+    }
+
+    function handleCloseDetail() {
+        setDetailOpen(false);
+        setSelectedExport(null);
+        clearActionMessages();
     }
 
     async function handleConfirmExport(scan) {
@@ -106,7 +125,7 @@ export function OwnerIotExportsPage() {
                     </div>
                 )}
 
-                {actionError && (
+                {actionError && !detailOpen && (
                     <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
                         {actionError}
                     </div>
@@ -194,6 +213,7 @@ export function OwnerIotExportsPage() {
                         submittingId={submittingId}
                         mode="pending"
                         onConfirm={handleConfirmExport}
+                        onViewDetail={handleOpenDetail}
                         onPageChange={setPendingPage}
                     />
                 )}
@@ -206,10 +226,18 @@ export function OwnerIotExportsPage() {
                         pageInfo={historyPageInfo}
                         loading={historyLoading}
                         mode="history"
+                        onViewDetail={handleOpenDetail}
                         onPageChange={setHistoryPage}
                     />
                 )}
             </main>
+
+            <IotExportDetailDrawer
+                open={detailOpen}
+                scan={selectedExport}
+                loading={detailLoading}
+                onClose={handleCloseDetail}
+            />
         </div>
     );
 }

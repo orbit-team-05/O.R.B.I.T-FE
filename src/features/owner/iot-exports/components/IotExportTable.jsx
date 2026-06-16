@@ -1,3 +1,4 @@
+import { Eye } from "lucide-react";
 import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
 
 function formatDateTime(value) {
@@ -13,14 +14,22 @@ function formatDateTime(value) {
     }).format(new Date(value));
 }
 
-function formatWeight(value) {
+function formatQuantity(value, storageUnit) {
     const numberValue = Number(value || 0);
 
-    if (numberValue >= 1000) {
-        return `${(numberValue / 1000).toLocaleString("vi-VN")} kg/ml`;
+    if (storageUnit === "MILLILITER") {
+        if (numberValue >= 1000) {
+            return `${(numberValue / 1000).toLocaleString("vi-VN")} lít`;
+        }
+
+        return `${numberValue.toLocaleString("vi-VN")} ml`;
     }
 
-    return `${numberValue.toLocaleString("vi-VN")} g/ml`;
+    if (numberValue >= 1000) {
+        return `${(numberValue / 1000).toLocaleString("vi-VN")} kg`;
+    }
+
+    return `${numberValue.toLocaleString("vi-VN")} g`;
 }
 
 function formatCurrency(value) {
@@ -51,6 +60,28 @@ function StatusBadge({ status }) {
     );
 }
 
+function NextActionHint({ item }) {
+    if (!item) return null;
+
+    if (item.needKeypadInput || item.nextAction === "ENTER_KEYPAD_CODE") {
+        return (
+            <p className="mt-2 text-[11px] text-red-600">
+                Chưa đọc được vật tư. Nhập keypad hoặc duyệt AI trước khi xác nhận.
+            </p>
+        );
+    }
+
+    if (item.nextAction === "WAIT_OWNER_CONFIRM") {
+        return (
+            <p className="mt-2 text-[11px] text-amber-700">
+                Đã nhận vật tư, chờ owner xác nhận xuất.
+            </p>
+        );
+    }
+
+    return null;
+}
+
 export function IotExportTable({
                                    title,
                                    description,
@@ -60,6 +91,7 @@ export function IotExportTable({
                                    submittingId = null,
                                    mode = "pending",
                                    onConfirm,
+                                   onViewDetail,
                                    onPageChange,
                                }) {
     const currentPage = Math.max(Number(pageInfo?.number ?? 0), 0);
@@ -85,7 +117,7 @@ export function IotExportTable({
             ) : (
                 <>
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[1250px] border-collapse text-left">
+                        <table className="w-full min-w-[1320px] border-collapse text-left">
                             <thead className="bg-slate-50">
                             <tr className="text-[11px] font-medium uppercase text-slate-600">
                                 <th className="px-5 py-3">Ảnh</th>
@@ -97,6 +129,7 @@ export function IotExportTable({
                                 <th className="px-5 py-3">Chi phí</th>
                                 <th className="px-5 py-3">QR</th>
                                 <th className="px-5 py-3">Trạng thái</th>
+                                <th className="w-[90px] px-5 py-3">Chi tiết</th>
                                 {isPendingMode && (
                                     <th className="w-[150px] px-5 py-3">
                                         Hành động
@@ -152,7 +185,7 @@ export function IotExportTable({
                                     </td>
 
                                     <td className="px-5 py-4 font-medium text-slate-900">
-                                        {formatWeight(item.quantityGrams)}
+                                        {formatQuantity(item.quantity ?? item.quantityGrams, item.storageUnit)}
                                     </td>
 
                                     <td className="px-5 py-4">
@@ -177,12 +210,18 @@ export function IotExportTable({
 
                                     <td className="px-5 py-4">
                                         <StatusBadge status={item.approvalStatus} />
+                                        <NextActionHint item={item} />
+                                    </td>
 
-                                        {isPendingMode && !item.productId && (
-                                            <p className="mt-2 text-[11px] text-red-600">
-                                                Chưa đọc được vật tư, chưa thể xác nhận.
-                                            </p>
-                                        )}
+                                    <td className="w-[90px] px-5 py-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => onViewDetail?.(item)}
+                                            className="inline-flex h-8 items-center justify-center gap-1 rounded-lg px-2 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                                        >
+                                            <Eye size={14} />
+                                            Xem
+                                        </button>
                                     </td>
 
                                     {isPendingMode && (
@@ -191,6 +230,7 @@ export function IotExportTable({
                                                 type="button"
                                                 disabled={
                                                     !item.productId ||
+                                                    item.needKeypadInput ||
                                                     submittingId === item.transactionId
                                                 }
                                                 onClick={() => onConfirm?.(item)}
@@ -208,7 +248,7 @@ export function IotExportTable({
                             {scans.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={isPendingMode ? 10 : 9}
+                                        colSpan={isPendingMode ? 11 : 10}
                                         className="px-5 py-10 text-center text-sm text-slate-500"
                                     >
                                         {isPendingMode
