@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 const INITIAL_FORM = {
     username: "",
     fullName: "",
-    email: "",
-    phone: "",
     roleIds: [],
     farmId: "",
 };
 
-export function CreateUserDrawer({
+export function UserDrawer({
     open,
+    mode = "create",
+    user,
     roles = [],
     farms = [],
     submitting,
@@ -22,11 +22,30 @@ export function CreateUserDrawer({
     const [form, setForm] = useState(INITIAL_FORM);
     const [validationError, setValidationError] = useState("");
 
+    const isEditMode = mode === "edit";
+
     useEffect(() => {
         if (!open) return;
+
+        if (isEditMode && user) {
+            setForm({
+                username: user.username ?? "",
+                fullName: user.fullName ?? "",
+                // Find matching role IDs from the roles array using role name
+                roleIds: user.roles
+                    ? roles
+                          .filter((r) => user.roles.includes(r.roleName))
+                          .map((r) => r.id)
+                    : [],
+                farmId: user.farmId ?? "",
+            });
+            setValidationError("");
+            return;
+        }
+
         setForm(INITIAL_FORM);
         setValidationError("");
-    }, [open]);
+    }, [open, isEditMode, user, roles]);
 
     function handleChange(event) {
         const { name, value } = event.target;
@@ -57,9 +76,15 @@ export function CreateUserDrawer({
         event.preventDefault();
         setValidationError("");
 
-        if (!form.username.trim()) {
-            setValidationError("Tên đăng nhập không được để trống");
-            return;
+        if (!isEditMode) {
+            if (!form.username.trim()) {
+                setValidationError("Tên đăng nhập không được để trống");
+                return;
+            }
+            if (!form.fullName.trim()) {
+                setValidationError("Họ và tên không được để trống");
+                return;
+            }
         }
 
         if (form.roleIds.length === 0) {
@@ -67,14 +92,22 @@ export function CreateUserDrawer({
             return;
         }
 
-        const payload = {
-            username: form.username.trim(),
-            fullName: form.fullName.trim() || undefined,
-            email: form.email.trim() || undefined,
-            phone: form.phone.trim() || undefined,
-            roleIds: form.roleIds,
-            farmId: form.farmId ? Number(form.farmId) : undefined,
-        };
+        if (!form.farmId) {
+            setValidationError("Vui lòng chọn nông trại trực thuộc");
+            return;
+        }
+
+        const payload = isEditMode
+            ? {
+                  roleIds: form.roleIds,
+                  farmId: Number(form.farmId),
+              }
+            : {
+                  username: form.username.trim(),
+                  fullName: form.fullName.trim(),
+                  roleIds: form.roleIds,
+                  farmId: Number(form.farmId),
+              };
 
         onSubmit(payload);
     }
@@ -93,7 +126,7 @@ export function CreateUserDrawer({
             <aside className="absolute right-0 top-0 flex h-full w-[380px] flex-col border-l border-slate-200 bg-white shadow-xl">
                 <header className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
                     <h2 className="text-base font-semibold text-slate-900">
-                        Thêm Người dùng mới
+                        {isEditMode ? "Xem & Sửa tài khoản" : "Thêm Người dùng mới"}
                     </h2>
 
                     <button
@@ -107,10 +140,12 @@ export function CreateUserDrawer({
 
                 <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-y-auto">
                     <div className="flex-1 space-y-4 px-5 py-5">
-                        {/* Info banner about default password */}
-                        <div className="rounded-lg border border-blue-100 bg-blue-50 px-3.5 py-2.5 text-xs text-blue-800 leading-relaxed">
-                            <span className="font-semibold">Lưu ý:</span> Mật khẩu mặc định cho người dùng mới sẽ được đặt tự động là <code className="bg-blue-100 px-1 py-0.5 rounded font-mono text-blue-900 font-bold">123456</code> ở Backend.
-                        </div>
+                        {/* Info banner about default password in create mode */}
+                        {!isEditMode && (
+                            <div className="rounded-lg border border-blue-100 bg-blue-50 px-3.5 py-2.5 text-xs text-blue-800 leading-relaxed">
+                                <span className="font-semibold">Lưu ý:</span> Mật khẩu mặc định cho người dùng mới sẽ được đặt tự động là <code className="bg-blue-100 px-1 py-0.5 rounded font-mono text-blue-900 font-bold">123456</code> ở Backend.
+                            </div>
+                        )}
 
                         {(error || validationError) && (
                             <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
@@ -128,13 +163,14 @@ export function CreateUserDrawer({
                                 value={form.username}
                                 onChange={handleChange}
                                 placeholder="VD: nguyenvanan"
-                                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15"
+                                disabled={isEditMode}
+                                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15 disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
                             />
                         </div>
 
                         <div>
                             <label className="mb-1.5 block text-xs font-medium text-slate-700">
-                                Họ và Tên (Họ tên đầy đủ)
+                                Họ và Tên *
                             </label>
 
                             <input
@@ -142,36 +178,8 @@ export function CreateUserDrawer({
                                 value={form.fullName}
                                 onChange={handleChange}
                                 placeholder="VD: Nguyễn Văn An"
-                                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="mb-1.5 block text-xs font-medium text-slate-700">
-                                Email
-                            </label>
-
-                            <input
-                                name="email"
-                                type="email"
-                                value={form.email}
-                                onChange={handleChange}
-                                placeholder="VD: an.nguyen@example.com"
-                                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="mb-1.5 block text-xs font-medium text-slate-700">
-                                Số điện thoại
-                            </label>
-
-                            <input
-                                name="phone"
-                                value={form.phone}
-                                onChange={handleChange}
-                                placeholder="VD: 0912345678"
-                                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15"
+                                disabled={isEditMode}
+                                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15 disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
                             />
                         </div>
 
@@ -200,7 +208,7 @@ export function CreateUserDrawer({
 
                         <div>
                             <label className="mb-1.5 block text-xs font-medium text-slate-700">
-                                Nông trại (Farm)
+                                Nông trại (Farm) *
                             </label>
 
                             <select
@@ -234,7 +242,7 @@ export function CreateUserDrawer({
                             disabled={submitting}
                             className="h-9 rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white hover:bg-[#00583d] disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                            {submitting ? "Đang lưu..." : "Thêm mới"}
+                            {submitting ? "Đang lưu..." : isEditMode ? "Cập nhật" : "Thêm mới"}
                         </button>
                     </footer>
                 </form>

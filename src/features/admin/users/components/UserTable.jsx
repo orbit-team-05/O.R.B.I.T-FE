@@ -21,11 +21,37 @@ function UserStatusBadge({ status }) {
     );
 }
 
+function ActionButton({ children, variant = "default", ...props }) {
+    const variantClass =
+        variant === "danger"
+            ? "text-red-600 hover:bg-red-50"
+            : variant === "success"
+                ? "text-[#006948] hover:bg-emerald-50"
+                : "text-slate-700 hover:bg-slate-100";
+
+    return (
+        <button
+            type="button"
+            className={[
+                "inline-flex h-8 min-w-[58px] items-center justify-center rounded-lg px-3",
+                "text-xs font-medium transition-colors duration-150",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006948]/30",
+                variantClass,
+            ].join(" ")}
+            {...props}
+        >
+            {children}
+        </button>
+    );
+}
+
 export function UserTable({
     users,
     pageInfo,
     onPageChange,
     loading = false,
+    onEdit,
+    onToggleStatus,
 }) {
     return (
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
@@ -54,6 +80,7 @@ export function UserTable({
                                     <th className="px-5 py-3">Vai trò</th>
                                     <th className="px-5 py-3">Trạng thái</th>
                                     <th className="px-5 py-3">Ngày tạo</th>
+                                    <th className="w-[180px] px-5 py-3 text-center">Hành động</th>
                                 </tr>
                             </thead>
 
@@ -73,8 +100,7 @@ export function UserTable({
 
                                         <td className="px-5 py-4">
                                             <div className="flex flex-col">
-                                                <span className="text-slate-900">{item.email || "(Không có email)"}</span>
-                                                {/* In case they want username view or it's different */}
+                                                <span className="text-slate-900">{item.email || item.username}</span>
                                             </div>
                                         </td>
 
@@ -115,13 +141,28 @@ export function UserTable({
                                                 ? new Date(item.createdAt).toLocaleDateString("vi-VN")
                                                 : "—"}
                                         </td>
+
+                                        <td className="w-[180px] px-5 py-4">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <ActionButton onClick={() => onEdit?.(item)}>
+                                                    Xem/Sửa
+                                                </ActionButton>
+
+                                                <ActionButton
+                                                    variant={item.status === "ACTIVE" ? "danger" : "success"}
+                                                    onClick={() => onToggleStatus?.(item)}
+                                                >
+                                                    {item.status === "ACTIVE" ? "Khóa" : "Mở khóa"}
+                                                </ActionButton>
+                                            </div>
+                                        </td>
                                     </tr>
                                 ))}
 
                                 {users.length === 0 && (
                                     <tr>
                                         <td
-                                            colSpan={7}
+                                            colSpan={8}
                                             className="px-5 py-10 text-center text-sm text-slate-500"
                                         >
                                             Chưa có tài khoản người dùng nào.

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { getUsers, getUserDashboard, createUser, getRoles, getFarms } from "../services/userApi";
+import { getUsers, getUserDashboard, createUser, updateUser, updateUserStatus, getRoles, getFarms } from "../services/userApi";
 
 const INITIAL_SUMMARY = {
     totalUsers: 0,
@@ -87,6 +87,43 @@ export function useAdminUsers(initialPage = 0, initialSize = 10) {
         }
     }
 
+    async function handleUpdateUser(userId, payload) {
+        try {
+            setActionLoading(true);
+            setActionError("");
+
+            await updateUser(userId, payload);
+            await loadUsers();
+
+            return true;
+        } catch (err) {
+            setActionError(getErrorMessage(err, "Không thể cập nhật người dùng."));
+            return false;
+        } finally {
+            setActionLoading(false);
+        }
+    }
+
+    async function handleToggleUserStatus(user) {
+        const currentActive = user.status === "ACTIVE";
+        const nextActive = !currentActive;
+
+        try {
+            setActionLoading(true);
+            setActionError("");
+
+            await updateUserStatus(user.id, nextActive);
+            await loadUsers();
+
+            return true;
+        } catch (err) {
+            setActionError(getErrorMessage(err, "Không thể cập nhật trạng thái người dùng."));
+            return false;
+        } finally {
+            setActionLoading(false);
+        }
+    }
+
     function handleSetPage(nextPage) {
         setPage(Math.max(Number(nextPage) || 0, 0));
     }
@@ -116,5 +153,7 @@ export function useAdminUsers(initialPage = 0, initialSize = 10) {
         actionError,
         clearActionError: () => setActionError(""),
         createUser: handleCreateUser,
+        updateUser: handleUpdateUser,
+        toggleUserStatus: handleToggleUserStatus,
     };
 }

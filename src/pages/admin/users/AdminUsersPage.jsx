@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { ConfirmDialog } from "../../../components/common/dialog/ConfirmDialog";
 import { useToast } from "../../../components/common/toast/ToastProvider";
 import { UserStats } from "../../../features/admin/users/components/UserStats";
 import { UserTable } from "../../../features/admin/users/components/UserTable";
-import { CreateUserDrawer } from "../../../features/admin/users/components/CreateUserDrawer";
+import { UserDrawer } from "../../../features/admin/users/components/UserDrawer";
 import { useAdminUsers } from "../../../features/admin/users/hooks/useAdminUsers";
 
 function AdminUsersHeader({ onCreate }) {
@@ -51,6 +52,13 @@ function AdminUsersSkeleton() {
 export function AdminUsersPage() {
     const { toast } = useToast();
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const [drawerMode, setDrawerMode] = useState("create");
+    const [selectedUser, setSelectedUser] = useState(null);
+
+    const [confirmState, setConfirmState] = useState({
+        open: false,
+        user: null,
+    });
 
     const {
         users,
@@ -67,28 +75,80 @@ export function AdminUsersPage() {
         actionError,
         clearActionError,
         createUser,
+        updateUser,
+        toggleUserStatus,
     } = useAdminUsers();
 
     function openCreateDrawer() {
         clearActionError();
+        setDrawerMode("create");
+        setSelectedUser(null);
+        setDrawerOpen(true);
+    }
+
+    function openEditDrawer(user) {
+        clearActionError();
+        setDrawerMode("edit");
+        setSelectedUser(user);
         setDrawerOpen(true);
     }
 
     function closeDrawer() {
         setDrawerOpen(false);
+        setSelectedUser(null);
     }
 
-    async function handleCreateUser(payload) {
-        const success = await createUser(payload);
+    async function handleDrawerSubmit(payload) {
+        if (drawerMode === "create") {
+            const success = await createUser(payload);
+            if (success) {
+                toast.success("Tạo tài khoản người dùng mới thành công!");
+                closeDrawer();
+            }
+        } else {
+            const success = await updateUser(selectedUser.id, payload);
+            if (success) {
+                toast.success("Cập nhật tài khoản người dùng thành công!");
+                closeDrawer();
+            }
+        }
+    }
+
+    function handleOpenConfirm(user) {
+        setConfirmState({
+            open: true,
+            user,
+        });
+    }
+
+    function handleCloseConfirm() {
+        setConfirmState({
+            open: false,
+            user: null,
+        });
+    }
+
+    async function handleConfirmToggleStatus() {
+        const { user } = confirmState;
+        if (!user) return;
+
+        const success = await toggleUserStatus(user);
         if (success) {
-            toast.success("Tạo tài khoản người dùng mới thành công!");
-            closeDrawer();
+            const isLocking = user.status === "ACTIVE";
+            toast.success(
+                isLocking
+                    ? `Đã khóa tài khoản "${user.fullName}" thành công!`
+                    : `Đã mở khóa tài khoản "${user.fullName}" thành công!`
+            );
+            handleCloseConfirm();
         }
     }
 
     if (initialLoading) {
         return <AdminUsersSkeleton />;
     }
+
+    const confirmUserActive = confirmState.user?.status === "ACTIVE";
 
     return (
         <>
@@ -114,17 +174,39 @@ export function AdminUsersPage() {
                     pageInfo={pageInfo}
                     loading={tableLoading}
                     onPageChange={setPage}
+                    onEdit={openEditDrawer}
+                    onToggleStatus={handleOpenConfirm}
                 />
             </section>
 
-            <CreateUserDrawer
+            <UserDrawer
                 open={drawerOpen}
+                mode={drawerMode}
+                user={selectedUser}
                 roles={roles}
                 farms={farms}
                 submitting={actionLoading}
                 error={actionError}
                 onClose={closeDrawer}
-                onSubmit={handleCreateUser}
+                onSubmit={handleDrawerSubmit}
+            />
+
+            <ConfirmDialog
+                open={confirmState.open}
+                title={confirmUserActive ? "Khóa tài khoản" : "Mở khóa tài khoản"}
+                description={
+                    confirmState.user
+                        ? `Bạn có chắc chắn muốn ${
+                              confirmUserActive ? "khóa" : "mở khóa"
+                          } tài khoản "${confirmState.user.fullName}" không?`
+                        : ""
+                }
+                confirmText={confirmUserActive ? "Khóa tài khoản" : "Mở khóa"}
+                cancelText="Hủy"
+                variant={confirmUserActive ? "danger" : "success"}
+                loading={actionLoading}
+                onCancel={handleCloseConfirm}
+                onConfirm={handleConfirmToggleStatus}
             />
         </>
     );
