@@ -5,11 +5,17 @@ import { ConfirmDialog } from "../../../../components/common/dialog/ConfirmDialo
 
 function formatDate(value) {
     if (!value) return "Chưa có";
-    return new Intl.DateTimeFormat("vi-VN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-    }).format(new Date(value));
+    try {
+        const date = new Date(value);
+        if (isNaN(date.getTime())) return String(value);
+        return new Intl.DateTimeFormat("vi-VN", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+        }).format(date);
+    } catch {
+        return String(value);
+    }
 }
 
 function formatCurrency(value) {
