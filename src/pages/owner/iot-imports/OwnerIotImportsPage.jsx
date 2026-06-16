@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { PlayCircle, Power, RefreshCcw } from "lucide-react";
+import { useState } from "react";
+import { RefreshCcw } from "lucide-react";
 
 import { IotImportConfirmDrawer } from "../../../features/owner/iot-imports/components/IotImportConfirmDrawer";
 import { IotImportPendingTable } from "../../../features/owner/iot-imports/components/IotImportPendingTable";
@@ -10,8 +10,6 @@ import { useAuth } from "../../../features/auth/context/AuthContext";
 import { InventoryStockTable } from "../../../features/owner/inventory/components/InventoryStockTable";
 import { InventoryStockDetailDrawer } from "../../../features/owner/inventory/components/InventoryStockDetailDrawer";
 import { useOwnerInventoryStocks } from "../../../features/owner/inventory/hooks/useOwnerInventoryStocks";
-
-import { useOwnerIotDevices } from "../../../features/owner/iot-devices/hooks/useOwnerIotDevices";
 
 function PageHeader({ onRefresh }) {
     return (
@@ -49,8 +47,6 @@ export function OwnerIotImportsPage() {
     const [activeTab, setActiveTab] = useState("pending");
     const [selectedScan, setSelectedScan] = useState(null);
 
-    const [selectedDeviceId, setSelectedDeviceId] = useState("");
-    const [modeMessage, setModeMessage] = useState("");
 
     const {
         scans,
@@ -84,41 +80,7 @@ export function OwnerIotImportsPage() {
         reload: reloadStocks,
     } = useOwnerInventoryStocks(farmId);
 
-    const {
-        devices,
-        reload: reloadDevices,
-        actionLoading: deviceActionLoading,
-        actionError: deviceActionError,
-        updateWorkMode,
-    } = useOwnerIotDevices(farmId, 0, 50);
 
-    const scaleDevices = useMemo(() => {
-        return devices.filter(
-            (device) =>
-                device.status === "ACTIVE" &&
-                device.deviceType === "ESP32_CAM_SCALE",
-        );
-    }, [devices]);
-
-    const selectedDevice = useMemo(() => {
-        return (
-            scaleDevices.find((item) => item.deviceId === selectedDeviceId) ??
-            scaleDevices[0] ??
-            null
-        );
-    }, [scaleDevices, selectedDeviceId]);
-
-    useEffect(() => {
-        if (!farmId) return;
-
-        void reloadDevices();
-    }, [farmId, reloadDevices]);
-
-    useEffect(() => {
-        if (selectedDeviceId || scaleDevices.length === 0) return;
-
-        setSelectedDeviceId(scaleDevices[0].deviceId);
-    }, [scaleDevices, selectedDeviceId]);
 
     function openConfirmDrawer(scan) {
         clearActionMessages();
@@ -140,7 +102,6 @@ export function OwnerIotImportsPage() {
         if (result) {
             closeConfirmDrawer();
             await reloadStocks();
-            await reloadDevices();
             setActiveTab("stocks");
         }
     }
@@ -161,41 +122,6 @@ export function OwnerIotImportsPage() {
     async function handleRefresh() {
         await reload();
         await reloadStocks();
-        await reloadDevices();
-    }
-
-    async function handleStartImportMode() {
-        if (!selectedDevice) return;
-
-        setModeMessage("");
-
-        const result = await updateWorkMode(
-            selectedDevice.deviceId,
-            "IMPORT",
-            null,
-        );
-
-        if (result) {
-            setModeMessage(`Đã bật chế độ nhập kho cho ${result.deviceName}.`);
-            await reloadDevices();
-        }
-    }
-
-    async function handleStopDeviceMode() {
-        if (!selectedDevice) return;
-
-        setModeMessage("");
-
-        const result = await updateWorkMode(
-            selectedDevice.deviceId,
-            "IDLE",
-            null,
-        );
-
-        if (result) {
-            setModeMessage(`Đã dừng thiết bị ${result.deviceName}.`);
-            await reloadDevices();
-        }
     }
 
     if (!farmId) {
@@ -253,103 +179,6 @@ export function OwnerIotImportsPage() {
                             {Number(stockSummary?.inventoryValue || 0).toLocaleString("vi-VN")}đ
                         </p>
                     </div>
-                </section>
-
-                <section className="rounded-xl border border-slate-200 bg-white p-5">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                        <div className="flex-1">
-                            <p className="text-xs font-medium uppercase text-slate-500">
-                                Điều khiển cân IoT
-                            </p>
-
-                            <h2 className="mt-1 text-base font-semibold text-slate-900">
-                                Bật chế độ nhập kho
-                            </h2>
-
-                            <p className="mt-1 text-sm text-slate-600">
-                                Khi bật, cân mới được phép chụp ảnh và gửi dữ liệu nhập kho lên server.
-                                Khi tắt, cân chỉ hiển thị khối lượng và không gửi dữ liệu.
-                            </p>
-                        </div>
-
-                        <div className="grid gap-3 sm:grid-cols-[minmax(260px,1fr)_auto_auto]">
-                            <select
-                                value={selectedDevice?.deviceId ?? ""}
-                                onChange={(event) => setSelectedDeviceId(event.target.value)}
-                                disabled={deviceActionLoading || scaleDevices.length === 0}
-                                className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none focus:border-[#006948]"
-                            >
-                                {scaleDevices.length === 0 && (
-                                    <option value="">
-                                        Chưa có thiết bị cân-camera
-                                    </option>
-                                )}
-
-                                {scaleDevices.map((device) => (
-                                    <option
-                                        key={device.deviceId}
-                                        value={device.deviceId}
-                                    >
-                                        {device.deviceName || device.deviceId} - {device.workMode || "IDLE"}
-                                    </option>
-                                ))}
-                            </select>
-
-                            <button
-                                type="button"
-                                disabled={
-                                    !selectedDevice ||
-                                    deviceActionLoading ||
-                                    selectedDevice.workMode === "IMPORT"
-                                }
-                                onClick={handleStartImportMode}
-                                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#006948] px-4 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                <PlayCircle size={16} />
-                                Bắt đầu nhập
-                            </button>
-
-                            <button
-                                type="button"
-                                disabled={
-                                    !selectedDevice ||
-                                    deviceActionLoading ||
-                                    selectedDevice.workMode === "IDLE"
-                                }
-                                onClick={handleStopDeviceMode}
-                                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                <Power size={16} />
-                                Dừng cân
-                            </button>
-                        </div>
-                    </div>
-
-                    {selectedDevice && (
-                        <div className="mt-4 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                            Trạng thái hiện tại:{" "}
-                            <span className="font-semibold text-[#006948]">
-                                {selectedDevice.workMode || "IDLE"}
-                            </span>
-                            {" "}· Command version:{" "}
-                            <span className="font-semibold">
-                                {selectedDevice.commandVersion ?? 0}
-                            </span>
-                        </div>
-                    )}
-
-                    {(modeMessage || deviceActionError) && (
-                        <div
-                            className={[
-                                "mt-3 rounded-lg px-4 py-3 text-sm",
-                                deviceActionError
-                                    ? "border border-red-100 bg-red-50 text-red-600"
-                                    : "border border-emerald-100 bg-emerald-50 text-[#006948]",
-                            ].join(" ")}
-                        >
-                            {deviceActionError || modeMessage}
-                        </div>
-                    )}
                 </section>
 
                 <section className="flex gap-2 rounded-xl border border-slate-200 bg-white p-1">

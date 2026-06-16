@@ -1,3 +1,5 @@
+import { PlayCircle, Power } from "lucide-react";
+
 import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
 
 const STATUS_LABELS = {
@@ -14,6 +16,36 @@ const STATUS_CLASSES = {
     LOST: "bg-red-50 text-red-600",
     BROKEN: "bg-red-100 text-red-700",
     UNASSIGNED: "bg-amber-50 text-amber-700",
+};
+
+const WORK_MODE_LABELS = {
+    IDLE: "Chờ lệnh",
+    IMPORT: "Nhập kho",
+    EXPORT: "Xuất kho",
+    HARVEST: "Thu hoạch",
+};
+
+const WORK_MODE_CLASSES = {
+    IDLE: "bg-slate-100 text-slate-600",
+    IMPORT: "bg-emerald-50 text-[#006948]",
+    EXPORT: "bg-blue-50 text-blue-700",
+    HARVEST: "bg-orange-50 text-orange-700",
+};
+
+const COMMAND_STATUS_LABELS = {
+    NONE: "Không có lệnh",
+    PENDING: "Chờ IoT xác nhận",
+    ACKED: "Đã xác nhận",
+    FAILED: "Thất bại",
+    TIMEOUT: "Quá hạn",
+};
+
+const COMMAND_STATUS_CLASSES = {
+    NONE: "bg-slate-100 text-slate-600",
+    PENDING: "bg-amber-50 text-amber-700",
+    ACKED: "bg-emerald-50 text-[#006948]",
+    FAILED: "bg-red-50 text-red-600",
+    TIMEOUT: "bg-red-50 text-red-600",
 };
 
 function formatDateTime(value) {
@@ -48,12 +80,91 @@ function DeviceTypeBadge({ type }) {
     );
 }
 
+function WorkModeBadge({ mode }) {
+    const safeMode = mode || "IDLE";
+
+    return (
+        <span
+            className={[
+                "inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium",
+                WORK_MODE_CLASSES[safeMode] ?? "bg-slate-100 text-slate-600",
+            ].join(" ")}
+        >
+            {WORK_MODE_LABELS[safeMode] ?? safeMode}
+        </span>
+    );
+}
+
+function CommandStatusBadge({ status }) {
+    const safeStatus = status || "NONE";
+
+    return (
+        <span
+            className={[
+                "inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium",
+                COMMAND_STATUS_CLASSES[safeStatus] ?? "bg-slate-100 text-slate-600",
+            ].join(" ")}
+        >
+            {COMMAND_STATUS_LABELS[safeStatus] ?? safeStatus}
+        </span>
+    );
+}
+
+function PendingModeText({ device }) {
+    if (device?.commandStatus !== "PENDING" || !device?.pendingWorkMode) {
+        return <span className="text-slate-400">Không có</span>;
+    }
+
+    return (
+        <div className="space-y-1">
+            <WorkModeBadge mode={device.pendingWorkMode} />
+
+            <p className="text-[11px] text-amber-700">
+                Đang chờ thiết bị nhận lệnh
+            </p>
+        </div>
+    );
+}
+
+function canControlDevice(device) {
+    return (
+        device?.status === "ACTIVE" &&
+        device?.deviceType === "ESP32_CAM_SCALE" &&
+        device?.commandStatus !== "PENDING"
+    );
+}
+
+function canStartExport(device) {
+    return (
+        canControlDevice(device) &&
+        device?.workMode !== "EXPORT"
+    );
+}
+
+function canStartImport(device) {
+    return (
+        canControlDevice(device) &&
+        device?.workMode !== "IMPORT"
+    );
+}
+
+function canStopDevice(device) {
+    return (
+        canControlDevice(device) &&
+        device?.workMode !== "IDLE"
+    );
+}
+
 export function OwnerIotDeviceTable({
                                         devices,
                                         pageInfo,
                                         loading = false,
+                                        actionLoading = false,
                                         onPageChange,
                                         onViewDetail,
+                                        onStartImportMode,
+                                        onStartExportMode,
+                                        onStopDeviceMode,
                                     }) {
     const currentPage = Math.max(Number(pageInfo?.number ?? 0), 0);
     const totalPages = Math.max(Number(pageInfo?.totalPages ?? 1), 1);
@@ -68,7 +179,7 @@ export function OwnerIotDeviceTable({
                 </h2>
 
                 <p className="mt-1 text-xs text-slate-600">
-                    Thiết bị đã được kích hoạt và gắn với farm hiện tại
+                    Theo dõi trạng thái thật của thiết bị và gửi lệnh chuyển chế độ làm việc
                 </p>
             </header>
 
@@ -77,16 +188,23 @@ export function OwnerIotDeviceTable({
             ) : (
                 <>
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[1000px] border-collapse text-left">
+                        <table className="w-full min-w-[1320px] border-collapse text-left">
                             <thead className="bg-slate-50">
                             <tr className="text-[11px] font-medium uppercase text-slate-600">
                                 <th className="px-5 py-3">Device ID</th>
                                 <th className="px-5 py-3">Tên thiết bị</th>
                                 <th className="px-5 py-3">Loại</th>
-                                <th className="px-5 py-3">Trạng thái</th>
+                                <th className="px-5 py-3">Kết nối</th>
+                                <th className="px-5 py-3">Mode thật</th>
+                                <th className="px-5 py-3">Lệnh chờ</th>
+                                <th className="px-5 py-3">Command</th>
                                 <th className="px-5 py-3">Last seen</th>
-                                <th className="px-5 py-3">Activated at</th>
-                                <th className="w-[140px] px-5 py-3 text-left">Hành động</th>
+                                <th className="w-[220px] px-5 py-3 text-left">
+                                    Điều khiển
+                                </th>
+                                <th className="w-[100px] px-5 py-3 text-left">
+                                    Chi tiết
+                                </th>
                             </tr>
                             </thead>
 
@@ -119,14 +237,88 @@ export function OwnerIotDeviceTable({
                                     </td>
 
                                     <td className="px-5 py-4">
-                                        {formatDateTime(item.lastSeenAt)}
+                                        <WorkModeBadge mode={item.workMode} />
                                     </td>
 
                                     <td className="px-5 py-4">
-                                        {formatDateTime(item.activatedAt)}
+                                        <PendingModeText device={item} />
                                     </td>
 
-                                    <td className="w-[140px] px-5 py-4">
+                                    <td className="px-5 py-4">
+                                        <div className="space-y-1">
+                                            <CommandStatusBadge status={item.commandStatus} />
+
+                                            <p className="text-[11px] text-slate-500">
+                                                Version: {item.commandVersion ?? 0}
+                                            </p>
+
+                                            {item.lastAckCommandVersion ? (
+                                                <p className="text-[11px] text-slate-500">
+                                                    ACK: {item.lastAckCommandVersion}
+                                                </p>
+                                            ) : null}
+                                        </div>
+                                    </td>
+
+                                    <td className="px-5 py-4">
+                                        {formatDateTime(item.lastSeenAt)}
+                                    </td>
+
+                                    <td className="w-[220px] px-5 py-4">
+                                        <div className="flex flex-wrap gap-2">
+                                            <button
+                                                type="button"
+                                                disabled={
+                                                    actionLoading ||
+                                                    !canStartImport(item)
+                                                }
+                                                onClick={() => onStartImportMode?.(item)}
+                                                className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-[#006948] px-3 text-xs font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                <PlayCircle size={14} />
+                                                Bắt đầu nhập
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                disabled={
+                                                    actionLoading ||
+                                                    !canStartExport(item)
+                                                }
+                                                onClick={() => onStartExportMode?.(item)}
+                                                className="inline-flex h-8 items-center justify-center rounded-lg bg-blue-600 px-3 text-xs font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                Bắt đầu xuất
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                disabled={
+                                                    actionLoading ||
+                                                    !canStopDevice(item)
+                                                }
+                                                onClick={() => onStopDeviceMode?.(item)}
+                                                className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-xs font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                <Power size={14} />
+                                                Dừng
+                                            </button>
+                                        </div>
+
+                                        {item.commandStatus === "PENDING" && (
+                                            <p className="mt-2 text-[11px] text-amber-700">
+                                                Đang chờ IoT poll và ACK lệnh.
+                                            </p>
+                                        )}
+
+                                        {item.commandStatus === "FAILED" && (
+                                            <p className="mt-2 text-[11px] text-red-600">
+                                                {item.commandErrorMessage || "Thiết bị không áp dụng được lệnh."}
+                                            </p>
+                                        )}
+                                    </td>
+
+                                    <td className="w-[100px] px-5 py-4">
                                         <button
                                             type="button"
                                             onClick={() => onViewDetail?.(item)}
@@ -141,7 +333,7 @@ export function OwnerIotDeviceTable({
                             {devices.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={7}
+                                        colSpan={10}
                                         className="px-5 py-10 text-center text-sm text-slate-500"
                                     >
                                         Farm chưa có thiết bị IoT nào.
