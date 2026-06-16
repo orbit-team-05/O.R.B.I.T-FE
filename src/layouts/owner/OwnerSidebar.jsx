@@ -12,7 +12,7 @@ import {
     Sprout,
     Warehouse,
     BrainCircuit,
-    PackagePlus,
+    PackageMinus,
     LogOut
 } from "lucide-react";
 
@@ -39,6 +39,11 @@ const OWNER_NAV_ITEMS = [
         label: "Kho vật tư",
         path: "/owner/inventory",
         icon: Warehouse,
+    },
+    {
+        label: "Xuất vật tư",
+        path: "/owner/iot-exports",
+        icon: PackageMinus,
     },
     {
         label: "Sản phẩm",
