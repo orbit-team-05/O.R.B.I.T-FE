@@ -1,9 +1,3 @@
-const SOURCE_LABELS = [
-    { keyword: "tepbac", label: "TEPBAC" },
-    { keyword: "tonghop", label: "TONGHOP" },
-    { keyword: "fruit", label: "FRUITVN" },
-];
-
 export function formatPrice(value) {
     if (value === null || value === undefined || value === "") return "-";
 
@@ -42,29 +36,9 @@ export function formatPriceChange(value) {
     return `${numberValue > 0 ? "+" : ""}${numberValue.toFixed(2)}%`;
 }
 
-export function getSourceLabel(item = {}) {
-    if (item.sourceCode) return String(item.sourceCode).toUpperCase();
-
-    const rawSource = item.sourceName || item.sourceUrl || "";
-    const normalizedSource = String(rawSource).toLowerCase();
-    const matchedSource = SOURCE_LABELS.find(({ keyword }) =>
-        normalizedSource.includes(keyword),
-    );
-
-    if (matchedSource) return matchedSource.label;
-
-    try {
-        const host = new URL(rawSource).hostname.replace(/^www\./, "");
-        return host.split(".")[0]?.toUpperCase() || "NGUON";
-    } catch {
-        return rawSource ? String(rawSource).toUpperCase() : "NGUON";
-    }
-}
-
 export function enrichMarketPrice(item = {}) {
     return {
         ...item,
-        sourceLabel: getSourceLabel(item),
         priceChangeValue: getPriceChangeValue(item.priceChange),
     };
 }
