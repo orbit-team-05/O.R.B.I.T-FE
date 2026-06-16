@@ -1,4 +1,4 @@
-import { Calendar, CheckCircle2, DollarSign, Sprout } from "lucide-react";
+import { Calendar, CheckCircle2, DollarSign, Sprout, TrendingUp } from "lucide-react";
 
 function formatCurrency(value) {
     if (value == null) return "0 ₫";
@@ -40,6 +40,14 @@ export function SeasonDashboardStats({ dashboard }) {
             colorClass: "text-amber-600 bg-amber-50 border-amber-100",
         },
         {
+            key: "totalExpectedRevenue",
+            label: "Doanh thu dự kiến",
+            value: dashboard?.totalExpectedRevenue ?? 0,
+            formattedValue: formatCurrency(dashboard?.totalExpectedRevenue ?? 0),
+            icon: TrendingUp,
+            colorClass: "text-rose-600 bg-rose-50 border-rose-100",
+        },
+        {
             key: "completedSeasons",
             label: "Mùa vụ hoàn thành",
             value: dashboard?.completedSeasons ?? 0,
@@ -50,7 +58,7 @@ export function SeasonDashboardStats({ dashboard }) {
     ];
 
     return (
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {stats.map((stat) => {
                 const IconComponent = stat.icon;
                 return (
@@ -75,3 +83,4 @@ export function SeasonDashboardStats({ dashboard }) {
         </section>
     );
 }
+

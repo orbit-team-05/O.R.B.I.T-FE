@@ -7,6 +7,7 @@ const INITIAL_FORM = {
     startDate: "",
     endDate: "",
     expectedYieldKg: "",
+    expectedPricePerKg: "",
 };
 
 function Field({ label, helper, error, children }) {
@@ -84,6 +85,10 @@ export function SeasonCreateDrawer({
             tempErrors.expectedYieldKg = "Sản lượng dự kiến phải lớn hơn 0";
         }
 
+        if (form.expectedPricePerKg && Number(form.expectedPricePerKg) <= 0) {
+            tempErrors.expectedPricePerKg = "Giá dự kiến phải lớn hơn 0";
+        }
+
         setErrors(tempErrors);
         return Object.keys(tempErrors).length === 0;
     }
@@ -98,6 +103,7 @@ export function SeasonCreateDrawer({
             startDate: form.startDate,
             endDate: form.endDate,
             expectedYieldKg: Number(form.expectedYieldKg),
+            expectedPricePerKg: form.expectedPricePerKg ? Number(form.expectedPricePerKg) : null,
         });
     }
 
@@ -189,6 +195,22 @@ export function SeasonCreateDrawer({
                                 onChange={(e) => updateField("expectedYieldKg", e.target.value)}
                                 className={inputClass(!!errors.expectedYieldKg)}
                                 placeholder="Ví dụ: 5000"
+                            />
+                        </Field>
+
+                        <Field
+                            label="Giá dự kiến (₫/kg)"
+                            error={errors.expectedPricePerKg}
+                            helper="Giá bán dự kiến mỗi kg sản phẩm (không bắt buộc)"
+                        >
+                            <input
+                                type="number"
+                                min="0.1"
+                                step="any"
+                                value={form.expectedPricePerKg}
+                                onChange={(e) => updateField("expectedPricePerKg", e.target.value)}
+                                className={inputClass(!!errors.expectedPricePerKg)}
+                                placeholder="Ví dụ: 150000"
                             />
                         </Field>
 

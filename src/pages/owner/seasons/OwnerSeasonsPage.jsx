@@ -49,8 +49,8 @@ function PageHeader({ onCreate, onRefresh, loading }) {
 function PageSkeleton() {
     return (
         <div className="space-y-6 px-6 py-6">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {Array.from({ length: 4 }).map((_, idx) => (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                {Array.from({ length: 5 }).map((_, idx) => (
                     <div
                         key={idx}
                         className="h-[96px] animate-pulse rounded-xl bg-slate-100 border border-slate-200"

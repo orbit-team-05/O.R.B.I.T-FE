@@ -47,6 +47,7 @@ export function SeasonDetailDrawer({
         startDate: "",
         plannedEndDate: "",
         expectedYieldKg: "",
+        expectedPricePerKg: "",
     });
 
     const [confirmDialog, setConfirmDialog] = useState({
@@ -64,6 +65,7 @@ export function SeasonDetailDrawer({
                 startDate: season.startDate || "",
                 plannedEndDate: season.plannedEndDate || "",
                 expectedYieldKg: season.expectedYieldKg || "",
+                expectedPricePerKg: season.expectedPricePerKg || "",
             });
             setIsEditing(false);
         }
@@ -99,6 +101,9 @@ export function SeasonDetailDrawer({
         if (form.expectedYieldKg !== "" && Number(form.expectedYieldKg) <= 0) {
             errors.expectedYieldKg = "Sản lượng dự kiến phải lớn hơn 0.";
         }
+        if (form.expectedPricePerKg !== "" && Number(form.expectedPricePerKg) <= 0) {
+            errors.expectedPricePerKg = "Giá dự kiến phải lớn hơn 0.";
+        }
         setFieldErrors(errors);
         return Object.keys(errors).length === 0;
     }
@@ -110,6 +115,7 @@ export function SeasonDetailDrawer({
             startDate: isFieldDisabled("startDate") ? undefined : form.startDate,
             plannedEndDate: form.plannedEndDate,
             expectedYieldKg: Number(form.expectedYieldKg),
+            expectedPricePerKg: form.expectedPricePerKg ? Number(form.expectedPricePerKg) : null,
         }).then((res) => {
             if (res) {
                 setIsEditing(false);
@@ -117,21 +123,40 @@ export function SeasonDetailDrawer({
         });
     }
 
+    const STATUS_CONFIRM_MAP = {
+        ACTIVE: {
+            title: "Bắt đầu nuôi",
+            description: `Bạn có chắc chắn muốn chuyển mùa vụ "${season.seasonName}" sang trạng thái đang nuôi?`,
+            variant: "success",
+        },
+        HARVESTING: {
+            title: "Bắt đầu thu hoạch",
+            description: `Bạn có chắc chắn muốn chuyển mùa vụ "${season.seasonName}" sang giai đoạn thu hoạch?`,
+            variant: "success",
+        },
+        COMPLETED: {
+            title: "Hoàn thành mùa vụ",
+            description: `Bạn có chắc chắn muốn hoàn thành mùa vụ "${season.seasonName}"? Thao tác này sẽ khóa toàn bộ dữ liệu của mùa vụ và không thể hoàn tác.`,
+            variant: "danger",
+        },
+    };
+
     function triggerStatusChange(nextStatus, label) {
-        if (nextStatus === "COMPLETED") {
-            setConfirmDialog({
-                open: true,
-                title: "Hoàn thành mùa vụ",
-                description: `Bạn có chắc chắn muốn hoàn thành mùa vụ "${season.seasonName}"? Thao tác này sẽ khóa toàn bộ dữ liệu của mùa vụ và không thể hoàn tác.`,
-                variant: "success",
-                onConfirm: () => {
-                    onUpdateStatus?.(season.id, nextStatus);
-                    setConfirmDialog((prev) => ({ ...prev, open: false }));
-                },
-            });
-        } else {
-            onUpdateStatus?.(season.id, nextStatus);
-        }
+        const config = STATUS_CONFIRM_MAP[nextStatus] || {
+            title: label,
+            description: `Bạn có chắc chắn muốn thực hiện thao tác "${label}" cho mùa vụ "${season.seasonName}"?`,
+            variant: "success",
+        };
+        setConfirmDialog({
+            open: true,
+            title: config.title,
+            description: config.description,
+            variant: config.variant,
+            onConfirm: () => {
+                onUpdateStatus?.(season.id, nextStatus);
+                setConfirmDialog((prev) => ({ ...prev, open: false }));
+            },
+        });
     }
 
     function triggerCancel() {
@@ -222,6 +247,7 @@ export function SeasonDetailDrawer({
                                             startDate: season.startDate || "",
                                             plannedEndDate: season.plannedEndDate || "",
                                             expectedYieldKg: season.expectedYieldKg || "",
+                                            expectedPricePerKg: season.expectedPricePerKg || "",
                                         });
                                     }}
                                     disabled={submitting}
@@ -334,8 +360,23 @@ export function SeasonDetailDrawer({
                                     )}
                                 </div>
 
+                                <div>
+                                    <label className="text-xs font-semibold text-slate-500">Giá dự kiến (₫/kg)</label>
+                                    <input
+                                        type="number"
+                                        value={form.expectedPricePerKg}
+                                        onChange={(e) => setForm({ ...form, expectedPricePerKg: e.target.value })}
+                                        disabled={isFieldDisabled("expectedPricePerKg")}
+                                        className={`${inputClass(isFieldDisabled("expectedPricePerKg"))} ${fieldErrors.expectedPricePerKg ? "!border-red-400 !ring-red-100" : ""}`}
+                                        placeholder="Ví dụ: 150000"
+                                    />
+                                    {fieldErrors.expectedPricePerKg && (
+                                        <p className="mt-1 text-xs text-red-500">{fieldErrors.expectedPricePerKg}</p>
+                                    )}
+                                </div>
+
                                 {!isEditing && (
-                                    <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-3">
+                                    <div className="grid grid-cols-3 gap-4 border-t border-slate-100 pt-3">
                                         <div>
                                             <span className="text-xs text-slate-500">Tổng chi phí tích lũy:</span>
                                             <p className="text-sm font-semibold text-red-600 mt-0.5">
@@ -346,6 +387,12 @@ export function SeasonDetailDrawer({
                                             <span className="text-xs text-slate-500">Sản lượng thực tế:</span>
                                             <p className="text-sm font-semibold text-emerald-700 mt-0.5">
                                                 {formatNumber(season.actualYieldKg)} kg
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <span className="text-xs text-slate-500">Doanh thu dự kiến:</span>
+                                            <p className="text-sm font-semibold text-rose-600 mt-0.5">
+                                                {season.expectedRevenue != null ? formatCurrency(season.expectedRevenue) : "Chưa có"}
                                             </p>
                                         </div>
                                     </div>
