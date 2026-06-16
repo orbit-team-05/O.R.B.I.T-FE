@@ -64,6 +64,8 @@ export function SeasonDetailDrawer({
         onConfirm: () => {},
     });
 
+    const [fieldErrors, setFieldErrors] = useState({});
+
     useEffect(() => {
         if (open && season) {
             setForm({
@@ -74,6 +76,7 @@ export function SeasonDetailDrawer({
                 expectedPricePerKg: season.expectedPricePerKg || "",
             });
             setIsEditing(false);
+            setFieldErrors({});
         }
     }, [open, season]);
 
@@ -93,8 +96,6 @@ export function SeasonDetailDrawer({
         }
         return false;
     };
-
-    const [fieldErrors, setFieldErrors] = useState({});
 
     function validate() {
         const errors = {};
