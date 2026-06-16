@@ -6,6 +6,7 @@ import { UserTable } from "../../../features/admin/users/components/UserTable";
 import { UserDrawer } from "../../../features/admin/users/components/UserDrawer";
 import { useAdminUsers } from "../../../features/admin/users/hooks/useAdminUsers";
 import { getUserDetail } from "../../../features/admin/users/services/userApi";
+import { useAuth } from "../../../features/auth/context/AuthContext";
 
 function AdminUsersHeader({ onCreate }) {
     return (
@@ -52,6 +53,9 @@ function AdminUsersSkeleton() {
 
 export function AdminUsersPage() {
     const { toast } = useToast();
+    const { user: currentUser } = useAuth();
+    const currentUserId = currentUser?.userId;
+
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [drawerMode, setDrawerMode] = useState("create");
     const [selectedUser, setSelectedUser] = useState(null);
@@ -103,6 +107,10 @@ export function AdminUsersPage() {
     }
 
     async function openEditDrawer(user) {
+        if (user.id === currentUserId) {
+            toast.error("Bạn không thể tự chỉnh sửa tài khoản của bản thân.");
+            return;
+        }
         clearActionError();
         setDrawerMode("edit");
         setSelectedUser(user);
@@ -122,14 +130,18 @@ export function AdminUsersPage() {
     }
 
     async function handleDrawerSubmit(payload) {
+        console.log("handleDrawerSubmit starting with mode:", drawerMode, "payload:", payload);
         if (drawerMode === "create") {
             const success = await createUser(payload);
+            console.log("createUser response success:", success);
             if (success) {
                 toast.success("Tạo tài khoản người dùng mới thành công!");
                 closeDrawer();
             }
         } else {
+            console.log("updateUser starting for selectedUser ID:", selectedUser.id, "payload:", payload);
             const success = await updateUser(selectedUser.id, payload);
+            console.log("updateUser response success:", success);
             if (success) {
                 toast.success("Cập nhật tài khoản người dùng thành công!");
                 closeDrawer();
@@ -138,6 +150,10 @@ export function AdminUsersPage() {
     }
 
     function handleOpenConfirm(user) {
+        if (user.id === currentUserId) {
+            toast.error("Bạn không thể tự khóa tài khoản của bản thân.");
+            return;
+        }
         setConfirmState({
             open: true,
             user,
@@ -200,6 +216,7 @@ export function AdminUsersPage() {
                     onView={openViewDrawer}
                     onEdit={openEditDrawer}
                     onToggleStatus={handleOpenConfirm}
+                    currentUserId={currentUserId}
                 />
             </section>
 

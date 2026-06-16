@@ -88,15 +88,21 @@ export function useAdminUsers(initialPage = 0, initialSize = 10) {
     }
 
     async function handleUpdateUser(userId, payload) {
+        console.log("useAdminUsers handleUpdateUser called, userId:", userId, "payload:", payload);
         try {
             setActionLoading(true);
             setActionError("");
 
-            await updateUser(userId, payload);
+            const res = await updateUser(userId, payload);
+            console.log("useAdminUsers: updateUser API response:", res);
+
+            console.log("useAdminUsers: loading users...");
             await loadUsers();
+            console.log("useAdminUsers: loadUsers completed");
 
             return true;
         } catch (err) {
+            console.error("useAdminUsers: handleUpdateUser failed with error:", err);
             setActionError(getErrorMessage(err, "Không thể cập nhật người dùng."));
             return false;
         } finally {

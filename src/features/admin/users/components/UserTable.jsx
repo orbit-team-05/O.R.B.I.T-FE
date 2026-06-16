@@ -37,6 +37,7 @@ function ActionButton({ children, variant = "default", ...props }) {
                 "text-xs font-medium transition-colors duration-150",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006948]/30",
                 variantClass,
+                "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent",
             ].join(" ")}
             {...props}
         >
@@ -53,6 +54,7 @@ export function UserTable({
     onView,
     onEdit,
     onToggleStatus,
+    currentUserId,
 }) {
     return (
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
@@ -149,13 +151,19 @@ export function UserTable({
                                                     Xem
                                                 </ActionButton>
 
-                                                <ActionButton onClick={() => onEdit?.(item)}>
+                                                <ActionButton
+                                                    onClick={() => onEdit?.(item)}
+                                                    disabled={item.id === currentUserId}
+                                                    title={item.id === currentUserId ? "Bạn không thể tự chỉnh sửa vai trò hoặc nông trại của bản thân" : ""}
+                                                >
                                                     Sửa
                                                 </ActionButton>
 
                                                 <ActionButton
                                                     variant={item.status === "ACTIVE" ? "danger" : "success"}
                                                     onClick={() => onToggleStatus?.(item)}
+                                                    disabled={item.id === currentUserId}
+                                                    title={item.id === currentUserId ? "Bạn không thể tự khóa/mở khóa tài khoản của bản thân" : ""}
                                                 >
                                                     {item.status === "ACTIVE" ? "Khóa" : "Mở khóa"}
                                                 </ActionButton>
