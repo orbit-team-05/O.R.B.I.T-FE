@@ -12,6 +12,14 @@ export async function getPendingImportScans(farmId, page = 0, size = 10) {
     return response.data.data;
 }
 
+export async function getImportScans(farmId, page = 0, size = 10) {
+    const response = await httpClient.get(getEndpoint(farmId), {
+        params: { page, size },
+    });
+
+    return response.data.data;
+}
+
 export async function confirmImportScan(
     farmId,
     transactionId,

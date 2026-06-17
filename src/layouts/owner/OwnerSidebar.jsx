@@ -41,6 +41,11 @@ const OWNER_NAV_ITEMS = [
         icon: Warehouse,
     },
     {
+        label: "Nhập vật tư",
+        path: "/owner/iot-imports",
+        icon: QrCode,
+    },
+    {
         label: "Xuất vật tư",
         path: "/owner/iot-exports",
         icon: PackageMinus,
