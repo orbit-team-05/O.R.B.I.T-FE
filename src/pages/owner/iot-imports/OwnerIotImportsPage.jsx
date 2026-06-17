@@ -4,27 +4,22 @@ import { RefreshCcw } from "lucide-react";
 import { IotImportConfirmDrawer } from "../../../features/owner/iot-imports/components/IotImportConfirmDrawer";
 import { IotImportPendingTable } from "../../../features/owner/iot-imports/components/IotImportPendingTable";
 import { useOwnerIotImports } from "../../../features/owner/iot-imports/hooks/useOwnerIotImports";
-
 import { useAuth } from "../../../features/auth/context/AuthContext";
-
-import { InventoryStockTable } from "../../../features/owner/inventory/components/InventoryStockTable";
-import { InventoryStockDetailDrawer } from "../../../features/owner/inventory/components/InventoryStockDetailDrawer";
-import { useOwnerInventoryStocks } from "../../../features/owner/inventory/hooks/useOwnerInventoryStocks";
 
 function PageHeader({ onRefresh }) {
     return (
         <header className="flex flex-col gap-3 border-b border-slate-200 bg-white px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <p className="text-sm font-medium text-[#006948]">
-                    Owner / Kho vật tư
+                    Owner / Nhập vật tư
                 </p>
 
                 <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
-                    Kho vật tư
+                    Nhập vật tư
                 </h1>
 
                 <p className="mt-1 text-sm text-slate-600">
-                    Quản lý scan nhập kho IoT, xác nhận giá lô hàng và theo dõi tồn kho hiện tại.
+                    Xác nhận scan nhập từ cân IoT, nhập giá lô hàng và xem lịch sử nhập kho.
                 </p>
             </div>
 
@@ -47,40 +42,30 @@ export function OwnerIotImportsPage() {
     const [activeTab, setActiveTab] = useState("pending");
     const [selectedScan, setSelectedScan] = useState(null);
 
-
     const {
-        scans,
+        pendingScans,
+        historyScans,
         summary,
-        pageInfo,
+
+        pendingPageInfo,
+        historyPageInfo,
+
         initialLoading,
         tableLoading,
+        historyLoading,
         submittingId,
+
         error,
         actionError,
         actionSuccess,
-        setPage,
+
+        setPendingPage,
+        setHistoryPage,
+
         reload,
         confirmImport,
         clearActionMessages,
     } = useOwnerIotImports(farmId);
-
-    const {
-        stocks,
-        summary: stockSummary,
-        pageInfo: stockPageInfo,
-        loading: stockLoading,
-        error: stockError,
-
-        selectedStockDetail,
-        setSelectedStockDetail,
-        detailLoading,
-        loadStockDetail,
-
-        setPage: setStockPage,
-        reload: reloadStocks,
-    } = useOwnerInventoryStocks(farmId);
-
-
 
     function openConfirmDrawer(scan) {
         clearActionMessages();
@@ -101,27 +86,8 @@ export function OwnerIotImportsPage() {
 
         if (result) {
             closeConfirmDrawer();
-            await reloadStocks();
-            setActiveTab("stocks");
+            setActiveTab("history");
         }
-    }
-
-    async function openStockDetail(stock) {
-        setSelectedStockDetail({
-            stock,
-            batches: [],
-        });
-
-        await loadStockDetail(stock.stockId);
-    }
-
-    function closeStockDetail() {
-        setSelectedStockDetail(null);
-    }
-
-    async function handleRefresh() {
-        await reload();
-        await reloadStocks();
     }
 
     if (!farmId) {
@@ -134,12 +100,18 @@ export function OwnerIotImportsPage() {
 
     return (
         <div className="min-h-screen bg-slate-50">
-            <PageHeader onRefresh={handleRefresh} />
+            <PageHeader onRefresh={reload} />
 
             <main className="space-y-5 px-6 py-6">
                 {actionSuccess && (
                     <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-[#006948]">
                         {actionSuccess}
+                    </div>
+                )}
+
+                {actionError && (
+                    <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+                        {actionError}
                     </div>
                 )}
 
@@ -164,22 +136,28 @@ export function OwnerIotImportsPage() {
 
                     <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
                         <p className="text-xs font-medium uppercase text-slate-500">
-                            Sản phẩm trong kho
+                            Đã nhập
                         </p>
                         <p className="mt-2 text-2xl font-semibold text-slate-900">
-                            {stockSummary?.totalProducts ?? 0}
+                            {summary?.approved ?? 0}
                         </p>
                     </div>
 
                     <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
                         <p className="text-xs font-medium uppercase text-slate-500">
-                            Giá trị tồn kho
+                            Giá trị nhập
                         </p>
                         <p className="mt-2 text-2xl font-semibold text-[#006948]">
-                            {Number(stockSummary?.inventoryValue || 0).toLocaleString("vi-VN")}đ
+                            {Number(summary?.totalImportCost || 0).toLocaleString("vi-VN")}đ
                         </p>
                     </div>
                 </section>
+
+                {error && (
+                    <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+                        {error}
+                    </div>
+                )}
 
                 <section className="flex gap-2 rounded-xl border border-slate-200 bg-white p-1">
                     <button
@@ -197,53 +175,42 @@ export function OwnerIotImportsPage() {
 
                     <button
                         type="button"
-                        onClick={() => setActiveTab("stocks")}
+                        onClick={() => setActiveTab("history")}
                         className={[
                             "h-10 rounded-lg px-4 text-sm font-medium transition-colors",
-                            activeTab === "stocks"
+                            activeTab === "history"
                                 ? "bg-[#006948] text-white"
                                 : "text-slate-600 hover:bg-slate-50",
                         ].join(" ")}
                     >
-                        Tồn kho hiện tại
+                        Lịch sử nhập
                     </button>
                 </section>
 
                 {activeTab === "pending" && (
-                    <>
-                        {error ? (
-                            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-                                {error}
-                            </div>
-                        ) : (
-                            <IotImportPendingTable
-                                scans={scans}
-                                pageInfo={pageInfo}
-                                loading={initialLoading || tableLoading}
-                                submittingId={submittingId}
-                                onConfirm={openConfirmDrawer}
-                                onPageChange={setPage}
-                            />
-                        )}
-                    </>
+                    <IotImportPendingTable
+                        title="Scan nhập kho chờ xác nhận"
+                        description="Dữ liệu từ cân IoT ở chế độ nhập sẽ hiện ở đây. Owner cần nhập giá lô hàng để xác nhận nhập kho."
+                        mode="pending"
+                        scans={pendingScans}
+                        pageInfo={pendingPageInfo}
+                        loading={initialLoading || tableLoading}
+                        submittingId={submittingId}
+                        onConfirm={openConfirmDrawer}
+                        onPageChange={setPendingPage}
+                    />
                 )}
 
-                {activeTab === "stocks" && (
-                    <>
-                        {stockError ? (
-                            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-                                {stockError}
-                            </div>
-                        ) : (
-                            <InventoryStockTable
-                                stocks={stocks}
-                                pageInfo={stockPageInfo}
-                                loading={stockLoading}
-                                onPageChange={setStockPage}
-                                onViewDetail={openStockDetail}
-                            />
-                        )}
-                    </>
+                {activeTab === "history" && (
+                    <IotImportPendingTable
+                        title="Lịch sử nhập vật tư"
+                        description="Danh sách scan nhập kho đã được xác nhận thành giao dịch nhập."
+                        mode="history"
+                        scans={historyScans}
+                        pageInfo={historyPageInfo}
+                        loading={historyLoading}
+                        onPageChange={setHistoryPage}
+                    />
                 )}
             </main>
 
@@ -254,13 +221,6 @@ export function OwnerIotImportsPage() {
                 actionError={actionError}
                 onClose={closeConfirmDrawer}
                 onConfirm={handleConfirmImport}
-            />
-
-            <InventoryStockDetailDrawer
-                open={Boolean(selectedStockDetail)}
-                detail={selectedStockDetail}
-                loading={detailLoading}
-                onClose={closeStockDetail}
             />
         </div>
     );

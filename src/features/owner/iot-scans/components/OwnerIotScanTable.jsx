@@ -72,6 +72,42 @@ function AiStatusBadge({ item }) {
     );
 }
 
+function getFlowLabel(item) {
+    if (item?.requestedAction === "EXPORT_FEED" || item?.transactionType === "EXPORT_FEED") {
+        return {
+            label: "Xuất vật tư",
+            className: "bg-orange-50 text-orange-700",
+        };
+    }
+
+    if (item?.requestedAction === "IMPORT_STOCK" || item?.transactionType === "IMPORT") {
+        return {
+            label: "Nhập kho",
+            className: "bg-emerald-50 text-[#006948]",
+        };
+    }
+
+    return {
+        label: "Scan IoT",
+        className: "bg-slate-100 text-slate-600",
+    };
+}
+
+function FlowBadge({ item }) {
+    const flow = getFlowLabel(item);
+
+    return (
+        <span
+            className={[
+                "inline-flex rounded-full px-3 py-1 text-[11px] font-medium",
+                flow.className,
+            ].join(" ")}
+        >
+            {flow.label}
+        </span>
+    );
+}
+
 export function OwnerIotScanTable({
                                       scans,
                                       pageInfo,
@@ -88,11 +124,11 @@ export function OwnerIotScanTable({
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
             <header className="border-b border-slate-200 px-5 py-4">
                 <h2 className="text-base font-semibold text-slate-900">
-                    Lịch sử nhập kho IoT
+                    Lịch sử Scan IoT
                 </h2>
 
                 <p className="mt-1 text-xs text-slate-600">
-                    Dữ liệu từ luồng /api/iot/import-scans: quét QR, nhập keypad và xác nhận nhập kho.
+                    Hiển thị toàn bộ scan từ thiết bị IoT: nhập kho, xuất vật tư, nhập keypad và voice phản hồi.
                 </p>
             </header>
 
@@ -105,6 +141,7 @@ export function OwnerIotScanTable({
                             <thead className="bg-slate-50">
                             <tr className="text-[11px] font-medium uppercase text-slate-600">
                                 <th className="px-5 py-3">Transaction</th>
+                                <th className="px-5 py-3">Luồng</th>
                                 <th className="px-5 py-3">Thời gian</th>
                                 <th className="px-5 py-3">Thiết bị</th>
                                 <th className="px-5 py-3">Sản phẩm / QR</th>
@@ -123,6 +160,9 @@ export function OwnerIotScanTable({
                                 >
                                     <td className="px-5 py-4 font-semibold text-slate-900">
                                         #{item.transactionId}
+                                    </td>
+                                    <td className="px-5 py-4">
+                                        <FlowBadge item={item} />
                                     </td>
 
                                     <td className="px-5 py-4">

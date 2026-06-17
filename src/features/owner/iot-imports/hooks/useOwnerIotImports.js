@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
     confirmImportScan,
+    getImportScans,
     getPendingImportScans,
 } from "../services/ownerIotImportApi";
 
@@ -8,14 +9,30 @@ function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
 }
 
-export function useOwnerIotImports(farmId, initialPage = 0, initialSize = 10) {
-    const [scanPage, setScanPage] = useState(null);
-    const [scans, setScans] = useState([]);
+function buildPageInfo(pageData, pageNumber, size, fallbackItems) {
+    return {
+        number: pageData?.number ?? pageData?.page ?? pageNumber,
+        size: pageData?.size ?? size,
+        totalPages: pageData?.totalPages ?? 0,
+        totalElements: pageData?.totalElements ?? fallbackItems.length,
+        first: pageData?.first ?? true,
+        last: pageData?.last ?? true,
+    };
+}
 
-    const [page, setPage] = useState(initialPage);
+export function useOwnerIotImports(farmId, initialPage = 0, initialSize = 10) {
+    const [pendingPage, setPendingPage] = useState(null);
+    const [historyPage, setHistoryPage] = useState(null);
+
+    const [pendingScans, setPendingScans] = useState([]);
+    const [historyScans, setHistoryScans] = useState([]);
+
+    const [pendingPageNumber, setPendingPageNumber] = useState(initialPage);
+    const [historyPageNumber, setHistoryPageNumber] = useState(initialPage);
     const [size] = useState(initialSize);
 
-    const [loading, setLoading] = useState(true);
+    const [pendingLoading, setPendingLoading] = useState(true);
+    const [historyLoading, setHistoryLoading] = useState(true);
     const [submittingId, setSubmittingId] = useState(null);
 
     const [error, setError] = useState("");
@@ -26,23 +43,53 @@ export function useOwnerIotImports(farmId, initialPage = 0, initialSize = 10) {
         if (!farmId) return;
 
         try {
-            setLoading(true);
+            setPendingLoading(true);
             setError("");
 
-            const data = await getPendingImportScans(farmId, page, size);
+            const data = await getPendingImportScans(
+                farmId,
+                pendingPageNumber,
+                size,
+            );
 
-            setScanPage(data);
-            setScans(data?.content ?? []);
+            setPendingPage(data);
+            setPendingScans(data?.content ?? []);
         } catch (err) {
             setError(getErrorMessage(err, "Không thể tải danh sách nhập kho chờ xác nhận."));
         } finally {
-            setLoading(false);
+            setPendingLoading(false);
         }
-    }, [farmId, page, size]);
+    }, [farmId, pendingPageNumber, size]);
+
+    const loadImportHistory = useCallback(async () => {
+        if (!farmId) return;
+
+        try {
+            setHistoryLoading(true);
+            setError("");
+
+            const data = await getImportScans(
+                farmId,
+                historyPageNumber,
+                size,
+            );
+
+            setHistoryPage(data);
+            setHistoryScans(data?.content ?? []);
+        } catch (err) {
+            setError(getErrorMessage(err, "Không thể tải lịch sử nhập kho."));
+        } finally {
+            setHistoryLoading(false);
+        }
+    }, [farmId, historyPageNumber, size]);
 
     useEffect(() => {
         void loadPendingImports();
     }, [loadPendingImports]);
+
+    useEffect(() => {
+        void loadImportHistory();
+    }, [loadImportHistory]);
 
     async function confirmImport(transactionId, totalImportCost, packageCount = 1) {
         try {
@@ -57,9 +104,11 @@ export function useOwnerIotImports(farmId, initialPage = 0, initialSize = 10) {
                 packageCount,
             );
 
-            setScans((prev) =>
+            setPendingScans((prev) =>
                 prev.filter((item) => item.transactionId !== transactionId),
             );
+
+            await loadImportHistory();
 
             setActionSuccess(
                 `Đã xác nhận nhập kho ${result.productName || "sản phẩm"}.`,
@@ -75,38 +124,61 @@ export function useOwnerIotImports(farmId, initialPage = 0, initialSize = 10) {
     }
 
     const summary = useMemo(() => {
+        const totalImportCost = historyScans.reduce(
+            (sum, item) => sum + Number(item.totalAmount || 0),
+            0,
+        );
+
         return {
-            pending: scans.length,
-            recognized: scans.filter((item) => item.productId).length,
-            unrecognized: scans.filter((item) => !item.productId).length,
+            pending: pendingScans.length,
+            recognized: pendingScans.filter((item) => item.productId).length,
+            unrecognized: pendingScans.filter((item) => !item.productId).length,
+            approved: historyScans.filter((item) => item.approvalStatus === "APPROVED").length,
+            totalImportCost,
         };
-    }, [scans]);
+    }, [pendingScans, historyScans]);
 
     return {
-        scans,
+        pendingScans,
+        historyScans,
         summary,
 
-        pageInfo: {
-            number: scanPage?.number ?? scanPage?.page ?? page,
-            size: scanPage?.size ?? size,
-            totalPages: scanPage?.totalPages ?? 0,
-            totalElements: scanPage?.totalElements ?? scans.length,
-            first: scanPage?.first ?? true,
-            last: scanPage?.last ?? true,
-        },
+        pendingPageInfo: buildPageInfo(
+            pendingPage,
+            pendingPageNumber,
+            size,
+            pendingScans,
+        ),
 
-        loading,
-        initialLoading: loading && scanPage === null,
-        tableLoading: loading && scanPage !== null,
+        historyPageInfo: buildPageInfo(
+            historyPage,
+            historyPageNumber,
+            size,
+            historyScans,
+        ),
+
+        pendingLoading,
+        historyLoading,
+        initialLoading: pendingLoading && pendingPage === null,
+        tableLoading: pendingLoading && pendingPage !== null,
         submittingId,
 
         error,
         actionError,
         actionSuccess,
 
-        setPage,
-        reload: loadPendingImports,
+        setPendingPage: setPendingPageNumber,
+        setHistoryPage: setHistoryPageNumber,
+
+        reload: async () => {
+            await Promise.all([
+                loadPendingImports(),
+                loadImportHistory(),
+            ]);
+        },
+
         confirmImport,
+
         clearActionMessages: () => {
             setActionError("");
             setActionSuccess("");

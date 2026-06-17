@@ -69,6 +69,10 @@ export function OwnerSeasonsPage() {
         dashboard,
         selectedDetail,
         setSelectedDetail,
+        materialUsages,
+        materialUsagePageInfo,
+        materialUsageLoading,
+        setMaterialUsagePage,
         speciesList,
         pageInfo,
         initialLoading,
@@ -170,6 +174,10 @@ export function OwnerSeasonsPage() {
             <SeasonDetailDrawer
                 open={Boolean(selectedDetail)}
                 season={selectedDetail}
+                materialUsages={materialUsages}
+                materialUsagePageInfo={materialUsagePageInfo}
+                materialUsageLoading={materialUsageLoading}
+                onMaterialUsagePageChange={setMaterialUsagePage}
                 submitting={submitting}
                 actionError={actionError}
                 onClose={handleCloseDetail}

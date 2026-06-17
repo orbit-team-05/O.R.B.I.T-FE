@@ -24,6 +24,9 @@ function formatWeight(value) {
 }
 
 export function IotImportPendingTable({
+                                          title = "Scan nhập kho chờ xác nhận",
+                                          description = "Dữ liệu từ cân IoT sẽ tự hiện ở đây qua WebSocket.",
+                                          mode = "pending",
                                           scans,
                                           pageInfo,
                                           loading = false,
@@ -40,11 +43,11 @@ export function IotImportPendingTable({
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
             <header className="border-b border-slate-200 px-5 py-4">
                 <h2 className="text-base font-semibold text-slate-900">
-                    Scan nhập kho chờ xác nhận
+                    {title}
                 </h2>
 
                 <p className="mt-1 text-xs text-slate-600">
-                    Dữ liệu từ cân IoT sẽ tự hiện ở đây qua WebSocket.
+                    {description}
                 </p>
             </header>
 
@@ -63,7 +66,9 @@ export function IotImportPendingTable({
                                 <th className="px-5 py-3">Khối lượng</th>
                                 <th className="px-5 py-3">QR</th>
                                 <th className="px-5 py-3">Trạng thái</th>
-                                <th className="w-[150px] px-5 py-3">Hành động</th>
+                                <th className="w-[150px] px-5 py-3">
+                                    {mode === "pending" ? "Hành động" : "Chi phí"}
+                                </th>
                             </tr>
                             </thead>
 
@@ -118,26 +123,36 @@ export function IotImportPendingTable({
                                     </td>
 
                                     <td className="px-5 py-4">
-                                        {item.productId ? (
+                                        {mode === "history" ? (
                                             <span className="rounded bg-emerald-50 px-2 py-1 text-[11px] font-medium text-[#006948]">
-                                                    Chờ nhập giá
-                                                </span>
+        Đã nhập kho
+    </span>
+                                        ) : item.productId ? (
+                                            <span className="rounded bg-emerald-50 px-2 py-1 text-[11px] font-medium text-[#006948]">
+        Chờ nhập giá
+    </span>
                                         ) : (
                                             <span className="rounded bg-red-50 px-2 py-1 text-[11px] font-medium text-red-600">
-                                                    Lỗi QR
-                                                </span>
+        Lỗi QR
+    </span>
                                         )}
                                     </td>
 
                                     <td className="w-[150px] px-5 py-4">
-                                        <button
-                                            type="button"
-                                            disabled={!item.productId || submittingId === item.transactionId}
-                                            onClick={() => onConfirm?.(item)}
-                                            className="inline-flex h-8 items-center justify-center rounded-lg bg-[#006948] px-3 text-xs font-medium text-white transition-colors hover:bg-[#00583d] disabled:cursor-not-allowed disabled:opacity-50"
-                                        >
-                                            Xác nhận
-                                        </button>
+                                        {mode === "pending" ? (
+                                            <button
+                                                type="button"
+                                                disabled={!item.productId || submittingId === item.transactionId}
+                                                onClick={() => onConfirm?.(item)}
+                                                className="inline-flex h-8 items-center justify-center rounded-lg bg-[#006948] px-3 text-xs font-medium text-white transition-colors hover:bg-[#00583d] disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                Xác nhận
+                                            </button>
+                                        ) : (
+                                            <span className="text-xs font-semibold text-[#006948]">
+        {Number(item.totalAmount || 0).toLocaleString("vi-VN")}đ
+    </span>
+                                        )}
                                     </td>
                                 </tr>
                             ))}
@@ -148,7 +163,9 @@ export function IotImportPendingTable({
                                         colSpan={8}
                                         className="px-5 py-10 text-center text-sm text-slate-500"
                                     >
-                                        Chưa có scan nhập kho nào đang chờ xác nhận.
+                                        {mode === "pending"
+                                            ? "Chưa có scan nhập kho nào đang chờ xác nhận."
+                                            : "Chưa có lịch sử nhập kho."}
                                     </td>
                                 </tr>
                             )}

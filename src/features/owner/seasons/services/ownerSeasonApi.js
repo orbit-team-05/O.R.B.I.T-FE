@@ -27,8 +27,8 @@ export async function updateSeason(id, payload) {
     return response.data.data;
 }
 
-export async function updateSeasonStatus(id, status) {
-    const response = await httpClient.patch(`/seasons/${id}/status`, { status });
+export async function updateSeasonStatus(id, payload) {
+    const response = await httpClient.patch(`/seasons/${id}/status`, payload);
     return response.data.data;
 }
 
@@ -39,5 +39,13 @@ export async function cancelSeason(id) {
 
 export async function getActiveSpecies() {
     const response = await httpClient.get("/species");
+    return response.data.data;
+}
+
+export async function getSeasonMaterialUsages(id, page = 0, size = 10) {
+    const response = await httpClient.get(`/seasons/${id}/material-usages`, {
+        params: { page, size },
+    });
+
     return response.data.data;
 }

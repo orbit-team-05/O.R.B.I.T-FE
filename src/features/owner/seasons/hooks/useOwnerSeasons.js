@@ -4,6 +4,7 @@ import {
     getSeasonCards,
     createSeason as apiCreateSeason,
     getSeasonDetail,
+    getSeasonMaterialUsages,
     updateSeason as apiUpdateSeason,
     updateSeasonStatus,
     cancelSeason as apiCancelSeason,
@@ -18,6 +19,10 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
     const [seasonPage, setSeasonPage] = useState(null);
     const [dashboard, setDashboard] = useState(null);
     const [selectedDetail, setSelectedDetail] = useState(null);
+    const [materialUsagePage, setMaterialUsagePage] = useState(null);
+    const [materialUsagePageNumber, setMaterialUsagePageNumber] = useState(0);
+    const [materialUsageSize] = useState(10);
+    const [materialUsageLoading, setMaterialUsageLoading] = useState(false);
     const [speciesList, setSpeciesList] = useState([]);
 
     const [page, setPage] = useState(initialPage);
@@ -80,22 +85,59 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
         loadSpecies();
     }, [loadDashboard, loadSpecies]);
 
-    const loadDetail = useCallback(async (id) => {
-        if (!id) return;
-        try {
-            setDetailLoading(true);
-            setLoadingDetailId(id);
-            setActionError("");
-            const data = await getSeasonDetail(id);
-            setSelectedDetail(data);
-            return data;
-        } catch (err) {
-            setActionError(getErrorMessage(err, "Không thể tải chi tiết mùa vụ."));
-        } finally {
-            setDetailLoading(false);
-            setLoadingDetailId(null);
-        }
-    }, []);
+    const loadMaterialUsages = useCallback(
+        async (seasonId, nextPage = 0) => {
+            if (!seasonId) return null;
+
+            try {
+                setMaterialUsageLoading(true);
+
+                const data = await getSeasonMaterialUsages(
+                    seasonId,
+                    nextPage,
+                    materialUsageSize,
+                );
+
+                setMaterialUsagePage(data);
+                return data;
+            } catch (err) {
+                setActionError(
+                    getErrorMessage(err, "Không thể tải lịch sử vật tư mùa vụ."),
+                );
+                return null;
+            } finally {
+                setMaterialUsageLoading(false);
+            }
+        },
+        [materialUsageSize],
+    );
+
+    const loadDetail = useCallback(
+        async (id) => {
+            if (!id) return;
+
+            try {
+                setDetailLoading(true);
+                setLoadingDetailId(id);
+                setActionError("");
+                setMaterialUsagePage(null);
+                setMaterialUsagePageNumber(0);
+
+                const data = await getSeasonDetail(id);
+                setSelectedDetail(data);
+
+                await loadMaterialUsages(id, 0);
+
+                return data;
+            } catch (err) {
+                setActionError(getErrorMessage(err, "Không thể tải chi tiết mùa vụ."));
+            } finally {
+                setDetailLoading(false);
+                setLoadingDetailId(null);
+            }
+        },
+        [loadMaterialUsages],
+    );
 
     const createSeason = async (payload) => {
         try {
@@ -134,12 +176,17 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
         }
     };
 
-    const updateStatus = async (id, status) => {
+    const updateStatus = async (id, status, extraPayload = {}) => {
         try {
             setSubmitting(true);
             setActionError("");
             setActionSuccess("");
-            await updateSeasonStatus(id, status);
+
+            await updateSeasonStatus(id, {
+                status,
+                ...extraPayload,
+            });
+
             setActionSuccess("Chuyển trạng thái mùa vụ thành công.");
             setSelectedDetail(null);
             await reload();
@@ -169,6 +216,15 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
             setSubmitting(false);
         }
     };
+
+    async function handleSetMaterialUsagePage(nextPage) {
+        const normalizedPage = Math.max(Number(nextPage) || 0, 0);
+        setMaterialUsagePageNumber(normalizedPage);
+
+        if (selectedDetail?.id) {
+            await loadMaterialUsages(selectedDetail.id, normalizedPage);
+        }
+    }
 
     function handleSetPage(nextPage) {
         setPage(Math.max(Number(nextPage) || 0, 0));
@@ -200,6 +256,21 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
         error,
         actionError,
         actionSuccess,
+        materialUsages: materialUsagePage?.content ?? [],
+        materialUsagePageInfo: {
+            number: materialUsagePage?.number ?? materialUsagePageNumber,
+            size: materialUsagePage?.size ?? materialUsageSize,
+            totalPages: materialUsagePage?.totalPages ?? 0,
+            totalElements: materialUsagePage?.totalElements ?? 0,
+            first: materialUsagePage?.first ?? true,
+            last: materialUsagePage?.last ?? true,
+        },
+        materialUsageLoading,
+        setMaterialUsagePage: handleSetMaterialUsagePage,
+        reloadMaterialUsages: () => {
+            if (!selectedDetail?.id) return Promise.resolve(null);
+            return loadMaterialUsages(selectedDetail.id, materialUsagePageNumber);
+        },
 
         setPage: handleSetPage,
         reload,

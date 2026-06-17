@@ -13,6 +13,7 @@ import { OwnerSeasonsPage } from "../../pages/owner/seasons/OwnerSeasonsPage";
 import { OwnerIotExportsPage } from "../../pages/owner/iot-exports/OwnerIotExportsPage";
 import { OwnerInventoryPage } from "../../pages/owner/inventory/OwnerInventoryPage";
 
+
 export function OwnerRoutes() {
     return (
         <Routes>

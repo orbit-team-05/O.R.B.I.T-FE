@@ -7,7 +7,7 @@ const INITIAL_FORM = {
     startDate: "",
     endDate: "",
     expectedYieldKg: "",
-    expectedPricePerKg: "",
+    initialCapitalCost: "",
 };
 
 function Field({ label, helper, error, children }) {
@@ -85,8 +85,8 @@ export function SeasonCreateDrawer({
             tempErrors.expectedYieldKg = "Sản lượng dự kiến phải lớn hơn 0";
         }
 
-        if (form.expectedPricePerKg && Number(form.expectedPricePerKg) <= 0) {
-            tempErrors.expectedPricePerKg = "Giá dự kiến phải lớn hơn 0";
+        if (form.initialCapitalCost === "" || Number(form.initialCapitalCost) < 0) {
+            tempErrors.initialCapitalCost = "Vốn đầu tư ban đầu không được âm";
         }
 
         setErrors(tempErrors);
@@ -103,7 +103,7 @@ export function SeasonCreateDrawer({
             startDate: form.startDate,
             endDate: form.endDate,
             expectedYieldKg: Number(form.expectedYieldKg),
-            expectedPricePerKg: form.expectedPricePerKg ? Number(form.expectedPricePerKg) : null,
+            initialCapitalCost: Number(form.initialCapitalCost),
         });
     }
 
@@ -199,18 +199,18 @@ export function SeasonCreateDrawer({
                         </Field>
 
                         <Field
-                            label="Giá dự kiến (₫/kg)"
-                            error={errors.expectedPricePerKg}
-                            helper="Giá bán dự kiến mỗi kg sản phẩm (không bắt buộc)"
+                            label="Vốn đầu tư ban đầu (₫)"
+                            error={errors.initialCapitalCost}
+                            helper="Ví dụ: tiền giống, cải tạo ao, chi phí chuẩn bị ban đầu"
                         >
                             <input
                                 type="number"
-                                min="0.1"
-                                step="any"
-                                value={form.expectedPricePerKg}
-                                onChange={(e) => updateField("expectedPricePerKg", e.target.value)}
-                                className={inputClass(!!errors.expectedPricePerKg)}
-                                placeholder="Ví dụ: 150000"
+                                min="0"
+                                step="1000"
+                                value={form.initialCapitalCost}
+                                onChange={(e) => updateField("initialCapitalCost", e.target.value)}
+                                className={inputClass(!!errors.initialCapitalCost)}
+                                placeholder="Ví dụ: 25000000"
                             />
                         </Field>
 

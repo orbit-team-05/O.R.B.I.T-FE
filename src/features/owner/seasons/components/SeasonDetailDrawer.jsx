@@ -31,15 +31,186 @@ function formatNumber(value) {
     return Number(value).toLocaleString("vi-VN");
 }
 
+function formatQuantity(value, storageUnit) {
+    const numberValue = Number(value || 0);
+
+    if (storageUnit === "MILLILITER") {
+        if (numberValue >= 1000) {
+            return `${(numberValue / 1000).toLocaleString("vi-VN")} l`;
+        }
+
+        return `${numberValue.toLocaleString("vi-VN")} ml`;
+    }
+
+    if (numberValue >= 1000) {
+        return `${(numberValue / 1000).toLocaleString("vi-VN")} kg`;
+    }
+
+    return `${numberValue.toLocaleString("vi-VN")} g`;
+}
+
 function inputClass(disabled = false) {
     return `h-10 w-full rounded-lg border ${
         disabled ? "border-slate-200 bg-slate-50 text-slate-500" : "border-slate-300 bg-white text-slate-900 focus:border-[#006948] focus:ring-emerald-100"
     } px-3 text-sm outline-none focus:ring-2`;
 }
 
+function SeasonMaterialUsageHistory({
+                                        usages = [],
+                                        pageInfo,
+                                        loading = false,
+                                        onPageChange,
+                                        consumedMaterialCost,
+                                    }) {
+    const currentPage = Math.max(Number(pageInfo?.number ?? 0), 0);
+    const totalPages = Math.max(Number(pageInfo?.totalPages ?? 1), 1);
+    const isFirstPage = currentPage <= 0 || pageInfo?.first;
+    const isLastPage = currentPage >= totalPages - 1 || pageInfo?.last;
+
+    return (
+        <div className="space-y-4 rounded-xl border border-slate-200 p-4">
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                        Vật tư đã xuất vào mùa vụ
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-500">
+                        Dữ liệu lấy từ API lịch sử xuất vật tư theo riêng mùa vụ này.
+                    </p>
+                </div>
+
+                <div className="text-right">
+                    <p className="text-xs text-slate-500">Tổng chi phí vật tư</p>
+                    <p className="mt-0.5 text-sm font-bold text-red-600">
+                        {formatCurrency(consumedMaterialCost)}
+                    </p>
+                </div>
+            </div>
+
+            {loading ? (
+                <div className="rounded-lg bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+                    Đang tải lịch sử vật tư...
+                </div>
+            ) : usages.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+                    Chưa có vật tư nào được xuất vào mùa vụ này.
+                </div>
+            ) : (
+                <>
+                    <div className="overflow-hidden rounded-lg border border-slate-200">
+                        <div className="max-h-[280px] overflow-auto">
+                            <table className="w-full min-w-[720px] text-left text-sm">
+                                <thead className="sticky top-0 bg-slate-50 text-[11px] uppercase text-slate-500">
+                                <tr>
+                                    <th className="px-3 py-2">Vật tư</th>
+                                    <th className="px-3 py-2">Khối lượng</th>
+                                    <th className="px-3 py-2">Đơn giá</th>
+                                    <th className="px-3 py-2">Thành tiền</th>
+                                    <th className="px-3 py-2">Ngày xuất</th>
+                                    <th className="px-3 py-2">Ảnh</th>
+                                </tr>
+                                </thead>
+
+                                <tbody>
+                                {usages.map((item) => (
+                                    <tr
+                                        key={item.transactionId}
+                                        className="border-t border-slate-100 text-slate-700"
+                                    >
+                                        <td className="px-3 py-3">
+                                            <div className="font-semibold text-slate-900">
+                                                {item.productName || "Chưa có tên"}
+                                            </div>
+                                            <div className="mt-0.5 text-xs text-slate-500">
+                                                #{item.transactionId} · {item.productCode || "Không có mã"}
+                                            </div>
+                                        </td>
+
+                                        <td className="px-3 py-3 font-medium">
+                                            {formatQuantity(item.quantity, item.storageUnit)}
+                                        </td>
+
+                                        <td className="px-3 py-3">
+                                            {formatCurrency(item.unitPrice)}
+                                        </td>
+
+                                        <td className="px-3 py-3 font-semibold text-red-600">
+                                            {formatCurrency(item.totalAmount)}
+                                        </td>
+
+                                        <td className="px-3 py-3 text-xs text-slate-500">
+                                            {formatDate(item.approvedAt || item.createdAt)}
+                                        </td>
+
+                                        <td className="px-3 py-3">
+                                            {item.imageUrl ? (
+                                                <a
+                                                    href={item.imageUrl}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="text-xs font-semibold text-blue-600 hover:underline"
+                                                >
+                                                    Mở ảnh
+                                                </a>
+                                            ) : (
+                                                <span className="text-xs text-slate-400">
+                                                    Không có
+                                                </span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs text-slate-500">
+                            Tổng {pageInfo?.totalElements ?? usages.length} giao dịch
+                        </p>
+
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                disabled={isFirstPage}
+                                onClick={() => {
+                                    if (!isFirstPage) onPageChange?.(currentPage - 1);
+                                }}
+                                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                                Trước
+                            </button>
+
+                            <span className="text-xs text-slate-600">
+                                Trang {currentPage + 1} / {totalPages}
+                            </span>
+
+                            <button
+                                type="button"
+                                disabled={isLastPage}
+                                onClick={() => {
+                                    if (!isLastPage) onPageChange?.(currentPage + 1);
+                                }}
+                                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                                Sau
+                            </button>
+                        </div>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
 export function SeasonDetailDrawer({
                                        open,
                                        season,
+                                       materialUsages = [],
+                                       materialUsagePageInfo,
+                                       materialUsageLoading = false,
+                                       onMaterialUsagePageChange,
                                        submitting = false,
                                        actionError = "",
                                        onClose,
@@ -53,7 +224,6 @@ export function SeasonDetailDrawer({
         startDate: "",
         plannedEndDate: "",
         expectedYieldKg: "",
-        expectedPricePerKg: "",
     });
 
     const [confirmDialog, setConfirmDialog] = useState({
@@ -62,6 +232,12 @@ export function SeasonDetailDrawer({
         description: "",
         variant: "success",
         onConfirm: () => {},
+    });
+
+    const [harvestPriceDialog, setHarvestPriceDialog] = useState({
+        open: false,
+        value: "",
+        error: "",
     });
 
     const [fieldErrors, setFieldErrors] = useState({});
@@ -73,7 +249,11 @@ export function SeasonDetailDrawer({
                 startDate: season.startDate || "",
                 plannedEndDate: season.plannedEndDate || "",
                 expectedYieldKg: season.expectedYieldKg || "",
-                expectedPricePerKg: season.expectedPricePerKg || "",
+            });
+            setHarvestPriceDialog({
+                open: false,
+                value: "",
+                error: "",
             });
             setIsEditing(false);
             setFieldErrors({});
@@ -99,18 +279,19 @@ export function SeasonDetailDrawer({
 
     function validate() {
         const errors = {};
+
         if (!form.seasonName.trim()) {
             errors.seasonName = "Tên mùa vụ không được để trống.";
         }
+
         if (form.plannedEndDate && form.startDate && form.plannedEndDate < form.startDate) {
             errors.plannedEndDate = "Ngày kết thúc dự kiến phải sau ngày bắt đầu.";
         }
-        if (form.expectedYieldKg !== "" && Number(form.expectedYieldKg) <= 0) {
+
+        if (form.expectedYieldKg === "" || Number(form.expectedYieldKg) <= 0) {
             errors.expectedYieldKg = "Sản lượng dự kiến phải lớn hơn 0.";
         }
-        if (form.expectedPricePerKg !== "" && Number(form.expectedPricePerKg) <= 0) {
-            errors.expectedPricePerKg = "Giá dự kiến phải lớn hơn 0.";
-        }
+
         setFieldErrors(errors);
         return Object.keys(errors).length === 0;
     }
@@ -122,7 +303,6 @@ export function SeasonDetailDrawer({
             startDate: isFieldDisabled("startDate") ? undefined : form.startDate,
             plannedEndDate: form.plannedEndDate,
             expectedYieldKg: Number(form.expectedYieldKg),
-            expectedPricePerKg: form.expectedPricePerKg ? Number(form.expectedPricePerKg) : null,
         }).then((res) => {
             if (res) {
                 setIsEditing(false);
@@ -149,6 +329,14 @@ export function SeasonDetailDrawer({
     };
 
     function triggerStatusChange(nextStatus, label) {
+        if (nextStatus === "HARVESTING" && season.status === "ACTIVE") {
+            setHarvestPriceDialog({
+                open: true,
+                value: "",
+                error: "",
+            });
+            return;
+        }
         const config = STATUS_CONFIRM_MAP[nextStatus] || {
             title: label,
             description: `Bạn có chắc chắn muốn thực hiện thao tác "${label}" cho mùa vụ "${season.seasonName}"?`,
@@ -163,6 +351,30 @@ export function SeasonDetailDrawer({
                 onUpdateStatus?.(season.id, nextStatus);
                 setConfirmDialog((prev) => ({ ...prev, open: false }));
             },
+        });
+    }
+
+    function handleConfirmHarvestPrice() {
+        const price = Number(harvestPriceDialog.value);
+
+        if (!price || price <= 0) {
+            setHarvestPriceDialog((prev) => ({
+                ...prev,
+                error: "Giá bán thực tế phải lớn hơn 0.",
+            }));
+            return;
+        }
+
+        onUpdateStatus?.(season.id, "HARVESTING", {
+            harvestPricePerKg: price,
+        })?.then((success) => {
+            if (success) {
+                setHarvestPriceDialog({
+                    open: false,
+                    value: "",
+                    error: "",
+                });
+            }
         });
     }
 
@@ -254,7 +466,6 @@ export function SeasonDetailDrawer({
                                             startDate: season.startDate || "",
                                             plannedEndDate: season.plannedEndDate || "",
                                             expectedYieldKg: season.expectedYieldKg || "",
-                                            expectedPricePerKg: season.expectedPricePerKg || "",
                                         });
                                     }}
                                     disabled={submitting}
@@ -367,39 +578,44 @@ export function SeasonDetailDrawer({
                                     )}
                                 </div>
 
-                                <div>
-                                    <label className="text-xs font-semibold text-slate-500">Giá dự kiến (₫/kg)</label>
-                                    <input
-                                        type="number"
-                                        value={form.expectedPricePerKg}
-                                        onChange={(e) => setForm({ ...form, expectedPricePerKg: e.target.value })}
-                                        disabled={isFieldDisabled("expectedPricePerKg")}
-                                        className={`${inputClass(isFieldDisabled("expectedPricePerKg"))} ${fieldErrors.expectedPricePerKg ? "!border-red-400 !ring-red-100" : ""}`}
-                                        placeholder="Ví dụ: 150000"
-                                    />
-                                    {fieldErrors.expectedPricePerKg && (
-                                        <p className="mt-1 text-xs text-red-500">{fieldErrors.expectedPricePerKg}</p>
-                                    )}
-                                </div>
-
                                 {!isEditing && (
-                                    <div className="grid grid-cols-3 gap-4 border-t border-slate-100 pt-3">
+                                    <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-3">
                                         <div>
-                                            <span className="text-xs text-slate-500">Tổng chi phí tích lũy:</span>
-                                            <p className="text-sm font-semibold text-red-600 mt-0.5">
+                                            <span className="text-xs text-slate-500">Vốn ban đầu:</span>
+                                            <p className="mt-0.5 text-sm font-semibold text-orange-600">
+                                                {formatCurrency(season.initialCapitalCost)}
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <span className="text-xs text-slate-500">Tổng đầu tư:</span>
+                                            <p className="mt-0.5 text-sm font-semibold text-red-600">
                                                 {formatCurrency(season.totalCost)}
                                             </p>
                                         </div>
+
                                         <div>
                                             <span className="text-xs text-slate-500">Sản lượng thực tế:</span>
-                                            <p className="text-sm font-semibold text-emerald-700 mt-0.5">
+                                            <p className="mt-0.5 text-sm font-semibold text-emerald-700">
                                                 {formatNumber(season.actualYieldKg)} kg
                                             </p>
                                         </div>
+
                                         <div>
-                                            <span className="text-xs text-slate-500">Doanh thu dự kiến:</span>
-                                            <p className="text-sm font-semibold text-rose-600 mt-0.5">
-                                                {season.expectedRevenue != null ? formatCurrency(season.expectedRevenue) : "Chưa có"}
+                                            <span className="text-xs text-slate-500">Giá bán thu hoạch:</span>
+                                            <p className="mt-0.5 text-sm font-semibold text-blue-700">
+                                                {season.harvestPricePerKg != null
+                                                    ? `${formatCurrency(season.harvestPricePerKg)} / kg`
+                                                    : "Chưa có"}
+                                            </p>
+                                        </div>
+
+                                        <div className="col-span-2">
+                                            <span className="text-xs text-slate-500">Doanh thu ước tính theo giá thu hoạch:</span>
+                                            <p className="mt-0.5 text-sm font-semibold text-rose-600">
+                                                {season.estimatedHarvestRevenue != null
+                                                    ? formatCurrency(season.estimatedHarvestRevenue)
+                                                    : "Chỉ có sau khi bắt đầu thu hoạch"}
                                             </p>
                                         </div>
                                     </div>
@@ -407,6 +623,15 @@ export function SeasonDetailDrawer({
                             </div>
                         </div>
 
+                        {!isEditing && (
+                            <SeasonMaterialUsageHistory
+                                usages={materialUsages}
+                                pageInfo={materialUsagePageInfo}
+                                loading={materialUsageLoading}
+                                onPageChange={onMaterialUsagePageChange}
+                                consumedMaterialCost={season.consumedMaterialCost}
+                            />
+                        )}
                         {!isEditing && (
                             <div className="space-y-3 rounded-xl border border-slate-200 p-4">
                                 <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
@@ -504,6 +729,78 @@ export function SeasonDetailDrawer({
                 onCancel={() => setConfirmDialog((prev) => ({ ...prev, open: false }))}
                 onConfirm={confirmDialog.onConfirm}
             />
+
+            {harvestPriceDialog.open && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 px-4">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl">
+                        <h3 className="text-base font-bold text-slate-900">
+                            Nhập giá bán thực tế
+                        </h3>
+
+                        <p className="mt-1 text-sm text-slate-500">
+                            Giá này sẽ được dùng để tính doanh thu ước tính khi mùa vụ bước vào giai đoạn thu hoạch.
+                        </p>
+
+                        <div className="mt-4">
+                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                Giá bán thực tế (₫/kg)
+                            </label>
+
+                            <input
+                                type="number"
+                                min="1"
+                                step="1000"
+                                value={harvestPriceDialog.value}
+                                onChange={(event) =>
+                                    setHarvestPriceDialog((prev) => ({
+                                        ...prev,
+                                        value: event.target.value,
+                                        error: "",
+                                    }))
+                                }
+                                className={`mt-1 h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none focus:ring-2 ${
+                                    harvestPriceDialog.error
+                                        ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                                        : "border-slate-300 focus:border-[#006948] focus:ring-emerald-100"
+                                }`}
+                                placeholder="Ví dụ: 150000"
+                            />
+
+                            {harvestPriceDialog.error && (
+                                <p className="mt-1 text-xs font-medium text-red-600">
+                                    {harvestPriceDialog.error}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="mt-5 flex justify-end gap-2">
+                            <button
+                                type="button"
+                                disabled={submitting}
+                                onClick={() =>
+                                    setHarvestPriceDialog({
+                                        open: false,
+                                        value: "",
+                                        error: "",
+                                    })
+                                }
+                                className="h-9 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                            >
+                                Hủy
+                            </button>
+
+                            <button
+                                type="button"
+                                disabled={submitting}
+                                onClick={handleConfirmHarvestPrice}
+                                className="h-9 rounded-lg bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
+                            >
+                                {submitting ? "Đang xử lý..." : "Bắt đầu thu hoạch"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

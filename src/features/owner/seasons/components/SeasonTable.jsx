@@ -52,7 +52,7 @@ export function SeasonTable({
             ) : (
                 <>
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[1100px] border-collapse text-left">
+                        <table className="w-full min-w-[1250px] border-collapse text-left">
                             <thead className="bg-slate-50">
                             <tr className="text-[11px] font-medium uppercase text-slate-600">
                                 <th className="px-5 py-3">Mã mùa vụ</th>
@@ -61,7 +61,8 @@ export function SeasonTable({
                                 <th className="px-5 py-3">Thời gian</th>
                                 <th className="px-5 py-3 w-[150px]">Tiến độ</th>
                                 <th className="px-5 py-3">Đầu tư</th>
-                                <th className="px-5 py-3">Sản lượng dự kiến</th>
+                                <th className="px-5 py-3">Sản lượng</th>
+                                <th className="px-5 py-3">Thu hoạch</th>
                                 <th className="w-[120px] px-5 py-3 text-right">Hành động</th>
                             </tr>
                             </thead>
@@ -118,19 +119,37 @@ export function SeasonTable({
                                         </div>
                                     </td>
 
-                                    <td className="px-5 py-4 font-semibold text-slate-900">
-                                        {formatCurrency(item.totalCost)}
+                                    <td className="px-5 py-4">
+                                        <div className="font-semibold text-red-600">
+                                            {formatCurrency(item.totalCost)}
+                                        </div>
+                                        <div className="mt-0.5 text-xs text-slate-500">
+                                            Vốn đầu: {formatCurrency(item.initialCapitalCost)}
+                                        </div>
                                     </td>
 
                                     <td className="px-5 py-4">
                                         <div className="font-semibold text-slate-950">
-                                            {formatNumber(item.expectedYieldKg)} kg
+                                            Dự kiến: {formatNumber(item.expectedYieldKg)} kg
                                         </div>
-                                        {item.status === "COMPLETED" && (
-                                            <div className="mt-0.5 text-xs text-emerald-700 font-medium">
+                                        {(item.status === "HARVESTING" || item.status === "COMPLETED") && (
+                                            <div className="mt-0.5 text-xs font-medium text-emerald-700">
                                                 Đã thu: {formatNumber(item.actualYieldKg)} kg
                                             </div>
                                         )}
+                                    </td>
+
+                                    <td className="px-5 py-4">
+                                        <div className="font-semibold text-slate-950">
+                                            {item.harvestPricePerKg != null
+                                                ? `${formatCurrency(item.harvestPricePerKg)} / kg`
+                                                : "Chưa có giá"}
+                                        </div>
+                                        <div className="mt-0.5 text-xs text-rose-600 font-medium">
+                                            {item.estimatedHarvestRevenue != null
+                                                ? `Ước tính: ${formatCurrency(item.estimatedHarvestRevenue)}`
+                                                : "Chưa bắt đầu thu hoạch"}
+                                        </div>
                                     </td>
 
                                     <td className="w-[120px] px-5 py-4 text-right">
@@ -149,7 +168,7 @@ export function SeasonTable({
                             {seasons.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={8}
+                                        colSpan={9}
                                         className="px-5 py-12 text-center text-sm text-slate-500"
                                     >
                                         Chưa có mùa vụ nào được tạo.
