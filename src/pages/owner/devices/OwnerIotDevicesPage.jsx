@@ -65,7 +65,6 @@ export function OwnerIotDevicesPage() {
         setPage,
 
         actionLoading,
-        actionError,
         clearActionError,
 
         activateDevice,
@@ -147,17 +146,10 @@ export function OwnerIotDevicesPage() {
             <section className="space-y-5">
                 <OwnerIotDevicesHeader />
 
-                {actionError && !detailDrawerOpen && !apiKeyDevice && (
-                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                        {actionError}
-                    </div>
-                )}
-
                 <OwnerIotDeviceStats summary={summary} />
 
                 <OwnerIotDeviceActivateCard
                     submitting={actionLoading}
-                    error={actionError}
                     onSubmit={handleActivateDevice}
                 />
 
