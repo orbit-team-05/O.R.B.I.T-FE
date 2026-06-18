@@ -105,6 +105,20 @@ export function AuthProvider({ children }) {
         navigate("/login", { replace: true });
     }, [navigate]);
 
+    const updateAuthUser = useCallback((newUserData) => {
+        try {
+            const currentUser = JSON.parse(localStorage.getItem(STORAGE_USER_KEY) || "{}");
+            const updatedUser = {
+                ...currentUser,
+                ...newUserData,
+            };
+            localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(updatedUser));
+            setUser(updatedUser);
+        } catch (err) {
+            console.error("Lỗi cập nhật localStorage user:", err);
+        }
+    }, []);
+
     const value = useMemo(() => ({
         user,
         token,
@@ -112,8 +126,9 @@ export function AuthProvider({ children }) {
         loading,
         login,
         logout,
+        updateAuthUser,
         getDefaultDashboard: () => getDefaultDashboard(user?.roles),
-    }), [user, token, loading, login, logout]);
+    }), [user, token, loading, login, logout, updateAuthUser]);
 
     return (
         <AuthContext.Provider value={value}>

@@ -10,6 +10,7 @@ import { AdminMarketPricesPage } from "../../pages/admin/market-prices/AdminMark
 import { AdminUsersPage } from "../../pages/admin/users/AdminUsersPage";
 import { AdminFarmPage } from "../../pages/admin/farms/AdminFarmPage";
 import { AdminComingSoonPage } from "../../pages/admin/common/AdminComingSoonPage";
+import { SettingsPage } from "../../pages/common/SettingsPage";
 
 export function AdminRoutes() {
     return (
@@ -30,12 +31,7 @@ export function AdminRoutes() {
 
                 <Route
                     path="settings"
-                    element={
-                        <AdminComingSoonPage
-                            title="Cài đặt hệ thống"
-                            description="Màn hình cấu hình tham số hệ thống và thiết lập vận hành sẽ được triển khai sau."
-                        />
-                    }
+                    element={<SettingsPage />}
                 />
 
                 <Route

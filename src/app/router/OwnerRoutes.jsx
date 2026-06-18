@@ -13,6 +13,7 @@ import OwnerDashboardPage from "../../pages/owner/dashboard/OwnerDashboardPage";
 import { OwnerSeasonsPage } from "../../pages/owner/seasons/OwnerSeasonsPage";
 import { OwnerIotExportsPage } from "../../pages/owner/iot-exports/OwnerIotExportsPage";
 import { OwnerInventoryPage } from "../../pages/owner/inventory/OwnerInventoryPage";
+import { SettingsPage } from "../../pages/common/SettingsPage";
 
 
 export function OwnerRoutes() {
@@ -80,12 +81,7 @@ export function OwnerRoutes() {
 
                 <Route
                     path="settings"
-                    element={
-                        <OwnerComingSoonPage
-                            title="Cài đặt Owner"
-                            description="Màn hình cấu hình tài khoản, farm scope và thiết lập vận hành sẽ được triển khai sau."
-                        />
-                    }
+                    element={<SettingsPage />}
                 />
 
                 <Route path="*" element={<Navigate to="/owner/dashboard" replace />} />
