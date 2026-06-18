@@ -224,6 +224,7 @@ export function SeasonDetailDrawer({
         startDate: "",
         plannedEndDate: "",
         expectedYieldKg: "",
+        initialCapitalCost: "",
     });
 
     const [confirmDialog, setConfirmDialog] = useState({
@@ -249,6 +250,7 @@ export function SeasonDetailDrawer({
                 startDate: season.startDate || "",
                 plannedEndDate: season.plannedEndDate || "",
                 expectedYieldKg: season.expectedYieldKg || "",
+                initialCapitalCost: season.initialCapitalCost != null ? String(season.initialCapitalCost) : "",
             });
             setHarvestPriceDialog({
                 open: false,
@@ -292,6 +294,10 @@ export function SeasonDetailDrawer({
             errors.expectedYieldKg = "Sản lượng dự kiến phải lớn hơn 0.";
         }
 
+        if (form.initialCapitalCost === "" || Number(form.initialCapitalCost) < 0) {
+            errors.initialCapitalCost = "Vốn đầu tư ban đầu không được âm.";
+        }
+
         setFieldErrors(errors);
         return Object.keys(errors).length === 0;
     }
@@ -303,6 +309,7 @@ export function SeasonDetailDrawer({
             startDate: isFieldDisabled("startDate") ? undefined : form.startDate,
             plannedEndDate: form.plannedEndDate,
             expectedYieldKg: Number(form.expectedYieldKg),
+            initialCapitalCost: Number(form.initialCapitalCost),
         }).then((res) => {
             if (res) {
                 setIsEditing(false);
@@ -577,6 +584,22 @@ export function SeasonDetailDrawer({
                                         <p className="mt-1 text-xs text-red-500">{fieldErrors.expectedYieldKg}</p>
                                     )}
                                 </div>
+
+                                {isEditing && (
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-500">Vốn đầu tư ban đầu (₫)</label>
+                                        <input
+                                            type="number"
+                                            value={form.initialCapitalCost}
+                                            onChange={(e) => setForm({ ...form, initialCapitalCost: e.target.value })}
+                                            disabled={isFieldDisabled("initialCapitalCost")}
+                                            className={`${inputClass(isFieldDisabled("initialCapitalCost"))} ${fieldErrors.initialCapitalCost ? "!border-red-400 !ring-red-100" : ""}`}
+                                        />
+                                        {fieldErrors.initialCapitalCost && (
+                                            <p className="mt-1 text-xs text-red-500">{fieldErrors.initialCapitalCost}</p>
+                                        )}
+                                    </div>
+                                )}
 
                                 {!isEditing && (
                                     <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-3">
