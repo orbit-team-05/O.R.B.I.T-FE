@@ -8,6 +8,7 @@ import { OwnerAiReviewsPage } from "../../pages/owner/ai-reviews/OwnerAiReviewsP
 import { OwnerProductsPage } from "../../pages/owner/products/OwnerProductsPage";
 import { OwnerIotImportsPage } from "../../pages/owner/iot-imports/OwnerIotImportsPage";
 import { OwnerMarketPricesPage } from "../../pages/owner/market-prices/OwnerMarketPricesPage";
+import { OwnerMarketWatchlistPage } from "../../pages/owner/market-watchlist/OwnerMarketWatchlistPage";
 import OwnerDashboardPage from "../../pages/owner/dashboard/OwnerDashboardPage";
 import { OwnerSeasonsPage } from "../../pages/owner/seasons/OwnerSeasonsPage";
 import { OwnerIotExportsPage } from "../../pages/owner/iot-exports/OwnerIotExportsPage";
@@ -55,12 +56,7 @@ export function OwnerRoutes() {
 
                 <Route
                     path="market-watchlist"
-                    element={
-                        <OwnerComingSoonPage
-                            title="Watchlist Farm"
-                            description="Màn hình quản lý danh sách species farm theo dõi giá thị trường sẽ được triển khai ở bước tiếp theo."
-                        />
-                    }
+                    element={<OwnerMarketWatchlistPage />}
                 />
                 <Route
                     path="transactions"
