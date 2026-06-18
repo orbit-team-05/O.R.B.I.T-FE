@@ -18,7 +18,7 @@ export async function getRoles() {
 }
 
 export async function getFarms() {
-    const response = await httpClient.get("/admin/farms");
+    const response = await httpClient.get("/admin/farms/all");
     return response.data.data;
 }
 
