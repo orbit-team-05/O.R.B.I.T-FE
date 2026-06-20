@@ -42,6 +42,11 @@ export async function getActiveSpecies() {
     return response.data.data;
 }
 
+export async function getSpeciesSizes(speciesId) {
+    const response = await httpClient.get(`/species/${speciesId}/sizes`);
+    return response.data.data;
+}
+
 export async function getSeasonMaterialUsages(id, page = 0, size = 10) {
     const response = await httpClient.get(`/seasons/${id}/material-usages`, {
         params: { page, size },

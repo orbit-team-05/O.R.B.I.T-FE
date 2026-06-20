@@ -9,6 +9,7 @@ import {
     updateSeasonStatus,
     cancelSeason as apiCancelSeason,
     getActiveSpecies,
+    getSpeciesSizes,
 } from "../services/ownerSeasonApi";
 
 function getErrorMessage(error, fallbackMessage) {
@@ -24,6 +25,8 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
     const [materialUsageSize] = useState(10);
     const [materialUsageLoading, setMaterialUsageLoading] = useState(false);
     const [speciesList, setSpeciesList] = useState([]);
+    const [speciesSizes, setSpeciesSizes] = useState([]);
+    const [sizesLoading, setSizesLoading] = useState(false);
 
     const [page, setPage] = useState(initialPage);
     const [size] = useState(initialSize);
@@ -67,6 +70,22 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
             setSpeciesList(data);
         } catch (err) {
             console.error("Không thể tải danh sách species:", err);
+        }
+    }, []);
+
+    const loadSpeciesSizes = useCallback(async (speciesId) => {
+        if (!speciesId) {
+            setSpeciesSizes([]);
+            return;
+        }
+        try {
+            setSizesLoading(true);
+            const data = await getSpeciesSizes(speciesId);
+            setSpeciesSizes(data);
+        } catch (err) {
+            console.error("Không thể tải danh sách size cho species:", err);
+        } finally {
+            setSizesLoading(false);
         }
     }, []);
 
@@ -279,6 +298,9 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
         updateSeason,
         updateStatus,
         cancelSeason,
+        speciesSizes,
+        sizesLoading,
+        loadSpeciesSizes,
         clearActionMessages: () => {
             setActionError("");
             setActionSuccess("");

@@ -90,6 +90,8 @@ export function OwnerSeasonsPage() {
         updateStatus,
         cancelSeason,
         clearActionMessages,
+        speciesSizes,
+        loadSpeciesSizes,
     } = useOwnerSeasons();
 
     const [createOpen, setCreateOpen] = useState(false);
@@ -184,6 +186,8 @@ export function OwnerSeasonsPage() {
                 onUpdateSeason={updateSeason}
                 onUpdateStatus={updateStatus}
                 onCancelSeason={cancelSeason}
+                speciesSizes={speciesSizes}
+                loadSpeciesSizes={loadSpeciesSizes}
             />
         </div>
     );

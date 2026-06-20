@@ -217,6 +217,8 @@ export function SeasonDetailDrawer({
                                        onUpdateSeason,
                                        onUpdateStatus,
                                        onCancelSeason,
+                                       speciesSizes = [],
+                                       loadSpeciesSizes,
                                    }) {
     const [isEditing, setIsEditing] = useState(false);
     const [form, setForm] = useState({
@@ -225,6 +227,8 @@ export function SeasonDetailDrawer({
         plannedEndDate: "",
         expectedYieldKg: "",
         initialCapitalCost: "",
+        actualYieldKg: "",
+        sizeCategory: "",
     });
 
     const [confirmDialog, setConfirmDialog] = useState({
@@ -251,6 +255,8 @@ export function SeasonDetailDrawer({
                 plannedEndDate: season.plannedEndDate || "",
                 expectedYieldKg: season.expectedYieldKg || "",
                 initialCapitalCost: season.initialCapitalCost != null ? String(season.initialCapitalCost) : "",
+                actualYieldKg: season.actualYieldKg != null ? String(season.actualYieldKg) : "",
+                sizeCategory: season.sizeCategory || "",
             });
             setHarvestPriceDialog({
                 open: false,
@@ -259,8 +265,12 @@ export function SeasonDetailDrawer({
             });
             setIsEditing(false);
             setFieldErrors({});
+
+            if (season.speciesId && loadSpeciesSizes) {
+                loadSpeciesSizes(season.speciesId);
+            }
         }
-    }, [open, season]);
+    }, [open, season, loadSpeciesSizes]);
 
     if (!open || !season) return null;
 
@@ -275,6 +285,9 @@ export function SeasonDetailDrawer({
         if (isCompleted) return true;
         if (fieldName === "startDate") {
             return !isPlanning; // locked for ACTIVE and HARVESTING
+        }
+        if (fieldName === "actualYieldKg") {
+            return !isHarvesting; // actualYieldKg only editable during HARVESTING
         }
         return false;
     };
@@ -298,6 +311,12 @@ export function SeasonDetailDrawer({
             errors.initialCapitalCost = "Vốn đầu tư ban đầu không được âm.";
         }
 
+        if (isHarvesting) {
+            if (form.actualYieldKg === "" || Number(form.actualYieldKg) < 0) {
+                errors.actualYieldKg = "Sản lượng thực tế không được âm.";
+            }
+        }
+
         setFieldErrors(errors);
         return Object.keys(errors).length === 0;
     }
@@ -310,6 +329,8 @@ export function SeasonDetailDrawer({
             plannedEndDate: form.plannedEndDate,
             expectedYieldKg: Number(form.expectedYieldKg),
             initialCapitalCost: Number(form.initialCapitalCost),
+            actualYieldKg: isHarvesting ? Number(form.actualYieldKg) : undefined,
+            sizeCategory: form.sizeCategory.trim(),
         }).then((res) => {
             if (res) {
                 setIsEditing(false);
@@ -586,18 +607,53 @@ export function SeasonDetailDrawer({
                                 </div>
 
                                 {isEditing && (
-                                    <div>
-                                        <label className="text-xs font-semibold text-slate-500">Vốn đầu tư ban đầu (₫)</label>
-                                        <input
-                                            type="number"
-                                            value={form.initialCapitalCost}
-                                            onChange={(e) => setForm({ ...form, initialCapitalCost: e.target.value })}
-                                            disabled={isFieldDisabled("initialCapitalCost")}
-                                            className={`${inputClass(isFieldDisabled("initialCapitalCost"))} ${fieldErrors.initialCapitalCost ? "!border-red-400 !ring-red-100" : ""}`}
-                                        />
-                                        {fieldErrors.initialCapitalCost && (
-                                            <p className="mt-1 text-xs text-red-500">{fieldErrors.initialCapitalCost}</p>
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="text-xs font-semibold text-slate-500">Vốn đầu tư ban đầu (₫)</label>
+                                            <input
+                                                type="number"
+                                                value={form.initialCapitalCost}
+                                                onChange={(e) => setForm({ ...form, initialCapitalCost: e.target.value })}
+                                                disabled={isFieldDisabled("initialCapitalCost")}
+                                                className={`${inputClass(isFieldDisabled("initialCapitalCost"))} ${fieldErrors.initialCapitalCost ? "!border-red-400 !ring-red-100" : ""}`}
+                                            />
+                                            {fieldErrors.initialCapitalCost && (
+                                                <p className="mt-1 text-xs text-red-500">{fieldErrors.initialCapitalCost}</p>
+                                            )}
+                                        </div>
+
+                                        {isHarvesting && (
+                                            <div>
+                                                <label className="text-xs font-semibold text-slate-500">Sản lượng thực tế (kg)</label>
+                                                <input
+                                                    type="number"
+                                                    value={form.actualYieldKg}
+                                                    onChange={(e) => setForm({ ...form, actualYieldKg: e.target.value })}
+                                                    disabled={isFieldDisabled("actualYieldKg")}
+                                                    className={`${inputClass(isFieldDisabled("actualYieldKg"))} ${fieldErrors.actualYieldKg ? "!border-red-400 !ring-red-100" : ""}`}
+                                                />
+                                                {fieldErrors.actualYieldKg && (
+                                                    <p className="mt-1 text-xs text-red-500">{fieldErrors.actualYieldKg}</p>
+                                                )}
+                                            </div>
                                         )}
+
+                                        <div>
+                                            <label className="text-xs font-semibold text-slate-500">Size (phân hạng)</label>
+                                            <input
+                                                list="size-suggestions"
+                                                value={form.sizeCategory}
+                                                onChange={(e) => setForm({ ...form, sizeCategory: e.target.value })}
+                                                disabled={isFieldDisabled("sizeCategory")}
+                                                placeholder="Ví dụ: 30 con/kg"
+                                                className={inputClass(isFieldDisabled("sizeCategory"))}
+                                            />
+                                            <datalist id="size-suggestions">
+                                                {speciesSizes.map(size => (
+                                                    <option key={size} value={size} />
+                                                ))}
+                                            </datalist>
+                                        </div>
                                     </div>
                                 )}
 
@@ -633,14 +689,39 @@ export function SeasonDetailDrawer({
                                             </p>
                                         </div>
 
-                                        <div className="col-span-2">
-                                            <span className="text-xs text-slate-500">Doanh thu ước tính theo giá thu hoạch:</span>
-                                            <p className="mt-0.5 text-sm font-semibold text-rose-600">
-                                                {season.estimatedHarvestRevenue != null
-                                                    ? formatCurrency(season.estimatedHarvestRevenue)
-                                                    : "Chỉ có sau khi bắt đầu thu hoạch"}
+                                        <div>
+                                            <span className="text-xs text-slate-500">Size (phân hạng):</span>
+                                            <p className="mt-0.5 text-sm font-semibold text-slate-800">
+                                                {season.sizeCategory || "Chưa có"}
                                             </p>
                                         </div>
+
+                                        <div>
+                                            <span className="text-xs text-slate-500">Giá thị trường (size):</span>
+                                            <p className="mt-0.5 text-sm font-semibold text-slate-800">
+                                                {season.marketPriceOfSize != null
+                                                    ? `${formatCurrency(season.marketPriceOfSize)} / kg`
+                                                    : "Chưa có"}
+                                            </p>
+                                        </div>
+
+                                        <div className="col-span-2 border-t border-slate-100 pt-3">
+                                            <span className="text-xs text-slate-500 font-semibold">Doanh thu dự kiến ({isHarvesting || isCompleted ? "sản lượng thực tế" : "sản lượng dự kiến"} * giá thị trường):</span>
+                                            <p className="mt-0.5 text-base font-bold text-rose-600 animate-pulse">
+                                                {season.estimatedRevenueOfCurrentYield != null
+                                                    ? formatCurrency(season.estimatedRevenueOfCurrentYield)
+                                                    : "Chưa đủ dữ liệu tính toán"}
+                                            </p>
+                                        </div>
+
+                                        {season.estimatedHarvestRevenue != null && (
+                                            <div className="col-span-2 border-t border-slate-100 pt-2">
+                                                <span className="text-xs text-slate-500">Doanh thu ước tính theo giá thu hoạch:</span>
+                                                <p className="mt-0.5 text-sm font-semibold text-rose-600">
+                                                    {formatCurrency(season.estimatedHarvestRevenue)}
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
