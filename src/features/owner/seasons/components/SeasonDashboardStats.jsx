@@ -32,14 +32,6 @@ export function SeasonDashboardStats({ dashboard }) {
             colorClass: "text-blue-600 bg-blue-50 border-blue-100",
         },
         {
-            key: "expectedYield",
-            label: "Sản lượng dự kiến",
-            value: dashboard?.expectedYieldKg ?? 0,
-            formattedValue: `${formatNumber(dashboard?.expectedYieldKg ?? 0)} kg`,
-            icon: Calendar,
-            colorClass: "text-amber-600 bg-amber-50 border-amber-100",
-        },
-        {
             key: "totalExpectedRevenue",
             label: "Doanh thu dự kiến",
             value: dashboard?.totalExpectedRevenue ?? 0,
@@ -58,7 +50,7 @@ export function SeasonDashboardStats({ dashboard }) {
     ];
 
     return (
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {stats.map((stat) => {
                 const IconComponent = stat.icon;
                 return (

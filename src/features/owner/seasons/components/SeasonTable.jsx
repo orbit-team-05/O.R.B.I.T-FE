@@ -52,13 +52,11 @@ export function SeasonTable({
             ) : (
                 <>
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[1250px] border-collapse text-left">
+                        <table className="w-full min-w-[1000px] border-collapse text-left">
                             <thead className="bg-slate-50">
                             <tr className="text-[11px] font-medium uppercase text-slate-600">
-                                <th className="px-5 py-3">Mã mùa vụ</th>
                                 <th className="px-5 py-3">Tên mùa vụ / Loài nuôi</th>
                                 <th className="px-5 py-3">Trạng thái</th>
-                                <th className="px-5 py-3">Thời gian</th>
                                 <th className="px-5 py-3 w-[150px]">Tiến độ</th>
                                 <th className="px-5 py-3">Đầu tư</th>
                                 <th className="px-5 py-3">Sản lượng</th>
@@ -73,10 +71,6 @@ export function SeasonTable({
                                     key={item.id}
                                     className="border-t border-slate-200 text-sm text-slate-700 hover:bg-slate-50/55"
                                 >
-                                    <td className="px-5 py-4 font-semibold text-slate-950">
-                                        {item.seasonCode}
-                                    </td>
-
                                     <td className="px-5 py-4">
                                         <div className="font-semibold text-slate-900">
                                             {item.seasonName}
@@ -88,21 +82,6 @@ export function SeasonTable({
 
                                     <td className="px-5 py-4">
                                         <SeasonStatusBadge status={item.status} />
-                                    </td>
-
-                                    <td className="px-5 py-4">
-                                        <div className="text-xs">
-                                            <span className="font-medium text-slate-500">Bắt đầu: </span>
-                                            <span className="text-slate-800">{formatDate(item.startDate)}</span>
-                                        </div>
-                                        <div className="mt-1 text-xs">
-                                            <span className="font-medium text-slate-500">
-                                                {item.status === "COMPLETED" ? "Kết thúc: " : "Dự kiến: "}
-                                            </span>
-                                            <span className="text-slate-800">
-                                                {formatDate(item.endDate || item.plannedEndDate)}
-                                            </span>
-                                        </div>
                                     </td>
 
                                     <td className="px-5 py-4">
@@ -165,16 +144,16 @@ export function SeasonTable({
                                 </tr>
                             ))}
 
-                            {seasons.length === 0 && (
-                                <tr>
-                                    <td
-                                        colSpan={9}
-                                        className="px-5 py-12 text-center text-sm text-slate-500"
-                                    >
-                                        Chưa có mùa vụ nào được tạo.
-                                    </td>
-                                </tr>
-                            )}
+                             {seasons.length === 0 && (
+                                 <tr>
+                                     <td
+                                         colSpan={7}
+                                         className="px-5 py-12 text-center text-sm text-slate-500"
+                                     >
+                                         Chưa có mùa vụ nào được tạo.
+                                     </td>
+                                 </tr>
+                             )}
                             </tbody>
                         </table>
                     </div>
