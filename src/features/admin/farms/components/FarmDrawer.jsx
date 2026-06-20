@@ -11,6 +11,7 @@ export function FarmDrawer({
                                open,
                                mode = "create",
                                farm,
+                               ownersList = [],
                                submitting,
                                error,
                                onClose,
@@ -67,9 +68,7 @@ export function FarmDrawer({
         }
 
         if (!form.ownerId || !String(form.ownerId).trim()) {
-            errors.ownerId = "Owner ID không được để trống";
-        } else if (isNaN(Number(form.ownerId)) || Number(form.ownerId) <= 0) {
-            errors.ownerId = "Owner ID phải là số nguyên dương";
+            errors.ownerId = "Vui lòng chọn chủ sở hữu";
         }
 
         setValidationErrors(errors);
@@ -178,24 +177,28 @@ export function FarmDrawer({
 
                         <div>
                             <label className="mb-1.5 block text-xs font-medium text-slate-700">
-                                Owner ID <span className="text-red-500">*</span>
+                                Chủ sở hữu nông trại <span className="text-red-500">*</span>
                             </label>
 
-                            <input
+                            <select
                                 name="ownerId"
-                                type="number"
-                                min="1"
                                 value={form.ownerId}
                                 onChange={handleChange}
-                                placeholder="Nhập ID chủ sở hữu..."
                                 className={[
-                                    "h-10 w-full rounded-lg border px-3 text-sm outline-none",
+                                    "h-10 w-full rounded-lg border px-3 text-sm outline-none bg-white",
                                     "focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15",
                                     validationErrors.ownerId
                                         ? "border-red-400"
                                         : "border-slate-300",
                                 ].join(" ")}
-                            />
+                            >
+                                <option value="">-- Chọn chủ sở hữu --</option>
+                                {ownersList.map((owner) => (
+                                    <option key={owner.id} value={owner.id}>
+                                        {owner.fullName} ({owner.username}) {owner.farmName ? `[Đang quản lý ${owner.farmName}]` : ""}
+                                    </option>
+                                ))}
+                            </select>
 
                             {validationErrors.ownerId && (
                                 <p className="mt-1 text-xs text-red-500">

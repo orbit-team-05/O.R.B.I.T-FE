@@ -78,6 +78,7 @@ export function AdminFarmPage() {
         initialLoading,
         tableLoading,
 
+        owners,
         actionLoading,
         actionError,
         clearActionError,
@@ -229,6 +230,7 @@ export function AdminFarmPage() {
                 open={drawerOpen}
                 mode={drawerMode}
                 farm={selectedFarm}
+                ownersList={owners}
                 submitting={actionLoading}
                 error={actionError}
                 onClose={closeDrawer}

@@ -42,3 +42,8 @@ export async function deleteFarm(farmId) {
 
     return response.data;
 }
+
+export async function getOwnersList() {
+    const response = await httpClient.get("/admin/users/owners");
+    return response.data.data;
+}

@@ -6,6 +6,7 @@ import {
     getFarms,
     getFarmSummary,
     updateFarm,
+    getOwnersList,
 } from "../services/farmApi";
 
 const INITIAL_SUMMARY = {
@@ -27,6 +28,7 @@ export function useAdminFarms(initialPage = 0, initialSize = 10) {
     const [page, setPage] = useState(initialPage);
     const [size] = useState(initialSize);
 
+    const [owners, setOwners] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -38,13 +40,15 @@ export function useAdminFarms(initialPage = 0, initialSize = 10) {
             setLoading(true);
             setError("");
 
-            const [farmsData, summaryData] = await Promise.all([
+            const [farmsData, summaryData, ownersList] = await Promise.all([
                 getFarms(page, size),
                 getFarmSummary(),
+                getOwnersList(),
             ]);
 
             setFarmsPage(farmsData);
             setSummary(summaryData);
+            setOwners(ownersList || []);
         } catch (err) {
             setError(getErrorMessage(err, "Không thể tải dữ liệu Farm."));
         } finally {
@@ -130,6 +134,7 @@ export function useAdminFarms(initialPage = 0, initialSize = 10) {
         error,
         reload: loadFarms,
 
+        owners,
         actionLoading,
         actionError,
         clearActionError: () => setActionError(""),
