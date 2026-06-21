@@ -41,3 +41,11 @@ export async function updateOwnerIotDeviceWorkMode(
 
     return response.data.data;
 }
+
+export async function cancelOwnerIotDevicePendingCommand(farmId, deviceId) {
+    const response = await httpClient.patch(
+        `${getOwnerIotDeviceEndpoint(farmId)}/${deviceId}/work-mode/cancel`,
+    );
+
+    return response.data.data;
+}

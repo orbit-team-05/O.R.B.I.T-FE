@@ -16,18 +16,24 @@ export function IotExportSeasonSelectDrawer({
                                                 seasons = [],
                                                 loading = false,
                                                 submitting = false,
+                                                mode = "EXPORT",
                                                 onClose,
                                                 onConfirm,
                                             }) {
     const [selectedSeasonId, setSelectedSeasonId] = useState("");
+    const isHarvest = mode === "HARVEST";
 
     const selectableSeasons = useMemo(() => {
+        if (isHarvest) {
+            return seasons.filter((season) => season.status === "HARVESTING");
+        }
+
         return seasons.filter(
             (season) =>
                 season.status === "ACTIVE" ||
                 season.status === "HARVESTING",
         );
-    }, [seasons]);
+    }, [isHarvest, seasons]);
 
     useEffect(() => {
         if (!open) {
@@ -63,11 +69,13 @@ export function IotExportSeasonSelectDrawer({
                 <header className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
                     <div>
                         <h2 className="text-base font-semibold text-slate-900">
-                            Chọn mùa vụ để xuất vật tư
+                            {isHarvest ? "Chọn mùa vụ để thu hoạch" : "Chọn mùa vụ để xuất vật tư"}
                         </h2>
 
                         <p className="mt-0.5 text-xs text-slate-500">
-                            Thiết bị sẽ xuất vật tư vào mùa vụ được chọn
+                            {isHarvest
+                                ? "Thiết bị sẽ cân thu hoạch, chụp ảnh và cộng doanh thu vào mùa vụ."
+                                : "Thiết bị sẽ xuất vật tư vào mùa vụ được chọn."}
                         </p>
                     </div>
 
@@ -101,7 +109,7 @@ export function IotExportSeasonSelectDrawer({
 
                         <section>
                             <label className="text-sm font-medium text-slate-700">
-                                Mùa vụ nhận chi phí xuất vật tư
+                                {isHarvest ? "Mùa vụ đang thu hoạch" : "Mùa vụ nhận chi phí xuất vật tư"}
                             </label>
 
                             <select
@@ -112,7 +120,7 @@ export function IotExportSeasonSelectDrawer({
                             >
                                 {selectableSeasons.length === 0 && (
                                     <option value="">
-                                        Chưa có mùa vụ đang hoạt động
+                                        {isHarvest ? "Chưa có mùa vụ HARVESTING" : "Chưa có mùa vụ đang hoạt động"}
                                     </option>
                                 )}
 
@@ -127,7 +135,9 @@ export function IotExportSeasonSelectDrawer({
                             </select>
 
                             <p className="mt-2 text-xs text-slate-500">
-                                Chỉ chọn được mùa vụ có trạng thái ACTIVE hoặc HARVESTING.
+                                {isHarvest
+                                    ? "Chỉ chọn được mùa vụ có trạng thái HARVESTING."
+                                    : "Chỉ chọn được mùa vụ có trạng thái ACTIVE hoặc HARVESTING."}
                             </p>
                         </section>
 
@@ -157,7 +167,11 @@ export function IotExportSeasonSelectDrawer({
                             }
                             className="h-9 rounded-lg bg-[#006948] px-4 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            {submitting ? "Đang gửi..." : "Bắt đầu xuất"}
+                            {submitting
+                                ? "Đang gửi..."
+                                : isHarvest
+                                    ? "Bắt đầu thu hoạch"
+                                    : "Bắt đầu xuất"}
                         </button>
                     </footer>
                 </form>

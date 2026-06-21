@@ -1,4 +1,4 @@
-import { PlayCircle, Power } from "lucide-react";
+import { PlayCircle, Power, XCircle } from "lucide-react";
 
 import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
 
@@ -126,6 +126,21 @@ function PendingModeText({ device }) {
     );
 }
 
+function canStartHarvest(device) {
+    return (
+        canControlDevice(device) &&
+        device?.workMode !== "HARVEST"
+    );
+}
+
+function canCancelPendingCommand(device) {
+    return (
+        device?.status === "ACTIVE" &&
+        device?.deviceType === "ESP32_CAM_SCALE" &&
+        device?.commandStatus === "PENDING"
+    );
+}
+
 function canControlDevice(device) {
     return (
         device?.status === "ACTIVE" &&
@@ -165,6 +180,8 @@ export function OwnerIotDeviceTable({
                                         onStartImportMode,
                                         onStartExportMode,
                                         onStopDeviceMode,
+                                        onStartHarvestMode,
+                                        onCancelPendingCommand,
                                     }) {
     const currentPage = Math.max(Number(pageInfo?.number ?? 0), 0);
     const totalPages = Math.max(Number(pageInfo?.totalPages ?? 1), 1);
@@ -290,6 +307,17 @@ export function OwnerIotDeviceTable({
                                             >
                                                 Bắt đầu xuất
                                             </button>
+                                            <button
+                                                type="button"
+                                                disabled={
+                                                    actionLoading ||
+                                                    !canStartHarvest(item)
+                                                }
+                                                onClick={() => onStartHarvestMode?.(item)}
+                                                className="inline-flex h-8 items-center justify-center rounded-lg bg-orange-600 px-3 text-xs font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                Thu hoạch
+                                            </button>
 
                                             <button
                                                 type="button"
@@ -303,6 +331,20 @@ export function OwnerIotDeviceTable({
                                                 <Power size={14} />
                                                 Dừng
                                             </button>
+                                            {item.commandStatus === "PENDING" && (
+                                                <button
+                                                    type="button"
+                                                    disabled={
+                                                        actionLoading ||
+                                                        !canCancelPendingCommand(item)
+                                                    }
+                                                    onClick={() => onCancelPendingCommand?.(item)}
+                                                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 text-xs font-medium text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                                >
+                                                    <XCircle size={14} />
+                                                    Hủy lệnh
+                                                </button>
+                                            )}
                                         </div>
 
                                         {item.commandStatus === "PENDING" && (

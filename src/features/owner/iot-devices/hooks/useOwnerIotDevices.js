@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 
 import {
     activateOwnerIotDevice,
+    cancelOwnerIotDevicePendingCommand,
     getOwnerIotDeviceDetail,
     getOwnerIotDevices,
     updateOwnerIotDeviceWorkMode,
@@ -104,6 +105,62 @@ export function useOwnerIotDevices(farmId, initialPage = 0, initialSize = 10) {
         }
     }
 
+    async function handleUpdateWorkMode(deviceId, mode, seasonId = null) {
+        if (!farmId || !deviceId) return null;
+
+        try {
+            setActionLoading(true);
+            setActionError("");
+
+            const payload = {
+                mode,
+                seasonId,
+            };
+
+            const data = await updateOwnerIotDeviceWorkMode(
+                farmId,
+                deviceId,
+                payload,
+            );
+
+            await loadDevices();
+
+            return data;
+        } catch (err) {
+            setActionError(
+                getErrorMessage(err, "Không thể cập nhật chế độ thiết bị."),
+            );
+            return null;
+        } finally {
+            setActionLoading(false);
+        }
+    }
+
+    async function handleCancelPendingCommand(deviceId) {
+        if (!farmId || !deviceId) return null;
+
+        try {
+            setActionLoading(true);
+            setActionError("");
+
+            const data = await cancelOwnerIotDevicePendingCommand(
+                farmId,
+                deviceId,
+            );
+
+            await loadDevices();
+
+            return data;
+        } catch (err) {
+            setActionError(
+                getErrorMessage(err, "Không thể hủy lệnh chờ của thiết bị."),
+            );
+            return null;
+        } finally {
+            setActionLoading(false);
+        }
+    }
+
     function handleSetPage(nextPage) {
         setPage(Math.max(Number(nextPage) || 0, 0));
     }
@@ -141,37 +198,8 @@ export function useOwnerIotDevices(farmId, initialPage = 0, initialSize = 10) {
 
         activateDevice: handleActivateDevice,
         updateWorkMode: handleUpdateWorkMode,
+        cancelPendingCommand: handleCancelPendingCommand,
+
         loadDeviceDetail,
     };
-
-    async function handleUpdateWorkMode(deviceId, mode, seasonId = null) {
-        if (!farmId || !deviceId) return null;
-
-        try {
-            setActionLoading(true);
-            setActionError("");
-
-            const payload = {
-                mode,
-                seasonId,
-            };
-
-            const data = await updateOwnerIotDeviceWorkMode(
-                farmId,
-                deviceId,
-                payload,
-            );
-
-            await loadDevices();
-
-            return data;
-        } catch (err) {
-            setActionError(
-                getErrorMessage(err, "Không thể cập nhật chế độ thiết bị."),
-            );
-            return null;
-        } finally {
-            setActionLoading(false);
-        }
-    }
 }
