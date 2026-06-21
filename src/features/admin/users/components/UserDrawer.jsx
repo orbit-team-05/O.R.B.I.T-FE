@@ -30,6 +30,16 @@ export function UserDrawer({
     const isEditMode = mode === "edit";
     const isViewMode = mode === "view";
 
+    const selectedRoles = roles.filter((role) => form.roleIds.includes(role.id));
+    const selectedRoleNames = selectedRoles.map((role) => role.roleName);
+
+    const isOwnerSelected = selectedRoleNames.includes("OWNER");
+    const isStaffSelected = selectedRoleNames.includes("STAFF");
+    const isAdminSelected = selectedRoleNames.includes("ADMIN");
+
+    const farmRequired = isEditMode || isStaffSelected;
+    const farmSelectDisabled = isViewMode || (!isEditMode && !isStaffSelected);
+
     useEffect(() => {
         if (!open) return;
 
@@ -72,25 +82,37 @@ export function UserDrawer({
 
     function handleRoleCheckboxChange(roleId) {
         if (isViewMode) return;
+
+        const selectedRole = roles.find((role) => role.id === roleId);
+
         setForm((prev) => {
             const exists = prev.roleIds.includes(roleId);
+
             if (exists) {
                 return {
                     ...prev,
-                    roleIds: prev.roleIds.filter((id) => id !== roleId),
-                };
-            } else {
-                return {
-                    ...prev,
-                    roleIds: [...prev.roleIds, roleId],
+                    roleIds: [],
+                    farmId: "",
                 };
             }
+
+            /*
+             * Tạm thời cho mỗi user chỉ chọn 1 vai trò chính:
+             * ADMIN / OWNER / STAFF.
+             */
+            return {
+                ...prev,
+                roleIds: [roleId],
+                farmId: selectedRole?.roleName === "STAFF" ? prev.farmId : "",
+            };
         });
     }
 
     function handleSubmit(event) {
         event.preventDefault();
+
         if (isViewMode) return;
+
         setValidationError("");
 
         if (!isEditMode) {
@@ -98,6 +120,7 @@ export function UserDrawer({
                 setValidationError("Tên đăng nhập không được để trống");
                 return;
             }
+
             if (!form.fullName.trim()) {
                 setValidationError("Họ và tên không được để trống");
                 return;
@@ -105,26 +128,57 @@ export function UserDrawer({
         }
 
         if (form.roleIds.length === 0) {
-            setValidationError("Vui lòng chọn ít nhất một vai trò");
+            setValidationError("Vui lòng chọn một vai trò");
             return;
         }
 
-        if (!form.farmId) {
-            setValidationError("Vui lòng chọn nông trại trực thuộc");
+        const selectedRoles = roles.filter((role) => form.roleIds.includes(role.id));
+        const roleNames = selectedRoles.map((role) => role.roleName);
+
+        const isStaff = roleNames.includes("STAFF");
+        const isOwner = roleNames.includes("OWNER");
+        const isAdmin = roleNames.includes("ADMIN");
+
+        if ([isStaff, isOwner, isAdmin].filter(Boolean).length > 1) {
+            setValidationError("Một tài khoản chỉ được chọn một vai trò chính.");
             return;
         }
 
-        const payload = isEditMode
-            ? {
-                  roleIds: form.roleIds,
-                  farmId: Number(form.farmId),
-              }
-            : {
-                  username: form.username.trim(),
-                  fullName: form.fullName.trim(),
-                  roleIds: form.roleIds,
-                  farmId: Number(form.farmId),
-              };
+        /*
+         * UPDATE: không sửa BE update nên vẫn giữ luật cũ:
+         * phải gửi farmId.
+         */
+        if (isEditMode) {
+            if (!form.farmId) {
+                setValidationError("Khi cập nhật tài khoản, vui lòng chọn nông trại trực thuộc.");
+                return;
+            }
+
+            onSubmit({
+                roleIds: form.roleIds,
+                farmId: Number(form.farmId),
+            });
+
+            return;
+        }
+
+        /*
+         * CREATE:
+         * OWNER -> farmId null
+         * ADMIN -> farmId null
+         * STAFF -> bắt buộc farmId
+         */
+        if (isStaff && !form.farmId) {
+            setValidationError("Nhân viên phải được gán vào một nông trại.");
+            return;
+        }
+
+        const payload = {
+            username: form.username.trim(),
+            fullName: form.fullName.trim(),
+            roleIds: form.roleIds,
+            farmId: isStaff ? Number(form.farmId) : null,
+        };
 
         onSubmit(payload);
     }
@@ -258,23 +312,48 @@ export function UserDrawer({
 
                         <div>
                             <label className="mb-1.5 block text-xs font-medium text-slate-700">
-                                Nông trại (Farm) *
+                                Nông trại (Farm) {farmRequired ? "*" : ""}
                             </label>
 
                             <select
                                 name="farmId"
                                 value={form.farmId}
                                 onChange={handleChange}
-                                disabled={isViewMode}
+                                disabled={farmSelectDisabled}
                                 className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15 disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
                             >
-                                <option value="">-- Chọn nông trại trực thuộc --</option>
+                                <option value="">
+                                    {isEditMode
+                                        ? "-- Chọn nông trại trực thuộc --"
+                                        : isStaffSelected
+                                            ? "-- Chọn nông trại trực thuộc --"
+                                            : "-- Không cần chọn nông trại --"}
+                                </option>
+
                                 {farms.map((farm) => (
                                     <option key={farm.id} value={farm.id}>
                                         {farm.farmName}
                                     </option>
                                 ))}
                             </select>
+
+                            {!isEditMode && !isViewMode && isOwnerSelected && (
+                                <p className="mt-1.5 text-xs text-amber-700">
+                                    Owner được tạo trước. Sau đó vào màn hình Farm để tạo nông trại và chọn owner này.
+                                </p>
+                            )}
+
+                            {!isViewMode && isAdminSelected && (
+                                <p className="mt-1.5 text-xs text-slate-500">
+                                    Admin không trực thuộc nông trại.
+                                </p>
+                            )}
+
+                            {!isViewMode && isStaffSelected && (
+                                <p className="mt-1.5 text-xs text-slate-500">
+                                    Staff bắt buộc phải thuộc một nông trại.
+                                </p>
+                            )}
                         </div>
 
                         {isViewMode && (
