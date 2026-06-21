@@ -115,7 +115,8 @@ export function OwnerIotImportsPage() {
                     </div>
                 )}
 
-                <section className="grid gap-4 md:grid-cols-4">
+                {/* 🛠 Đmr cấu trúc Grid đổi từ 4 sang 3 cột và xóa hẳn card chi phí */}
+                <section className="grid gap-4 md:grid-cols-3">
                     <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
                         <p className="text-xs font-medium uppercase text-slate-500">
                             Chờ xác nhận
@@ -140,15 +141,6 @@ export function OwnerIotImportsPage() {
                         </p>
                         <p className="mt-2 text-2xl font-semibold text-slate-900">
                             {summary?.approved ?? 0}
-                        </p>
-                    </div>
-
-                    <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
-                        <p className="text-xs font-medium uppercase text-slate-500">
-                            Giá trị nhập
-                        </p>
-                        <p className="mt-2 text-2xl font-semibold text-[#006948]">
-                            {Number(summary?.totalImportCost || 0).toLocaleString("vi-VN")}đ
                         </p>
                     </div>
                 </section>
