@@ -60,7 +60,8 @@ export function SeasonTable({
                                 <th className="px-5 py-3 w-[150px]">Tiến độ</th>
                                 <th className="px-5 py-3">Đầu tư</th>
                                 <th className="px-5 py-3">Sản lượng</th>
-                                <th className="px-5 py-3">Thu hoạch</th>
+                                <th className="px-5 py-3">Doanh thu</th>
+                                <th className="px-5 py-3">Giá</th>
                                 <th className="w-[120px] px-5 py-3 text-right">Hành động</th>
                             </tr>
                             </thead>
@@ -120,15 +121,32 @@ export function SeasonTable({
 
                                     <td className="px-5 py-4">
                                         <div className="font-semibold text-slate-950">
-                                            {item.harvestPricePerKg != null
-                                                ? `${formatCurrency(item.harvestPricePerKg)} / kg`
-                                                : "Chưa có giá"}
+                                            Dự kiến: {item.estimatedRevenueOfCurrentYield != null
+                                                ? formatCurrency(item.estimatedRevenueOfCurrentYield)
+                                                : "Chưa có"}
                                         </div>
-                                        <div className="mt-0.5 text-xs text-rose-600 font-medium">
-                                            {item.estimatedHarvestRevenue != null
-                                                ? `Ước tính: ${formatCurrency(item.estimatedHarvestRevenue)}`
-                                                : "Chưa bắt đầu thu hoạch"}
+                                        {(item.status === "HARVESTING" || item.status === "COMPLETED") && (
+                                            <div className="mt-0.5 text-xs font-medium text-emerald-700">
+                                                Thực tế: {item.estimatedHarvestRevenue != null
+                                                    ? formatCurrency(item.estimatedHarvestRevenue)
+                                                    : "Chưa có"}
+                                            </div>
+                                        )}
+                                    </td>
+
+                                    <td className="px-5 py-4">
+                                        <div className="font-semibold text-slate-950">
+                                            Thị trường: {item.marketPriceOfSize != null
+                                                ? `${formatCurrency(item.marketPriceOfSize)} / kg`
+                                                : "Chưa có"}
                                         </div>
+                                        {(item.status === "HARVESTING" || item.status === "COMPLETED") && (
+                                            <div className="mt-0.5 text-xs font-medium text-emerald-700">
+                                                Thực tế: {item.harvestPricePerKg != null
+                                                    ? `${formatCurrency(item.harvestPricePerKg)} / kg`
+                                                    : "Chưa có"}
+                                            </div>
+                                        )}
                                     </td>
 
                                     <td className="w-[120px] px-5 py-4 text-right">
@@ -147,7 +165,7 @@ export function SeasonTable({
                              {seasons.length === 0 && (
                                  <tr>
                                      <td
-                                         colSpan={7}
+                                         colSpan={8}
                                          className="px-5 py-12 text-center text-sm text-slate-500"
                                      >
                                          Chưa có mùa vụ nào được tạo.
