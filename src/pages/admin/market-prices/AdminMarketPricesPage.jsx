@@ -80,7 +80,6 @@ export function AdminMarketPricesPage() {
 
     async function handleRunCrawl() {
         if (crawling) return;
-        toast.info("Đang bắt đầu chạy crawl dữ liệu giá mới...");
         const res = await runCrawl();
         if (res.success) {
             toast.success(`Crawl thành công! Đã lưu mới ${res.count} dữ liệu giá.`);
