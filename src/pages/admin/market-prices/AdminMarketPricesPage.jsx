@@ -20,7 +20,7 @@ function AdminMarketPricesHeader({ onRunCrawl, crawling }) {
                 type="button"
                 disabled={crawling}
                 onClick={onRunCrawl}
-                className="inline-flex h-9 items-center justify-center rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white hover:bg-[#00583d] disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex h-9 items-center justify-center rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white hover:bg-[#00583d] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
             >
                 {crawling ? (
                     <>
@@ -41,7 +41,7 @@ function AdminMarketPricesHeader({ onRunCrawl, crawling }) {
 function AdminMarketPricesSkeleton() {
     return (
         <section className="space-y-5">
-            <AdminMarketPricesHeader />
+            <AdminMarketPricesHeader crawling={true} />
 
             <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
                 {[1, 2, 3, 4].map((item) => (
