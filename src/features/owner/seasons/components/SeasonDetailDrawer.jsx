@@ -50,18 +50,17 @@ function formatQuantity(value, storageUnit) {
 }
 
 function inputClass(disabled = false) {
-    return `h-10 w-full rounded-lg border ${
-        disabled ? "border-slate-200 bg-slate-50 text-slate-500" : "border-slate-300 bg-white text-slate-900 focus:border-[#006948] focus:ring-emerald-100"
-    } px-3 text-sm outline-none focus:ring-2`;
+    return `h-10 w-full rounded-lg border ${disabled ? "border-slate-200 bg-slate-50 text-slate-500" : "border-slate-300 bg-white text-slate-900 focus:border-[#006948] focus:ring-emerald-100"
+        } px-3 text-sm outline-none focus:ring-2`;
 }
 
 function SeasonMaterialUsageHistory({
-                                        usages = [],
-                                        pageInfo,
-                                        loading = false,
-                                        onPageChange,
-                                        consumedMaterialCost,
-                                    }) {
+    usages = [],
+    pageInfo,
+    loading = false,
+    onPageChange,
+    consumedMaterialCost,
+}) {
     const currentPage = Math.max(Number(pageInfo?.number ?? 0), 0);
     const totalPages = Math.max(Number(pageInfo?.totalPages ?? 1), 1);
     const isFirstPage = currentPage <= 0 || pageInfo?.first;
@@ -101,65 +100,65 @@ function SeasonMaterialUsageHistory({
                         <div className="max-h-[280px] overflow-auto">
                             <table className="w-full min-w-[720px] text-left text-sm">
                                 <thead className="sticky top-0 bg-slate-50 text-[11px] uppercase text-slate-500">
-                                <tr>
-                                    <th className="px-3 py-2">Vật tư</th>
-                                    <th className="px-3 py-2">Khối lượng</th>
-                                    <th className="px-3 py-2">Đơn giá</th>
-                                    <th className="px-3 py-2">Thành tiền</th>
-                                    <th className="px-3 py-2">Ngày xuất</th>
-                                    <th className="px-3 py-2">Ảnh</th>
-                                </tr>
+                                    <tr>
+                                        <th className="px-3 py-2">Vật tư</th>
+                                        <th className="px-3 py-2">Khối lượng</th>
+                                        <th className="px-3 py-2">Đơn giá</th>
+                                        <th className="px-3 py-2">Thành tiền</th>
+                                        <th className="px-3 py-2">Ngày xuất</th>
+                                        <th className="px-3 py-2">Ảnh</th>
+                                    </tr>
                                 </thead>
 
                                 <tbody>
-                                {usages.map((item) => (
-                                    <tr
-                                        key={item.transactionId}
-                                        className="border-t border-slate-100 text-slate-700"
-                                    >
-                                        <td className="px-3 py-3">
-                                            <div className="font-semibold text-slate-900">
-                                                {item.productName || "Chưa có tên"}
-                                            </div>
-                                            <div className="mt-0.5 text-xs text-slate-500">
-                                                #{item.transactionId} · {item.productCode || "Không có mã"}
-                                            </div>
-                                        </td>
+                                    {usages.map((item) => (
+                                        <tr
+                                            key={item.transactionId}
+                                            className="border-t border-slate-100 text-slate-700"
+                                        >
+                                            <td className="px-3 py-3">
+                                                <div className="font-semibold text-slate-900">
+                                                    {item.productName || "Chưa có tên"}
+                                                </div>
+                                                <div className="mt-0.5 text-xs text-slate-500">
+                                                    #{item.transactionId} · {item.productCode || "Không có mã"}
+                                                </div>
+                                            </td>
 
-                                        <td className="px-3 py-3 font-medium">
-                                            {formatQuantity(item.quantity, item.storageUnit)}
-                                        </td>
+                                            <td className="px-3 py-3 font-medium">
+                                                {formatQuantity(item.quantity, item.storageUnit)}
+                                            </td>
 
-                                        <td className="px-3 py-3">
-                                            {formatCurrency(item.unitPrice)}
-                                        </td>
+                                            <td className="px-3 py-3">
+                                                {formatCurrency(item.unitPrice)}
+                                            </td>
 
-                                        <td className="px-3 py-3 font-semibold text-red-600">
-                                            {formatCurrency(item.totalAmount)}
-                                        </td>
+                                            <td className="px-3 py-3 font-semibold text-red-600">
+                                                {formatCurrency(item.totalAmount)}
+                                            </td>
 
-                                        <td className="px-3 py-3 text-xs text-slate-500">
-                                            {formatDate(item.approvedAt || item.createdAt)}
-                                        </td>
+                                            <td className="px-3 py-3 text-xs text-slate-500">
+                                                {formatDate(item.approvedAt || item.createdAt)}
+                                            </td>
 
-                                        <td className="px-3 py-3">
-                                            {item.imageUrl ? (
-                                                <a
-                                                    href={item.imageUrl}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="text-xs font-semibold text-blue-600 hover:underline"
-                                                >
-                                                    Mở ảnh
-                                                </a>
-                                            ) : (
-                                                <span className="text-xs text-slate-400">
-                                                    Không có
-                                                </span>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
+                                            <td className="px-3 py-3">
+                                                {item.imageUrl ? (
+                                                    <a
+                                                        href={item.imageUrl}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="text-xs font-semibold text-blue-600 hover:underline"
+                                                    >
+                                                        Mở ảnh
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-xs text-slate-400">
+                                                        Không có
+                                                    </span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
                         </div>
@@ -205,21 +204,21 @@ function SeasonMaterialUsageHistory({
 }
 
 export function SeasonDetailDrawer({
-                                       open,
-                                       season,
-                                       materialUsages = [],
-                                       materialUsagePageInfo,
-                                       materialUsageLoading = false,
-                                       onMaterialUsagePageChange,
-                                       submitting = false,
-                                       actionError = "",
-                                       onClose,
-                                       onUpdateSeason,
-                                       onUpdateStatus,
-                                       onCancelSeason,
-                                       speciesSizes = [],
-                                       loadSpeciesSizes,
-                                   }) {
+    open,
+    season,
+    materialUsages = [],
+    materialUsagePageInfo,
+    materialUsageLoading = false,
+    onMaterialUsagePageChange,
+    submitting = false,
+    actionError = "",
+    onClose,
+    onUpdateSeason,
+    onUpdateStatus,
+    onCancelSeason,
+    speciesSizes = [],
+    loadSpeciesSizes,
+}) {
     const [isEditing, setIsEditing] = useState(false);
     const [form, setForm] = useState({
         seasonName: "",
@@ -236,7 +235,7 @@ export function SeasonDetailDrawer({
         title: "",
         description: "",
         variant: "success",
-        onConfirm: () => {},
+        onConfirm: () => { },
     });
 
     const [harvestPriceDialog, setHarvestPriceDialog] = useState({
@@ -246,6 +245,7 @@ export function SeasonDetailDrawer({
     });
 
     const [fieldErrors, setFieldErrors] = useState({});
+    const [localError, setLocalError] = useState("");
 
     useEffect(() => {
         if (open && season) {
@@ -265,6 +265,7 @@ export function SeasonDetailDrawer({
             });
             setIsEditing(false);
             setFieldErrors({});
+            setLocalError("");
 
             if (season.speciesId && loadSpeciesSizes) {
                 loadSpeciesSizes(season.speciesId);
@@ -357,6 +358,24 @@ export function SeasonDetailDrawer({
     };
 
     function triggerStatusChange(nextStatus, label) {
+        setLocalError("");
+        if (nextStatus === "COMPLETED") {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const startDate = new Date(season.startDate);
+            startDate.setHours(0, 0, 0, 0);
+
+            if (startDate > today) {
+                setLocalError("Không thể hoàn thành mùa vụ trước ngày bắt đầu, vui lòng kiểm tra lại");
+                return;
+            }
+
+            if (!season.consumedMaterialCost || Number(season.consumedMaterialCost) <= 0) {
+                setLocalError("Không thể hoàn thành mùa vụ khi chưa xuất vật tư nào (chi phí vật tư bằng 0).");
+                return;
+            }
+        }
+
         if (nextStatus === "HARVESTING" && season.status === "ACTIVE") {
             setHarvestPriceDialog({
                 open: true,
@@ -407,6 +426,7 @@ export function SeasonDetailDrawer({
     }
 
     function triggerCancel() {
+        setLocalError("");
         setConfirmDialog({
             open: true,
             title: "Hủy mùa vụ",
@@ -443,6 +463,7 @@ export function SeasonDetailDrawer({
                                 <button
                                     type="button"
                                     onClick={() => {
+                                        setLocalError("");
                                         if (isEditing) {
                                             handleSave();
                                         } else {
@@ -451,11 +472,10 @@ export function SeasonDetailDrawer({
                                         }
                                     }}
                                     disabled={submitting}
-                                    className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border px-3 text-xs font-semibold shadow-sm transition-colors ${
-                                        isEditing
+                                    className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border px-3 text-xs font-semibold shadow-sm transition-colors ${isEditing
                                             ? "border-[#006948] bg-[#006948] text-white hover:bg-[#00583d]"
                                             : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                                    }`}
+                                        }`}
                                 >
                                     {isEditing ? (
                                         <>
@@ -489,6 +509,7 @@ export function SeasonDetailDrawer({
                                     onClick={() => {
                                         setIsEditing(false);
                                         setFieldErrors({});
+                                        setLocalError("");
                                         setForm({
                                             seasonName: season.seasonName || "",
                                             startDate: season.startDate || "",
@@ -514,9 +535,9 @@ export function SeasonDetailDrawer({
                     </header>
 
                     <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
-                        {actionError && (
+                        {(actionError || localError) && (
                             <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-                                {actionError}
+                                {actionError || localError}
                             </div>
                         )}
 
@@ -582,6 +603,17 @@ export function SeasonDetailDrawer({
                                             <p className="mt-1 text-xs text-red-500">{fieldErrors.plannedEndDate}</p>
                                         )}
                                     </div>
+                                    {season.endDate && (
+                                        <div className="col-span-2">
+                                            <label className="text-xs font-semibold text-slate-500">Ngày kết thúc thực tế</label>
+                                            <input
+                                                type="date"
+                                                value={season.endDate}
+                                                disabled={true}
+                                                className={inputClass(true)}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -862,11 +894,10 @@ export function SeasonDetailDrawer({
                                         error: "",
                                     }))
                                 }
-                                className={`mt-1 h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none focus:ring-2 ${
-                                    harvestPriceDialog.error
+                                className={`mt-1 h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none focus:ring-2 ${harvestPriceDialog.error
                                         ? "border-red-300 focus:border-red-500 focus:ring-red-100"
                                         : "border-slate-300 focus:border-[#006948] focus:ring-emerald-100"
-                                }`}
+                                    }`}
                                 placeholder="Ví dụ: 150000"
                             />
 
