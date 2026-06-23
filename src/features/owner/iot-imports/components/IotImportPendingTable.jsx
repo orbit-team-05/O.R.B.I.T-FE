@@ -66,9 +66,8 @@ export function IotImportPendingTable({
                                 <th className="px-5 py-3">Khối lượng</th>
                                 <th className="px-5 py-3">QR</th>
                                 <th className="px-5 py-3">Trạng thái</th>
-                                <th className="w-[150px] px-5 py-3">
-                                    {mode === "pending" ? "Hành động" : "Chi phí"}
-                                </th>
+                                {/* 🛠 ĐÃ SỬA: Chỉ render tiêu đề cột nếu là tab pending */}
+                                {mode === "pending" && <th className="w-[150px] px-5 py-3">Hành động</th>}
                             </tr>
                             </thead>
 
@@ -125,21 +124,22 @@ export function IotImportPendingTable({
                                     <td className="px-5 py-4">
                                         {mode === "history" ? (
                                             <span className="rounded bg-emerald-50 px-2 py-1 text-[11px] font-medium text-[#006948]">
-        Đã nhập kho
-    </span>
+                                                Đã nhập kho
+                                            </span>
                                         ) : item.productId ? (
                                             <span className="rounded bg-emerald-50 px-2 py-1 text-[11px] font-medium text-[#006948]">
-        Chờ nhập giá
-    </span>
+                                                Chờ nhập giá
+                                            </span>
                                         ) : (
                                             <span className="rounded bg-red-50 px-2 py-1 text-[11px] font-medium text-red-600">
-        Lỗi QR
-    </span>
+                                                Lỗi QR
+                                            </span>
                                         )}
                                     </td>
 
-                                    <td className="w-[150px] px-5 py-4">
-                                        {mode === "pending" ? (
+                                    {/* 🛠 ĐÃ SỬA: Chỉ hiển thị ô chứa nút Xác nhận ở tab Chờ xác nhận */}
+                                    {mode === "pending" && (
+                                        <td className="w-[150px] px-5 py-4">
                                             <button
                                                 type="button"
                                                 disabled={!item.productId || submittingId === item.transactionId}
@@ -148,19 +148,16 @@ export function IotImportPendingTable({
                                             >
                                                 Xác nhận
                                             </button>
-                                        ) : (
-                                            <span className="text-xs font-semibold text-[#006948]">
-        {Number(item.totalAmount || 0).toLocaleString("vi-VN")}đ
-    </span>
-                                        )}
-                                    </td>
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
 
                             {scans.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={8}
+                                        /* 🛠 ĐÃ SỬA: colSpan giảm từ 8 xuống 7 ở tab history */
+                                        colSpan={mode === "pending" ? 8 : 7}
                                         className="px-5 py-10 text-center text-sm text-slate-500"
                                     >
                                         {mode === "pending"
