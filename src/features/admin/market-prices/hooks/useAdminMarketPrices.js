@@ -5,6 +5,7 @@ import {
     getAdminMarketPriceSummary,
     getMarketPriceSourceOptions,
     getMarketPriceSpeciesOptions,
+    runActiveCrawl,
 } from "../services/marketPriceApi";
 
 const DEFAULT_SUMMARY = {
@@ -36,6 +37,7 @@ export function useAdminMarketPrices(initialPage = 0, initialSize = 10) {
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [crawling, setCrawling] = useState(false);
 
     const loadOptions = useCallback(async () => {
         const [sources, species] = await Promise.all([
@@ -103,6 +105,22 @@ export function useAdminMarketPrices(initialPage = 0, initialSize = 10) {
         setPage(Math.max(Number(nextPage) || 0, 0));
     }
 
+    async function runCrawl() {
+        try {
+            setCrawling(true);
+            const savedCount = await runActiveCrawl();
+            await loadPrices();
+            return { success: true, count: savedCount };
+        } catch (err) {
+            return {
+                success: false,
+                error: getErrorMessage(err, "Không thể thực hiện chạy crawl."),
+            };
+        } finally {
+            setCrawling(false);
+        }
+    }
+
     return {
         prices: pricePage?.content ?? [],
         summary,
@@ -130,5 +148,8 @@ export function useAdminMarketPrices(initialPage = 0, initialSize = 10) {
 
         error,
         reload: loadPrices,
+
+        crawling,
+        runCrawl,
     };
 }

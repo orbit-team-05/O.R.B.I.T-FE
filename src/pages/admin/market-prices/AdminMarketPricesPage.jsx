@@ -3,7 +3,7 @@ import { MarketPriceStats } from "../../../features/admin/market-prices/componen
 import { MarketPriceTable } from "../../../features/admin/market-prices/components/MarketPriceTable";
 import { useAdminMarketPrices } from "../../../features/admin/market-prices/hooks/useAdminMarketPrices";
 
-function AdminMarketPricesHeader({ onRunCrawl }) {
+function AdminMarketPricesHeader({ onRunCrawl, crawling }) {
     return (
         <header className="flex items-start justify-between gap-4">
             <div>
@@ -18,10 +18,21 @@ function AdminMarketPricesHeader({ onRunCrawl }) {
 
             <button
                 type="button"
+                disabled={crawling}
                 onClick={onRunCrawl}
-                className="h-9 rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white hover:bg-[#00583d]"
+                className="inline-flex h-9 items-center justify-center rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white hover:bg-[#00583d] disabled:cursor-not-allowed disabled:opacity-50"
             >
-                Chạy crawl mới
+                {crawling ? (
+                    <>
+                        <svg className="mr-2 h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Đang crawl...
+                    </>
+                ) : (
+                    "Chạy crawl mới"
+                )}
             </button>
         </header>
     );
@@ -63,10 +74,19 @@ export function AdminMarketPricesPage() {
         error,
         setPage,
         reload,
+        crawling,
+        runCrawl,
     } = useAdminMarketPrices();
 
-    function handleRunCrawl() {
-        toast.error("Chưa có API chạy crawl thủ công.");
+    async function handleRunCrawl() {
+        if (crawling) return;
+        toast.info("Đang bắt đầu chạy crawl dữ liệu giá mới...");
+        const res = await runCrawl();
+        if (res.success) {
+            toast.success(`Crawl thành công! Đã lưu mới ${res.count} dữ liệu giá.`);
+        } else {
+            toast.error(res.error);
+        }
     }
 
     if (initialLoading) {
@@ -76,7 +96,7 @@ export function AdminMarketPricesPage() {
     if (error) {
         return (
             <section className="space-y-5">
-                <AdminMarketPricesHeader onRunCrawl={handleRunCrawl} />
+                <AdminMarketPricesHeader onRunCrawl={handleRunCrawl} crawling={crawling} />
 
                 <div className="rounded-xl border border-red-200 bg-red-50 p-5">
                     <p className="text-sm font-medium text-red-700">{error}</p>
@@ -95,7 +115,7 @@ export function AdminMarketPricesPage() {
 
     return (
         <section className="space-y-5">
-            <AdminMarketPricesHeader onRunCrawl={handleRunCrawl} />
+            <AdminMarketPricesHeader onRunCrawl={handleRunCrawl} crawling={crawling} />
 
             <MarketPriceStats summary={summary} />
 

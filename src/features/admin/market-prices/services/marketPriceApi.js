@@ -43,3 +43,8 @@ export async function getMarketPriceSpeciesOptions() {
 
     return response.data.data.content ?? [];
 }
+
+export async function runActiveCrawl() {
+    const response = await httpClient.post("/admin/crawler/run-active");
+    return response.data.data;
+}
