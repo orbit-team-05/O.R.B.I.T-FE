@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,6 +21,18 @@ export function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [apiError, setApiError] = useState("");
 
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const reason = params.get("reason");
+        if (reason === "user_locked") {
+            setApiError("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.");
+        } else if (reason === "concurrent_login") {
+            setApiError("Tài khoản đã được đăng nhập ở thiết bị khác. Phiên làm việc này đã kết thúc.");
+        } else if (reason === "session_expired") {
+            setApiError("Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.");
+        }
+    }, []);
+
     const {
         register,
         handleSubmit,
@@ -31,6 +43,10 @@ export function LoginPage() {
     });
 
     async function onSubmit(data) {
+        // Clear query params to prevent showing the warning again if they login and fail
+        if (window.location.search) {
+            window.history.replaceState(null, "", window.location.pathname);
+        }
         setApiError("");
 
         const result = await login(data.identifier, data.password);

@@ -34,7 +34,16 @@ httpClient.interceptors.response.use(
             if (token) {
                 localStorage.removeItem(STORAGE_TOKEN_KEY);
                 localStorage.removeItem(STORAGE_USER_KEY);
-                window.location.href = "/login";
+                
+                const serverMsg = error.response.data?.message;
+                let reason = "session_expired";
+                if (serverMsg === "USER_LOCKED") {
+                    reason = "user_locked";
+                } else if (serverMsg === "CONCURRENT_LOGIN") {
+                    reason = "concurrent_login";
+                }
+                
+                window.location.href = `/login?reason=${reason}`;
             }
         }
 
