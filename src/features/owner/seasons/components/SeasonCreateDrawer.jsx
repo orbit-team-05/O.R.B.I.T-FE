@@ -206,7 +206,7 @@ export function SeasonCreateDrawer({
                             <input
                                 type="number"
                                 min="0"
-                                step="1000"
+                                step="any"
                                 value={form.initialCapitalCost}
                                 onChange={(e) => updateField("initialCapitalCost", e.target.value)}
                                 className={inputClass(!!errors.initialCapitalCost)}

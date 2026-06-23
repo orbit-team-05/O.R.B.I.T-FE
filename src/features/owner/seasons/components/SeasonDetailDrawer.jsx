@@ -876,7 +876,7 @@ export function SeasonDetailDrawer({
                             <input
                                 type="number"
                                 min="1"
-                                step="1000"
+                                step="any"
                                 value={harvestPriceDialog.value}
                                 onChange={(event) =>
                                     setHarvestPriceDialog((prev) => ({
