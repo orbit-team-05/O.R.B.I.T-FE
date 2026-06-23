@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { X, Edit2, Check, ArrowLeftRight, Trash2 } from "lucide-react";
 import { SeasonStatusBadge } from "./SeasonStatusBadge";
 import { ConfirmDialog } from "../../../../components/common/dialog/ConfirmDialog";
+import { useToast } from "../../../../components/common/toast/ToastProvider";
 
 function formatDate(value) {
     if (!value) return "Chưa có";
@@ -245,7 +246,7 @@ export function SeasonDetailDrawer({
     });
 
     const [fieldErrors, setFieldErrors] = useState({});
-    const [localError, setLocalError] = useState("");
+    const toast = useToast();
 
     useEffect(() => {
         if (open && season) {
@@ -265,7 +266,6 @@ export function SeasonDetailDrawer({
             });
             setIsEditing(false);
             setFieldErrors({});
-            setLocalError("");
 
             if (season.speciesId && loadSpeciesSizes) {
                 loadSpeciesSizes(season.speciesId);
@@ -358,7 +358,6 @@ export function SeasonDetailDrawer({
     };
 
     function triggerStatusChange(nextStatus, label) {
-        setLocalError("");
         if (nextStatus === "COMPLETED") {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -366,12 +365,12 @@ export function SeasonDetailDrawer({
             startDate.setHours(0, 0, 0, 0);
 
             if (startDate > today) {
-                setLocalError("Không thể hoàn thành mùa vụ trước ngày bắt đầu, vui lòng kiểm tra lại");
+                toast.error("Không thể hoàn thành mùa vụ trước ngày bắt đầu, vui lòng kiểm tra lại");
                 return;
             }
 
             if (!season.consumedMaterialCost || Number(season.consumedMaterialCost) <= 0) {
-                setLocalError("Không thể hoàn thành mùa vụ khi chưa xuất vật tư nào (chi phí vật tư bằng 0).");
+                toast.error("Không thể hoàn thành mùa vụ khi chưa xuất vật tư nào (chi phí vật tư bằng 0).");
                 return;
             }
         }
@@ -426,7 +425,6 @@ export function SeasonDetailDrawer({
     }
 
     function triggerCancel() {
-        setLocalError("");
         setConfirmDialog({
             open: true,
             title: "Hủy mùa vụ",
@@ -463,7 +461,6 @@ export function SeasonDetailDrawer({
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        setLocalError("");
                                         if (isEditing) {
                                             handleSave();
                                         } else {
@@ -509,7 +506,6 @@ export function SeasonDetailDrawer({
                                     onClick={() => {
                                         setIsEditing(false);
                                         setFieldErrors({});
-                                        setLocalError("");
                                         setForm({
                                             seasonName: season.seasonName || "",
                                             startDate: season.startDate || "",
@@ -535,11 +531,6 @@ export function SeasonDetailDrawer({
                     </header>
 
                     <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
-                        {(actionError || localError) && (
-                            <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-                                {actionError || localError}
-                            </div>
-                        )}
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
