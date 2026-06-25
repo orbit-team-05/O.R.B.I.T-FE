@@ -73,14 +73,21 @@ function AiStatusBadge({ item }) {
 }
 
 function getFlowLabel(item) {
-    if (item?.requestedAction === "EXPORT_FEED" || item?.transactionType === "EXPORT_FEED") {
+    if (
+        item?.requestedAction === "EXPORT_FEED" ||
+        item?.transactionType === "EXPORT_FEED"
+    ) {
         return {
             label: "Xuất vật tư",
             className: "bg-orange-50 text-orange-700",
         };
     }
 
-    if (item?.requestedAction === "IMPORT_STOCK" || item?.transactionType === "IMPORT") {
+    if (
+        item?.requestedAction === "IMPORT" ||
+        item?.requestedAction === "IMPORT_STOCK" ||
+        item?.transactionType === "IMPORT"
+    ) {
         return {
             label: "Nhập kho",
             className: "bg-emerald-50 text-[#006948]",
