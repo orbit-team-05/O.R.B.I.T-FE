@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { loginApi } from "../services/authApi";
 
 const STORAGE_TOKEN_KEY = "orbit_access_token";
+const STORAGE_REFRESH_TOKEN_KEY = "orbit_refresh_token";
 const STORAGE_USER_KEY = "orbit_user";
 
 const AuthContext = createContext(null);
@@ -32,6 +33,7 @@ function loadStoredAuth() {
     } catch {
         // Dữ liệu hỏng → xoá
         localStorage.removeItem(STORAGE_TOKEN_KEY);
+        localStorage.removeItem(STORAGE_REFRESH_TOKEN_KEY);
         localStorage.removeItem(STORAGE_USER_KEY);
     }
 
@@ -64,8 +66,9 @@ export function AuthProvider({ children }) {
 
             const data = await loginApi({ identifier, password });
 
-            // Lưu vào localStorage
+            // Lưu access token + refresh token vào localStorage
             localStorage.setItem(STORAGE_TOKEN_KEY, data.token);
+            localStorage.setItem(STORAGE_REFRESH_TOKEN_KEY, data.refreshToken);
 
             const userData = {
                 userId: data.userId,
@@ -99,6 +102,7 @@ export function AuthProvider({ children }) {
 
     const logout = useCallback(() => {
         localStorage.removeItem(STORAGE_TOKEN_KEY);
+        localStorage.removeItem(STORAGE_REFRESH_TOKEN_KEY);
         localStorage.removeItem(STORAGE_USER_KEY);
         setToken(null);
         setUser(null);

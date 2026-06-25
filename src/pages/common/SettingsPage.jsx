@@ -114,8 +114,11 @@ export function SettingsPage() {
         }
         if (!passwordForm.newPassword) {
             errors.newPassword = "Mật khẩu mới không được để trống";
-        } else if (passwordForm.newPassword.length < 6) {
-            errors.newPassword = "Mật khẩu mới phải từ 6 ký tự trở lên";
+        } else {
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
+            if (!passwordRegex.test(passwordForm.newPassword)) {
+                errors.newPassword = "Mật khẩu mới phải từ 8 ký tự trở lên, bao gồm chữ hoa, chữ thường, chữ số và ít nhất một ký tự đặc biệt";
+            }
         }
         if (!passwordForm.confirmNewPassword) {
             errors.confirmNewPassword = "Xác nhận mật khẩu không được để trống";
