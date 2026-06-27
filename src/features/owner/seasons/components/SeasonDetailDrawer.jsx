@@ -288,7 +288,7 @@ export function SeasonDetailDrawer({
             return !isPlanning; // locked for ACTIVE and HARVESTING
         }
         if (fieldName === "actualYieldKg") {
-            return !isHarvesting; // actualYieldKg only editable during HARVESTING
+            return true; // actualYieldKg is read-only, calculated from IoT scale scans
         }
         return false;
     };
@@ -312,12 +312,6 @@ export function SeasonDetailDrawer({
             errors.initialCapitalCost = "Vốn đầu tư ban đầu không được âm.";
         }
 
-        if (isHarvesting) {
-            if (form.actualYieldKg === "" || Number(form.actualYieldKg) < 0) {
-                errors.actualYieldKg = "Sản lượng thực tế không được âm.";
-            }
-        }
-
         setFieldErrors(errors);
         return Object.keys(errors).length === 0;
     }
@@ -330,7 +324,6 @@ export function SeasonDetailDrawer({
             plannedEndDate: form.plannedEndDate,
             expectedYieldKg: Number(form.expectedYieldKg),
             initialCapitalCost: Number(form.initialCapitalCost),
-            actualYieldKg: isHarvesting ? Number(form.actualYieldKg) : undefined,
             sizeCategory: form.sizeCategory.trim(),
         }).then((res) => {
             if (res) {
@@ -655,6 +648,7 @@ export function SeasonDetailDrawer({
                                                     disabled={isFieldDisabled("actualYieldKg")}
                                                     className={`${inputClass(isFieldDisabled("actualYieldKg"))} ${fieldErrors.actualYieldKg ? "!border-red-400 !ring-red-100" : ""}`}
                                                 />
+                                                <p className="mt-1 text-[10px] text-slate-400 italic">Cập nhật tự động từ cân IoT</p>
                                                 {fieldErrors.actualYieldKg && (
                                                     <p className="mt-1 text-xs text-red-500">{fieldErrors.actualYieldKg}</p>
                                                 )}
