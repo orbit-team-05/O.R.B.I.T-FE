@@ -32,9 +32,7 @@ function formatQuantity(value, storageUnit) {
     return `${numberValue.toLocaleString("vi-VN")} g`;
 }
 
-function formatCurrency(value) {
-    return `${Number(value || 0).toLocaleString("vi-VN")}đ`;
-}
+
 
 function StatusBadge({ status }) {
     if (status === "APPROVED") {
@@ -60,40 +58,20 @@ function StatusBadge({ status }) {
     );
 }
 
-function NextActionHint({ item }) {
-    if (!item) return null;
 
-    if (item.needKeypadInput || item.nextAction === "ENTER_KEYPAD_CODE") {
-        return (
-            <p className="mt-2 text-[11px] text-red-600">
-                Chưa đọc được vật tư. Nhập keypad hoặc duyệt AI trước khi xác nhận.
-            </p>
-        );
-    }
-
-    if (item.nextAction === "WAIT_OWNER_CONFIRM") {
-        return (
-            <p className="mt-2 text-[11px] text-amber-700">
-                Đã nhận vật tư, chờ owner xác nhận xuất.
-            </p>
-        );
-    }
-
-    return null;
-}
 
 export function IotExportTable({
-                                   title,
-                                   description,
-                                   scans,
-                                   pageInfo,
-                                   loading = false,
-                                   submittingId = null,
-                                   mode = "pending",
-                                   onConfirm,
-                                   onViewDetail,
-                                   onPageChange,
-                               }) {
+    title,
+    description,
+    scans,
+    pageInfo,
+    loading = false,
+    submittingId = null,
+    mode = "pending",
+    onConfirm,
+    onViewDetail,
+    onPageChange,
+}) {
     const currentPage = Math.max(Number(pageInfo?.number ?? 0), 0);
     const totalPages = Math.max(Number(pageInfo?.totalPages ?? 1), 1);
     const isFirstPage = currentPage <= 0 || pageInfo?.first;
@@ -117,8 +95,7 @@ export function IotExportTable({
             ) : (
                 <>
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[1320px] border-collapse text-left">
-                            <thead className="bg-slate-50">
+                        <table className="w-full min-w-[1180px] border-collapse text-left">                            <thead className="bg-slate-50">
                             <tr className="text-[11px] font-medium uppercase text-slate-600">
                                 <th className="px-5 py-3">Ảnh</th>
                                 <th className="px-5 py-3">Transaction</th>
@@ -126,7 +103,6 @@ export function IotExportTable({
                                 <th className="px-5 py-3">Mùa vụ</th>
                                 <th className="px-5 py-3">Vật tư</th>
                                 <th className="px-5 py-3">Khối lượng</th>
-                                <th className="px-5 py-3">Chi phí</th>
                                 <th className="px-5 py-3">QR</th>
                                 <th className="px-5 py-3">Trạng thái</th>
                                 <th className="w-[90px] px-5 py-3">Chi tiết</th>
@@ -136,127 +112,115 @@ export function IotExportTable({
                                     </th>
                                 )}
                             </tr>
-                            </thead>
+                        </thead>
 
                             <tbody>
-                            {scans.map((item) => (
-                                <tr
-                                    key={item.transactionId}
-                                    className="border-t border-slate-200 text-sm text-slate-700"
-                                >
-                                    <td className="px-5 py-4">
-                                        {item.imageUrl ? (
-                                            <img
-                                                src={item.imageUrl}
-                                                alt="Ảnh scan xuất"
-                                                className="h-14 w-20 rounded-lg border border-slate-200 object-cover"
-                                            />
-                                        ) : (
-                                            <div className="flex h-14 w-20 items-center justify-center rounded-lg bg-slate-100 text-[11px] text-slate-400">
-                                                No image
+                                {scans.map((item) => (
+                                    <tr
+                                        key={item.transactionId}
+                                        className="border-t border-slate-200 text-sm text-slate-700"
+                                    >
+                                        <td className="px-5 py-4">
+                                            {item.imageUrl ? (
+                                                <img
+                                                    src={item.imageUrl}
+                                                    alt="Ảnh scan xuất"
+                                                    className="h-14 w-20 rounded-lg border border-slate-200 object-cover"
+                                                />
+                                            ) : (
+                                                <div className="flex h-14 w-20 items-center justify-center rounded-lg bg-slate-100 text-[11px] text-slate-400">
+                                                    No image
+                                                </div>
+                                            )}
+                                        </td>
+
+                                        <td className="px-5 py-4 font-semibold text-slate-900">
+                                            #{item.transactionId}
+                                        </td>
+
+                                        <td className="px-5 py-4">
+                                            {formatDateTime(item.approvedAt || item.createdAt)}
+                                        </td>
+
+                                        <td className="max-w-[220px] px-5 py-4">
+                                            <div className="line-clamp-2 font-medium text-slate-900">
+                                                {item.seasonName || "Chưa có mùa vụ"}
                                             </div>
-                                        )}
-                                    </td>
-
-                                    <td className="px-5 py-4 font-semibold text-slate-900">
-                                        #{item.transactionId}
-                                    </td>
-
-                                    <td className="px-5 py-4">
-                                        {formatDateTime(item.approvedAt || item.createdAt)}
-                                    </td>
-
-                                    <td className="max-w-[220px] px-5 py-4">
-                                        <div className="line-clamp-2 font-medium text-slate-900">
-                                            {item.seasonName || "Chưa có mùa vụ"}
-                                        </div>
-                                        <div className="mt-1 text-xs text-slate-500">
-                                            Season ID: {item.seasonId || "N/A"}
-                                        </div>
-                                    </td>
-
-                                    <td className="max-w-[240px] px-5 py-4">
-                                        <div className="line-clamp-2 font-medium text-slate-900">
-                                            {item.productName || "Chưa nhận diện"}
-                                        </div>
-                                        <div className="mt-1 break-all text-xs text-slate-500">
-                                            {item.productCode || item.deviceName || item.deviceId}
-                                        </div>
-                                    </td>
-
-                                    <td className="px-5 py-4 font-medium text-slate-900">
-                                        {formatQuantity(item.quantity ?? item.quantityGrams, item.storageUnit)}
-                                    </td>
-
-                                    <td className="px-5 py-4">
-                                        <div className="font-semibold text-slate-900">
-                                            {formatCurrency(item.totalAmount)}
-                                        </div>
-                                        {item.unitPrice ? (
                                             <div className="mt-1 text-xs text-slate-500">
-                                                Đơn giá FIFO: {formatCurrency(item.unitPrice)}
+                                                Season ID: {item.seasonId || "N/A"}
                                             </div>
-                                        ) : null}
-                                    </td>
+                                        </td>
 
-                                    <td className="max-w-[220px] px-5 py-4">
-                                        <div className="text-xs font-medium text-slate-700">
-                                            {item.qrType || "N/A"}
-                                        </div>
-                                        <div className="mt-1 break-all text-xs text-slate-500">
-                                            {item.qrCodeValue || "Không đọc được QR"}
-                                        </div>
-                                    </td>
+                                        <td className="max-w-[240px] px-5 py-4">
+                                            <div className="line-clamp-2 font-medium text-slate-900">
+                                                {item.productName || "Chưa nhận diện"}
+                                            </div>
+                                            <div className="mt-1 break-all text-xs text-slate-500">
+                                                {item.productCode || item.deviceName || item.deviceId}
+                                            </div>
+                                        </td>
 
-                                    <td className="px-5 py-4">
-                                        <StatusBadge status={item.approvalStatus} />
-                                        <NextActionHint item={item} />
-                                    </td>
+                                        <td className="px-5 py-4 font-medium text-slate-900">
+                                            {formatQuantity(item.quantity ?? item.quantityGrams, item.storageUnit)}
+                                        </td>
 
-                                    <td className="w-[90px] px-5 py-4">
-                                        <button
-                                            type="button"
-                                            onClick={() => onViewDetail?.(item)}
-                                            className="inline-flex h-8 items-center justify-center gap-1 rounded-lg px-2 text-xs font-medium text-slate-700 hover:bg-slate-100"
-                                        >
-                                            <Eye size={14} />
-                                            Xem
-                                        </button>
-                                    </td>
 
-                                    {isPendingMode && (
-                                        <td className="w-[150px] px-5 py-4">
+                                        <td className="max-w-[220px] px-5 py-4">
+                                            <div className="text-xs font-medium text-slate-700">
+                                                {item.qrType || "N/A"}
+                                            </div>
+                                            <div className="mt-1 break-all text-xs text-slate-500">
+                                                {item.qrCodeValue || "Không đọc được QR"}
+                                            </div>
+                                        </td>
+
+                                        <td className="px-5 py-4">
+                                            <StatusBadge status={item.approvalStatus} />
+                                        </td>
+
+                                        <td className="w-[90px] px-5 py-4">
                                             <button
                                                 type="button"
-                                                disabled={
-                                                    !item.productId ||
-                                                    item.needKeypadInput ||
-                                                    submittingId === item.transactionId
-                                                }
-                                                onClick={() => onConfirm?.(item)}
-                                                className="inline-flex h-8 items-center justify-center rounded-lg bg-[#006948] px-3 text-xs font-medium text-white transition-colors hover:bg-[#00583d] disabled:cursor-not-allowed disabled:opacity-50"
+                                                onClick={() => onViewDetail?.(item)}
+                                                className="inline-flex h-8 items-center justify-center gap-1 rounded-lg px-2 text-xs font-medium text-slate-700 hover:bg-slate-100"
                                             >
-                                                {submittingId === item.transactionId
-                                                    ? "Đang xuất..."
-                                                    : "Xác nhận xuất"}
+                                                <Eye size={14} />
+                                                Xem
                                             </button>
                                         </td>
-                                    )}
-                                </tr>
-                            ))}
 
-                            {scans.length === 0 && (
-                                <tr>
-                                    <td
-                                        colSpan={isPendingMode ? 11 : 10}
-                                        className="px-5 py-10 text-center text-sm text-slate-500"
-                                    >
-                                        {isPendingMode
-                                            ? "Chưa có scan xuất vật tư nào đang chờ xác nhận."
-                                            : "Chưa có lịch sử xuất vật tư."}
-                                    </td>
-                                </tr>
-                            )}
+                                        {isPendingMode && (
+                                            <td className="w-[150px] px-5 py-4">
+                                                <button
+                                                    type="button"
+                                                    disabled={
+                                                        !item.productId ||
+                                                        item.needKeypadInput ||
+                                                        submittingId === item.transactionId
+                                                    }
+                                                    onClick={() => onConfirm?.(item)}
+                                                    className="inline-flex h-8 items-center justify-center rounded-lg bg-[#006948] px-3 text-xs font-medium text-white transition-colors hover:bg-[#00583d] disabled:cursor-not-allowed disabled:opacity-50"
+                                                >
+                                                    {submittingId === item.transactionId
+                                                        ? "Đang xuất..."
+                                                        : "Xác nhận xuất"}
+                                                </button>
+                                            </td>
+                                        )}
+                                    </tr>
+                                ))}
+
+                                {scans.length === 0 && (
+                                    <tr>
+                                        <td
+                                            colSpan={isPendingMode ? 10 : 9} className="px-5 py-10 text-center text-sm text-slate-500"
+                                        >
+                                            {isPendingMode
+                                                ? "Chưa có scan xuất vật tư nào đang chờ xác nhận."
+                                                : "Chưa có lịch sử xuất vật tư."}
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>
