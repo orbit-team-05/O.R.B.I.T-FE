@@ -1,11 +1,11 @@
 import { useCallback, useMemo, useState } from "react";
 
 import {
-    addOwnerMarketWatchlistSpecies,
-    getOwnerAvailableWatchlistSpecies,
+    addOwnerMarketWatchlistTarget,
+    getOwnerAvailableWatchlistTargets,
     getOwnerMarketWatchlist,
     getOwnerMarketWatchlistSummary,
-    removeOwnerMarketWatchlistSpecies,
+    removeOwnerMarketWatchlistTarget,
 } from "../services/ownerMarketWatchlistApi";
 
 const EMPTY_PAGE = {
@@ -29,7 +29,7 @@ export function useOwnerMarketWatchlist(
     initialSize = 10,
 ) {
     const [watchlistPage, setWatchlistPage] = useState(null);
-    const [availableSpeciesPage, setAvailableSpeciesPage] = useState(EMPTY_PAGE);
+    const [availableTargetsPage, setAvailableTargetsPage] = useState(EMPTY_PAGE);
     const [summary, setSummary] = useState({ watchlistCount: 0 });
 
     const [page, setPage] = useState(initialPage);
@@ -38,7 +38,7 @@ export function useOwnerMarketWatchlist(
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [submitting, setSubmitting] = useState(false);
-    const [removingSpeciesId, setRemovingSpeciesId] = useState(null);
+    const [removingTargetId, setRemovingTargetId] = useState(null);
 
     const loadData = useCallback(async () => {
         if (!farmId) {
@@ -52,12 +52,12 @@ export function useOwnerMarketWatchlist(
 
             const [watchlistData, availableData, summaryData] = await Promise.all([
                 getOwnerMarketWatchlist(farmId, page, size),
-                getOwnerAvailableWatchlistSpecies(farmId, 0, 100),
+                getOwnerAvailableWatchlistTargets(farmId, 0, 100),
                 getOwnerMarketWatchlistSummary(farmId),
             ]);
 
             setWatchlistPage(watchlistData);
-            setAvailableSpeciesPage(availableData);
+            setAvailableTargetsPage(availableData);
             setSummary(summaryData ?? { watchlistCount: 0 });
         } catch (err) {
             setError(
@@ -69,11 +69,11 @@ export function useOwnerMarketWatchlist(
     }, [farmId, page, size]);
 
     const watchlist = watchlistPage?.content ?? [];
-    const availableSpecies = availableSpeciesPage?.content ?? [];
+    const availableTargets = availableTargetsPage?.content ?? [];
 
     const stats = useMemo(() => {
         const activeWatchlist = summary?.watchlistCount ?? 0;
-        const availableCount = availableSpeciesPage?.totalElements ?? 0;
+        const availableCount = availableTargetsPage?.totalElements ?? 0;
         const visibleCount = watchlist.length;
         const currentPage = (watchlistPage?.number ?? page) + 1;
         const totalPages = Math.max(Number(watchlistPage?.totalPages ?? 1), 1);
@@ -86,7 +86,7 @@ export function useOwnerMarketWatchlist(
             totalPages,
         };
     }, [
-        availableSpeciesPage?.totalElements,
+        availableTargetsPage?.totalElements,
         page,
         summary?.watchlistCount,
         watchlist.length,
@@ -94,17 +94,17 @@ export function useOwnerMarketWatchlist(
         watchlistPage?.totalPages,
     ]);
 
-    async function addSpecies(speciesId) {
-        if (!farmId || !speciesId) return null;
+    async function addTarget(targetId) {
+        if (!farmId || !targetId) return null;
 
         try {
             setSubmitting(true);
-            const data = await addOwnerMarketWatchlistSpecies(farmId, speciesId);
+            const data = await addOwnerMarketWatchlistTarget(farmId, targetId);
             await loadData();
             return data;
         } catch (err) {
             throw new Error(
-                getErrorMessage(err, "Không thể thêm species vào watchlist."),
+                getErrorMessage(err, "Không thể thêm mục tiêu vào watchlist."),
                 { cause: err },
             );
         } finally {
@@ -112,12 +112,12 @@ export function useOwnerMarketWatchlist(
         }
     }
 
-    async function removeSpecies(speciesId) {
-        if (!farmId || !speciesId) return null;
+    async function removeTarget(targetId) {
+        if (!farmId || !targetId) return null;
 
         try {
-            setRemovingSpeciesId(speciesId);
-            const data = await removeOwnerMarketWatchlistSpecies(farmId, speciesId);
+            setRemovingTargetId(targetId);
+            const data = await removeOwnerMarketWatchlistTarget(farmId, targetId);
 
             if (watchlist.length === 1 && page > 0) {
                 setPage((prev) => Math.max(prev - 1, 0));
@@ -128,11 +128,11 @@ export function useOwnerMarketWatchlist(
             return data;
         } catch (err) {
             throw new Error(
-                getErrorMessage(err, "Không thể xóa species khỏi watchlist."),
+                getErrorMessage(err, "Không thể xóa mục tiêu khỏi watchlist."),
                 { cause: err },
             );
         } finally {
-            setRemovingSpeciesId(null);
+            setRemovingTargetId(null);
         }
     }
 
@@ -142,7 +142,7 @@ export function useOwnerMarketWatchlist(
 
     return {
         watchlist,
-        availableSpecies,
+        availableTargets,
         summary,
         stats,
         loading,
@@ -150,7 +150,7 @@ export function useOwnerMarketWatchlist(
         tableLoading: loading && watchlistPage !== null,
         error,
         submitting,
-        removingSpeciesId,
+        removingTargetId,
         pageInfo: {
             number: watchlistPage?.number ?? page,
             size: watchlistPage?.size ?? size,
@@ -161,7 +161,7 @@ export function useOwnerMarketWatchlist(
         },
         reload: loadData,
         setPage: handleSetPage,
-        addSpecies,
-        removeSpecies,
+        addTarget,
+        removeTarget,
     };
 }

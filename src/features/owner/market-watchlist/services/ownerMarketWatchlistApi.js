@@ -49,13 +49,13 @@ export async function getOwnerMarketWatchlist(farmId, page = 0, size = 10) {
     );
 }
 
-export async function getOwnerAvailableWatchlistSpecies(
+export async function getOwnerAvailableWatchlistTargets(
     farmId,
     page = 0,
     size = 100,
 ) {
     const response = await httpClient.get(
-        `/farms/${farmId}/market-watchlist/available-species`,
+        `/farms/${farmId}/market-watchlist/available-targets`,
         {
             params: { page, size },
         },
@@ -64,7 +64,7 @@ export async function getOwnerAvailableWatchlistSpecies(
     return normalizePageResponse(
         unwrapApiResponse(
             response.data,
-            "Không thể tải danh sách species có thể thêm.",
+            "Không thể tải danh sách mục tiêu có thể thêm.",
         ),
     );
 }
@@ -82,24 +82,24 @@ export async function getOwnerMarketWatchlistSummary(farmId) {
     );
 }
 
-export async function addOwnerMarketWatchlistSpecies(farmId, speciesId) {
+export async function addOwnerMarketWatchlistTarget(farmId, targetId) {
     const response = await httpClient.post(`/farms/${farmId}/market-watchlist`, {
-        speciesId,
+        targetId,
     });
 
     return unwrapApiResponse(
         response.data,
-        "Không thể thêm species vào watchlist.",
+        "Không thể thêm mục tiêu vào watchlist.",
     );
 }
 
-export async function removeOwnerMarketWatchlistSpecies(farmId, speciesId) {
+export async function removeOwnerMarketWatchlistTarget(farmId, targetId) {
     const response = await httpClient.delete(
-        `/farms/${farmId}/market-watchlist/${speciesId}`,
+        `/farms/${farmId}/market-watchlist/targets/${targetId}`,
     );
 
     return unwrapApiResponse(
         response.data,
-        "Không thể xóa species khỏi watchlist.",
+        "Không thể xóa mục tiêu khỏi watchlist.",
     );
 }

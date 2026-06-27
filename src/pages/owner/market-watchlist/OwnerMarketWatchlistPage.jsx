@@ -11,7 +11,7 @@ const STAT_CARDS = [
     {
         key: "activeWatchlist",
         title: "Đang theo dõi",
-        suffix: "Species",
+        suffix: "Mục tiêu",
         description: "Trong watchlist",
         icon: Eye,
         tone: "text-slate-900",
@@ -19,7 +19,7 @@ const STAT_CARDS = [
     {
         key: "availableCount",
         title: "Có thể thêm",
-        suffix: "Species",
+        suffix: "Mục tiêu",
         description: "Sẵn sàng thêm",
         icon: Plus,
         tone: "text-[#006948]",
@@ -50,12 +50,6 @@ function formatDate(value) {
         month: "2-digit",
         year: "numeric",
     }).format(new Date(value));
-}
-
-function formatCategoryGroup(value) {
-    if (!value) return "Không hiển thị dữ liệu";
-
-    return String(value).replaceAll("_", " ");
 }
 
 function LoadingSkeleton() {
@@ -137,7 +131,7 @@ function WatchlistTable({
     items,
     pageInfo,
     loading,
-    removingSpeciesId,
+    removingTargetId,
     onPageChange,
     onRemove,
 }) {
@@ -150,11 +144,11 @@ function WatchlistTable({
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
             <header className="border-b border-slate-200 px-5 py-5">
                 <h2 className="text-lg font-semibold text-slate-900">
-                    Danh sách mặt hàng đang theo dõi
+                    Danh sách mục tiêu đang theo dõi
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-600">
-                    Species đang được farm theo dõi giá thị trường.
+                    Các crawl target đang được farm theo dõi giá thị trường.
                 </p>
             </header>
 
@@ -166,7 +160,7 @@ function WatchlistTable({
                 <div className="p-5">
                     <EmptyPanel
                         minHeight={420}
-                        message="Không hiển thị dữ liệu species đang theo dõi."
+                        message="Không hiển thị dữ liệu mục tiêu đang theo dõi."
                     />
                 </div>
             ) : (
@@ -175,8 +169,9 @@ function WatchlistTable({
                         <table className="w-full min-w-[760px] border-collapse text-left">
                             <thead className="bg-slate-50">
                                 <tr className="text-[11px] font-semibold uppercase text-slate-600">
-                                    <th className="px-5 py-4">Species</th>
-                                    <th className="px-5 py-4">Nhóm</th>
+                                    <th className="px-5 py-4">Nguồn</th>
+                                    <th className="px-5 py-4">Mục tiêu theo dõi</th>
+                                    <th className="px-5 py-4">Mặt hàng</th>
                                     <th className="px-5 py-4">Đơn vị</th>
                                     <th className="px-5 py-4">Trạng thái</th>
                                     <th className="px-5 py-4">Ngày thêm</th>
@@ -186,25 +181,29 @@ function WatchlistTable({
 
                             <tbody>
                                 {items.map((item) => {
-                                    const removing = removingSpeciesId === item.speciesId;
+                                    const removing = removingTargetId === item.targetId;
 
                                     return (
                                         <tr
-                                            key={item.id}
+                                            key={item.watchlistId}
                                             className="border-t border-slate-200 text-sm text-slate-700"
                                         >
-                                            <td className="max-w-[240px] px-5 py-4 font-semibold text-slate-900">
+                                            <td className="px-5 py-4 font-semibold text-slate-900">
+                                                {item.sourceName || "Không hiển thị dữ liệu"}
+                                            </td>
+
+                                            <td className="max-w-[240px] px-5 py-4">
                                                 <div className="line-clamp-2">
-                                                    {item.speciesName || "Không hiển thị dữ liệu"}
+                                                    {item.targetName || "Không hiển thị dữ liệu"}
                                                 </div>
                                             </td>
 
                                             <td className="px-5 py-4">
-                                                {formatCategoryGroup(item.categoryGroup)}
+                                                {item.speciesName || "Không hiển thị dữ liệu"}
                                             </td>
 
                                             <td className="px-5 py-4">
-                                                {item.marketUnit || "Không hiển thị dữ liệu"}
+                                                {item.defaultPriceUnit || "Không hiển thị dữ liệu"}
                                             </td>
 
                                             <td className="px-5 py-4">
@@ -236,7 +235,7 @@ function WatchlistTable({
 
                     <footer className="flex flex-col gap-3 border-t border-slate-200 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
                         <p className="text-xs text-slate-500">
-                            Tổng {pageInfo.totalElements} species đang theo dõi
+                            Tổng {pageInfo.totalElements} mục tiêu đang theo dõi
                         </p>
 
                         <div className="flex items-center gap-2">
@@ -282,21 +281,21 @@ export function OwnerMarketWatchlistPage() {
 
     const {
         watchlist,
-        availableSpecies,
+        availableTargets,
         stats,
         initialLoading,
         tableLoading,
         error,
         submitting,
-        removingSpeciesId,
+        removingTargetId,
         pageInfo,
         reload,
         setPage,
-        addSpecies,
-        removeSpecies,
+        addTarget,
+        removeTarget,
     } = useOwnerMarketWatchlist(farmId);
 
-    const [selectedSpeciesId, setSelectedSpeciesId] = useState("");
+    const [selectedTargetId, setSelectedTargetId] = useState("");
 
     useEffect(() => {
         reload();
@@ -312,33 +311,33 @@ export function OwnerMarketWatchlistPage() {
         [stats],
     );
 
-    async function handleAddSpecies(event) {
+    async function handleAddTarget(event) {
         event.preventDefault();
 
-        if (!selectedSpeciesId) {
-            toast.error("Vui lòng chọn species để thêm vào watchlist.");
+        if (!selectedTargetId) {
+            toast.error("Vui lòng chọn mục tiêu để thêm vào watchlist.");
             return;
         }
 
         try {
-            const addedItem = await addSpecies(Number(selectedSpeciesId));
+            const addedItem = await addTarget(Number(selectedTargetId));
             toast.success(
-                `Đã thêm "${addedItem?.speciesName || "species"}" vào watchlist.`,
+                "Đã thêm mục tiêu vào watchlist thành công.",
             );
-            setSelectedSpeciesId("");
+            setSelectedTargetId("");
         } catch (err) {
-            toast.error(err.message || "Không thể thêm species vào watchlist.");
+            toast.error(err.message || "Không thể thêm mục tiêu vào watchlist.");
         }
     }
 
-    async function handleRemoveSpecies(item) {
+    async function handleRemoveTarget(item) {
         try {
-            await removeSpecies(item.speciesId);
+            await removeTarget(item.targetId);
             toast.success(
-                `Đã xóa "${item.speciesName || "species"}" khỏi watchlist.`,
+                "Đã xóa mục tiêu khỏi watchlist thành công.",
             );
         } catch (err) {
-            toast.error(err.message || "Không thể xóa species khỏi watchlist.");
+            toast.error(err.message || "Không thể xóa mục tiêu khỏi watchlist.");
         }
     }
 
@@ -356,7 +355,7 @@ export function OwnerMarketWatchlistPage() {
                         </h1>
 
                         <p className="mt-1 text-sm text-slate-600">
-                            Quản lý danh sách species farm muốn theo dõi giá thị trường.
+                            Quản lý danh sách mục tiêu crawl farm muốn theo dõi giá thị trường.
                         </p>
                     </div>
                 </div>
@@ -385,7 +384,7 @@ export function OwnerMarketWatchlistPage() {
                     </h1>
 
                     <p className="mt-1 max-w-2xl text-sm text-slate-600">
-                        Quản lý danh sách species farm muốn theo dõi giá thị trường.
+                        Quản lý danh sách mục tiêu crawl farm muốn theo dõi giá thị trường.
                     </p>
                 </div>
 
@@ -406,44 +405,44 @@ export function OwnerMarketWatchlistPage() {
                     <header className="border-b border-slate-200 px-5 py-5">
                         <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
                             <Shapes size={18} className="text-[#006948]" />
-                            Thêm mặt hàng theo dõi
+                            Thêm mục tiêu theo dõi
                         </h2>
 
                         <p className="mt-1 text-sm text-slate-600">
-                            Chọn species có sẵn để thêm vào watchlist.
+                            Chọn mục tiêu có sẵn để thêm vào watchlist.
                         </p>
                     </header>
 
-                    <form onSubmit={handleAddSpecies} className="space-y-4 px-5 py-5">
+                    <form onSubmit={handleAddTarget} className="space-y-4 px-5 py-5">
                         <div>
                             <label className="text-sm font-medium text-slate-700">
-                                Chọn species
+                                Chọn mục tiêu crawl
                             </label>
 
                             <select
-                                value={selectedSpeciesId}
-                                onChange={(event) => setSelectedSpeciesId(event.target.value)}
+                                value={selectedTargetId}
+                                onChange={(event) => setSelectedTargetId(event.target.value)}
                                 className="mt-2 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/10"
                             >
-                                <option value="">Chọn species để thêm</option>
-                                {availableSpecies.map((item) => (
+                                <option value="">Chọn mục tiêu để thêm</option>
+                                {availableTargets.map((item) => (
                                     <option key={item.id} value={item.id}>
-                                        {item.name} - {formatCategoryGroup(item.categoryGroup)} - {item.marketUnit}
+                                        {item.targetName} ({item.sourceName} - {item.speciesName})
                                     </option>
                                 ))}
                             </select>
                         </div>
 
-                        {availableSpecies.length === 0 ? (
+                        {availableTargets.length === 0 ? (
                             <EmptyPanel
                                 minHeight={120}
-                                message="Không còn species khả dụng để thêm."
+                                message="Không còn mục tiêu khả dụng để thêm."
                             />
                         ) : null}
 
                         <button
                             type="submit"
-                            disabled={submitting || availableSpecies.length === 0}
+                            disabled={submitting || availableTargets.length === 0}
                             className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white hover:bg-[#00583d] disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             <Plus size={16} />
@@ -456,11 +455,12 @@ export function OwnerMarketWatchlistPage() {
                     items={watchlist}
                     pageInfo={pageInfo}
                     loading={tableLoading}
-                    removingSpeciesId={removingSpeciesId}
+                    removingTargetId={removingTargetId}
                     onPageChange={setPage}
-                    onRemove={handleRemoveSpecies}
+                    onRemove={handleRemoveTarget}
                 />
             </section>
         </section>
     );
 }
+
