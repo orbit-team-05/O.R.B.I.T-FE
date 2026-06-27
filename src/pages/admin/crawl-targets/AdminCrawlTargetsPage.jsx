@@ -2,9 +2,11 @@ import { useState } from "react";
 
 import { ConfirmDialog } from "../../../components/common/dialog/ConfirmDialog";
 import { useToast } from "../../../components/common/toast/ToastProvider";
+
 import { CrawlTargetDrawer } from "../../../features/admin/crawl-targets/components/CrawlTargetDrawer";
 import { CrawlTargetStats } from "../../../features/admin/crawl-targets/components/CrawlTargetStats";
 import { CrawlTargetTable } from "../../../features/admin/crawl-targets/components/CrawlTargetTable";
+
 import { useAdminCrawlTargets } from "../../../features/admin/crawl-targets/hooks/useAdminCrawlTargets";
 
 function AdminCrawlTargetsHeader({ onCreate }) {
@@ -16,16 +18,16 @@ function AdminCrawlTargetsHeader({ onCreate }) {
                 </h1>
 
                 <p className="mt-1 text-sm text-slate-600">
-                    Quản lý URL crawl, ánh xạ species và bộ lọc dữ liệu giá thị trường
+                    Quản lý URL crawl, ánh xạ species và bộ lọc dữ liệu giá thị trường.
                 </p>
             </div>
 
             <button
                 type="button"
                 onClick={onCreate}
-                className="h-9 rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white hover:bg-[#00583d]"
+                className="h-9 rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white transition hover:bg-[#00583d]"
             >
-                + Thêm target
+                + Thêm Target
             </button>
         </header>
     );
@@ -50,6 +52,16 @@ function AdminCrawlTargetsSkeleton() {
     );
 }
 
+function ErrorAlert({ message }) {
+    if (!message) return null;
+
+    return (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {message}
+        </div>
+    );
+}
+
 export function AdminCrawlTargetsPage() {
     const toast = useToast();
 
@@ -59,6 +71,7 @@ export function AdminCrawlTargetsPage() {
         sourceOptions,
         speciesOptions,
         pageInfo,
+
         error,
         setPage,
         reload,
@@ -69,13 +82,16 @@ export function AdminCrawlTargetsPage() {
         actionLoading,
         actionError,
         clearActionError,
+
         createTarget,
         updateTarget,
         toggleTargetStatus,
     } = useAdminCrawlTargets();
 
     const [drawerOpen, setDrawerOpen] = useState(false);
+
     const [drawerMode, setDrawerMode] = useState("create");
+
     const [selectedTarget, setSelectedTarget] = useState(null);
 
     const [confirmState, setConfirmState] = useState({
@@ -83,16 +99,24 @@ export function AdminCrawlTargetsPage() {
         target: null,
     });
 
+    function resetDrawerState() {
+        setDrawerOpen(false);
+        setSelectedTarget(null);
+        clearActionError();
+    }
+
     function openCreateDrawer() {
         clearActionError();
+
         setSelectedTarget(null);
         setDrawerMode("create");
         setDrawerOpen(true);
     }
 
-    function openEditDrawer(item) {
+    function openEditDrawer(target) {
         clearActionError();
-        setSelectedTarget(item);
+
+        setSelectedTarget(target);
         setDrawerMode("edit");
         setDrawerOpen(true);
     }
@@ -100,42 +124,42 @@ export function AdminCrawlTargetsPage() {
     function closeDrawer() {
         if (actionLoading) return;
 
-        setDrawerOpen(false);
-        setSelectedTarget(null);
-        clearActionError();
+        resetDrawerState();
     }
 
     async function handleSubmitTarget(payload) {
-        const isEdit = drawerMode === "edit" && selectedTarget;
+        const isEditMode =
+            drawerMode === "edit" && selectedTarget;
 
-        const success = isEdit
+        const success = isEditMode
             ? await updateTarget(selectedTarget.id, payload)
             : await createTarget(payload);
 
         if (!success) {
             toast.error(
-                isEdit
+                isEditMode
                     ? "Không thể cập nhật cấu hình crawl."
                     : "Không thể thêm cấu hình crawl.",
             );
+
             return;
         }
 
         toast.success(
-            isEdit
+            isEditMode
                 ? `Đã cập nhật target "${payload.targetName}".`
                 : `Đã thêm target "${payload.targetName}".`,
         );
 
-        closeDrawer();
+        resetDrawerState();
     }
 
-    function handleToggleStatus(item) {
+    function handleToggleStatus(target) {
         clearActionError();
 
         setConfirmState({
             open: true,
-            target: item,
+            target,
         });
     }
 
@@ -151,21 +175,31 @@ export function AdminCrawlTargetsPage() {
     }
 
     async function confirmToggleStatus() {
-        const item = confirmState.target;
+        const target = confirmState.target;
 
-        if (!item) return;
+        if (!target) return;
 
-        const active = item.isActive ?? item.active;
-        const actionText = active ? "tắt" : "bật lại";
+        const isActive =
+            target.isActive ?? target.active;
 
-        const success = await toggleTargetStatus(item);
+        const actionText = isActive
+            ? "tắt"
+            : "bật lại";
+
+        const success = await toggleTargetStatus(target);
 
         if (!success) {
-            toast.error(`Không thể ${actionText} target "${item.targetName}".`);
+            toast.error(
+                `Không thể ${actionText} target "${target.targetName}".`,
+            );
+
             return;
         }
 
-        toast.success(`Đã ${actionText} target "${item.targetName}".`);
+        toast.success(
+            `Đã ${actionText} target "${target.targetName}".`,
+        );
+
         closeConfirmDialog();
     }
 
@@ -176,15 +210,19 @@ export function AdminCrawlTargetsPage() {
     if (error) {
         return (
             <section className="space-y-5">
-                <AdminCrawlTargetsHeader onCreate={openCreateDrawer} />
+                <AdminCrawlTargetsHeader
+                    onCreate={openCreateDrawer}
+                />
 
                 <div className="rounded-xl border border-red-200 bg-red-50 p-5">
-                    <p className="text-sm font-medium text-red-700">{error}</p>
+                    <p className="text-sm font-medium text-red-700">
+                        {error}
+                    </p>
 
                     <button
                         type="button"
                         onClick={reload}
-                        className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white"
+                        className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"
                     >
                         Thử lại
                     </button>
@@ -194,18 +232,25 @@ export function AdminCrawlTargetsPage() {
     }
 
     const confirmTarget = confirmState.target;
-    const confirmTargetActive = confirmTarget?.isActive ?? confirmTarget?.active;
+
+    const confirmTargetActive =
+        confirmTarget?.isActive ??
+        confirmTarget?.active;
 
     return (
         <>
             <section className="space-y-5">
-                <AdminCrawlTargetsHeader onCreate={openCreateDrawer} />
+                <AdminCrawlTargetsHeader
+                    onCreate={openCreateDrawer}
+                />
 
-                {actionError && !drawerOpen && !confirmState.open && (
-                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                        {actionError}
-                    </div>
-                )}
+                {actionError &&
+                    !drawerOpen &&
+                    !confirmState.open && (
+                        <ErrorAlert
+                            message={actionError}
+                        />
+                    )}
 
                 <CrawlTargetStats summary={summary} />
 
@@ -233,17 +278,33 @@ export function AdminCrawlTargetsPage() {
 
             <ConfirmDialog
                 open={confirmState.open}
-                title={confirmTargetActive ? "Tắt target crawl" : "Bật lại target crawl"}
+                title={
+                    confirmTargetActive
+                        ? "Tắt Target Crawl"
+                        : "Bật lại Target Crawl"
+                }
                 description={
                     confirmTarget
                         ? `Bạn có chắc muốn ${
-                            confirmTargetActive ? "tắt" : "bật lại"
-                        } target "${confirmTarget.targetName}" không?`
+                              confirmTargetActive
+                                  ? "tắt"
+                                  : "bật lại"
+                          } target "${
+                              confirmTarget.targetName
+                          }" không?`
                         : ""
                 }
-                confirmText={confirmTargetActive ? "Tắt target" : "Bật lại"}
+                confirmText={
+                    confirmTargetActive
+                        ? "Tắt Target"
+                        : "Bật lại"
+                }
                 cancelText="Hủy"
-                variant={confirmTargetActive ? "danger" : "success"}
+                variant={
+                    confirmTargetActive
+                        ? "danger"
+                        : "success"
+                }
                 loading={actionLoading}
                 onCancel={closeConfirmDialog}
                 onConfirm={confirmToggleStatus}

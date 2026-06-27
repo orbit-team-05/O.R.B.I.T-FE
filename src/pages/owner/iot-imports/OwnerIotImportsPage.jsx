@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RefreshCcw } from "lucide-react";
+
+import { useToast } from "../../../components/common/toast/ToastProvider";
+
+import { useAuth } from "../../../features/auth/context/AuthContext";
 
 import { IotImportConfirmDrawer } from "../../../features/owner/iot-imports/components/IotImportConfirmDrawer";
 import { IotImportPendingTable } from "../../../features/owner/iot-imports/components/IotImportPendingTable";
+
 import { useOwnerIotImports } from "../../../features/owner/iot-imports/hooks/useOwnerIotImports";
-import { useAuth } from "../../../features/auth/context/AuthContext";
 
 function PageHeader({ onRefresh }) {
     return (
@@ -19,7 +23,8 @@ function PageHeader({ onRefresh }) {
                 </h1>
 
                 <p className="mt-1 text-sm text-slate-600">
-                    Xác nhận scan nhập từ cân IoT, nhập giá lô hàng và xem lịch sử nhập kho.
+                    Xác nhận scan nhập từ cân IoT,
+                    nhập giá lô hàng và xem lịch sử nhập kho.
                 </p>
             </div>
 
@@ -29,6 +34,7 @@ function PageHeader({ onRefresh }) {
                 className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
                 <RefreshCcw size={16} />
+
                 Làm mới
             </button>
         </header>
@@ -36,11 +42,18 @@ function PageHeader({ onRefresh }) {
 }
 
 export function OwnerIotImportsPage() {
+    const toast = useToast();
+
     const { user } = useAuth();
+
     const farmId = user?.farmId;
 
-    const [activeTab, setActiveTab] = useState("pending");
-    const [selectedScan, setSelectedScan] = useState(null);
+    const [activeTab, setActiveTab] =
+        useState("pending");
+
+    const [selectedScan,
+        setSelectedScan] =
+        useState(null);
 
     const {
         pendingScans,
@@ -67,35 +80,75 @@ export function OwnerIotImportsPage() {
         clearActionMessages,
     } = useOwnerIotImports(farmId);
 
+    /**
+     * Toast only for API errors.
+     */
+    useEffect(() => {
+        if (error) {
+            toast.error(
+                "Không thể tải dữ liệu nhập vật tư"
+            );
+        }
+    }, [error, toast]);
+
+    /**
+     * Toast for action success.
+     */
+    useEffect(() => {
+        if (actionSuccess) {
+            toast.success(actionSuccess);
+        }
+    }, [actionSuccess, toast]);
+
+    /**
+     * Toast for action errors.
+     */
+    useEffect(() => {
+        if (actionError) {
+            toast.error(actionError);
+        }
+    }, [actionError, toast]);
+
+    /**
+     * Toast for missing farmId.
+     */
+    useEffect(() => {
+        if (!farmId) {
+            toast.error(
+                "Tài khoản OWNER chưa có farm"
+            );
+        }
+    }, [farmId, toast]);
+
     function openConfirmDrawer(scan) {
         clearActionMessages();
+
         setSelectedScan(scan);
     }
 
     function closeConfirmDrawer() {
         clearActionMessages();
+
         setSelectedScan(null);
     }
 
-    async function handleConfirmImport(transactionId, totalImportCost, packageCount) {
-        const result = await confirmImport(
-            transactionId,
-            totalImportCost,
-            packageCount,
-        );
+    async function handleConfirmImport(
+        transactionId,
+        totalImportCost,
+        packageCount,
+    ) {
+        const result =
+            await confirmImport(
+                transactionId,
+                totalImportCost,
+                packageCount,
+            );
 
         if (result) {
             closeConfirmDrawer();
+
             setActiveTab("history");
         }
-    }
-
-    if (!farmId) {
-        return (
-            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-                Tài khoản OWNER chưa có farmId. Vui lòng kiểm tra dữ liệu user/farm.
-            </div>
-        );
     }
 
     return (
@@ -103,24 +156,12 @@ export function OwnerIotImportsPage() {
             <PageHeader onRefresh={reload} />
 
             <main className="space-y-5 px-6 py-6">
-                {actionSuccess && (
-                    <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-[#006948]">
-                        {actionSuccess}
-                    </div>
-                )}
-
-                {actionError && (
-                    <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-                        {actionError}
-                    </div>
-                )}
-
-                {/* 🛠 Đmr cấu trúc Grid đổi từ 4 sang 3 cột và xóa hẳn card chi phí */}
                 <section className="grid gap-4 md:grid-cols-3">
                     <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
                         <p className="text-xs font-medium uppercase text-slate-500">
                             Chờ xác nhận
                         </p>
+
                         <p className="mt-2 text-2xl font-semibold text-slate-900">
                             {summary?.pending ?? 0}
                         </p>
@@ -130,6 +171,7 @@ export function OwnerIotImportsPage() {
                         <p className="text-xs font-medium uppercase text-slate-500">
                             Đã nhận diện QR
                         </p>
+
                         <p className="mt-2 text-2xl font-semibold text-slate-900">
                             {summary?.recognized ?? 0}
                         </p>
@@ -139,25 +181,25 @@ export function OwnerIotImportsPage() {
                         <p className="text-xs font-medium uppercase text-slate-500">
                             Đã nhập
                         </p>
+
                         <p className="mt-2 text-2xl font-semibold text-slate-900">
                             {summary?.approved ?? 0}
                         </p>
                     </div>
                 </section>
 
-                {error && (
-                    <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-                        {error}
-                    </div>
-                )}
-
                 <section className="flex gap-2 rounded-xl border border-slate-200 bg-white p-1">
                     <button
                         type="button"
-                        onClick={() => setActiveTab("pending")}
+                        onClick={() =>
+                            setActiveTab(
+                                "pending",
+                            )
+                        }
                         className={[
                             "h-10 rounded-lg px-4 text-sm font-medium transition-colors",
-                            activeTab === "pending"
+                            activeTab ===
+                            "pending"
                                 ? "bg-[#006948] text-white"
                                 : "text-slate-600 hover:bg-slate-50",
                         ].join(" ")}
@@ -167,10 +209,15 @@ export function OwnerIotImportsPage() {
 
                     <button
                         type="button"
-                        onClick={() => setActiveTab("history")}
+                        onClick={() =>
+                            setActiveTab(
+                                "history",
+                            )
+                        }
                         className={[
                             "h-10 rounded-lg px-4 text-sm font-medium transition-colors",
-                            activeTab === "history"
+                            activeTab ===
+                            "history"
                                 ? "bg-[#006948] text-white"
                                 : "text-slate-600 hover:bg-slate-50",
                         ].join(" ")}
@@ -179,29 +226,48 @@ export function OwnerIotImportsPage() {
                     </button>
                 </section>
 
-                {activeTab === "pending" && (
+                {activeTab ===
+                    "pending" && (
                     <IotImportPendingTable
                         title="Scan nhập kho chờ xác nhận"
                         description="Dữ liệu từ cân IoT ở chế độ nhập sẽ hiện ở đây. Owner cần nhập giá lô hàng để xác nhận nhập kho."
                         mode="pending"
                         scans={pendingScans}
-                        pageInfo={pendingPageInfo}
-                        loading={initialLoading || tableLoading}
-                        submittingId={submittingId}
-                        onConfirm={openConfirmDrawer}
-                        onPageChange={setPendingPage}
+                        pageInfo={
+                            pendingPageInfo
+                        }
+                        loading={
+                            initialLoading ||
+                            tableLoading
+                        }
+                        submittingId={
+                            submittingId
+                        }
+                        onConfirm={
+                            openConfirmDrawer
+                        }
+                        onPageChange={
+                            setPendingPage
+                        }
                     />
                 )}
 
-                {activeTab === "history" && (
+                {activeTab ===
+                    "history" && (
                     <IotImportPendingTable
                         title="Lịch sử nhập vật tư"
                         description="Danh sách scan nhập kho đã được xác nhận thành giao dịch nhập."
                         mode="history"
                         scans={historyScans}
-                        pageInfo={historyPageInfo}
-                        loading={historyLoading}
-                        onPageChange={setHistoryPage}
+                        pageInfo={
+                            historyPageInfo
+                        }
+                        loading={
+                            historyLoading
+                        }
+                        onPageChange={
+                            setHistoryPage
+                        }
                     />
                 )}
             </main>
@@ -209,11 +275,18 @@ export function OwnerIotImportsPage() {
             <IotImportConfirmDrawer
                 open={Boolean(selectedScan)}
                 scan={selectedScan}
-                submitting={submittingId === selectedScan?.transactionId}
+                submitting={
+                    submittingId ===
+                    selectedScan?.transactionId
+                }
                 actionError={actionError}
                 onClose={closeConfirmDrawer}
-                onConfirm={handleConfirmImport}
+                onConfirm={
+                    handleConfirmImport
+                }
             />
         </div>
     );
 }
+
+export default OwnerIotImportsPage;

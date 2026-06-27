@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
+
 import { OwnerAiReviewDrawer } from "../../../features/owner/ai-reviews/components/OwnerAiReviewDrawer";
 import { OwnerAiReviewStats } from "../../../features/owner/ai-reviews/components/OwnerAiReviewStats";
 import { OwnerAiReviewTable } from "../../../features/owner/ai-reviews/components/OwnerAiReviewTable";
 import { useOwnerAiReviews } from "../../../features/owner/ai-reviews/hooks/useOwnerAiReviews";
 import { useAuth } from "../../../features/auth/context/AuthContext";
-
-const CURRENT_FARM_ID = 1;
+import { useToast } from "../../../components/common/toast/ToastProvider";
 
 function PageHeader({ onRefresh }) {
     return (
@@ -53,6 +53,8 @@ function PageSkeleton() {
 }
 
 export function OwnerAiReviewsPage() {
+    const toast = useToast();
+
     const { user } = useAuth();
     const farmId = user?.farmId;
 
@@ -86,14 +88,32 @@ export function OwnerAiReviewsPage() {
         loadProducts();
     }, [loadProducts]);
 
-    if (!farmId) {
-        return (
-            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-                Tài khoản OWNER chưa có farmId. Vui lòng kiểm tra dữ liệu user/farm.
-            </div>
-        );
-    }
+    useEffect(() => {
+        if (error) {
+            toast.error(error);
+        }
+    }, [error, toast]);
 
+    useEffect(() => {
+        if (actionSuccess) {
+            toast.success(actionSuccess);
+            clearActionMessages();
+        }
+
+        if (actionError) {
+            toast.error(actionError);
+            clearActionMessages();
+        }
+    }, [
+        actionSuccess,
+        actionError,
+        toast,
+        clearActionMessages,
+    ]);
+
+    if (!farmId) {
+        return null;
+    }
 
     function openReviewDrawer(review) {
         clearActionMessages();
@@ -124,20 +144,8 @@ export function OwnerAiReviewsPage() {
 
             {initialLoading ? (
                 <PageSkeleton />
-            ) : error ? (
-                <div className="px-6 py-6">
-                    <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-                        {error}
-                    </div>
-                </div>
             ) : (
-                <main className="space-y-5 px-6 py-6">
-                    {actionSuccess && (
-                        <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-[#006948]">
-                            {actionSuccess}
-                        </div>
-                    )}
-
+                <main className="space-y-6 px-6 py-6">
                     <OwnerAiReviewStats summary={summary} />
 
                     <OwnerAiReviewTable
@@ -163,3 +171,5 @@ export function OwnerAiReviewsPage() {
         </div>
     );
 }
+
+export default OwnerAiReviewsPage;

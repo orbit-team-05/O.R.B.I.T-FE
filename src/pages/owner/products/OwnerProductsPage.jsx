@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
+
+import { useAuth } from "../../../features/auth/context/AuthContext";
+
 import { OwnerProductCreateDrawer } from "../../../features/owner/products/components/OwnerProductCreateDrawer";
 import { OwnerProductDetailDrawer } from "../../../features/owner/products/components/OwnerProductDetailDrawer";
 import { OwnerProductTable } from "../../../features/owner/products/components/OwnerProductTable";
-import { useOwnerProducts } from "../../../features/owner/products/hooks/useOwnerProducts";
-import { useAuth } from "../../../features/auth/context/AuthContext";
 
+import { useOwnerProducts } from "../../../features/owner/products/hooks/useOwnerProducts";
 
 function PageHeader({ onCreate, onRefresh }) {
     return (
@@ -20,7 +22,7 @@ function PageHeader({ onCreate, onRefresh }) {
                 </h1>
 
                 <p className="mt-1 text-sm text-slate-600">
-                    Tạo danh mục sản phẩm, sinh mã keypad và QR sản phẩm cho thiết bị IoT.
+                    Quản lý sản phẩm, keypad và QR cho thiết bị IoT.
                 </p>
             </div>
 
@@ -48,16 +50,28 @@ function PageHeader({ onCreate, onRefresh }) {
 
 function ProductStats({ summary }) {
     const items = [
-        { key: "totalProducts", label: "Tổng sản phẩm" },
-        { key: "feed", label: "Thức ăn" },
-        { key: "medicine", label: "Thuốc" },
-        { key: "chemical", label: "Hóa chất" },
+        {
+            key: "totalProducts",
+            label: "Tổng sản phẩm",
+        },
+        {
+            key: "feed",
+            label: "Thức ăn",
+        },
+        {
+            key: "medicine",
+            label: "Thuốc",
+        },
+        {
+            key: "chemical",
+            label: "Hóa chất",
+        },
     ];
 
     return (
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {items.map((item) => (
-                <div
+                <article
                     key={item.key}
                     className="rounded-xl border border-slate-200 bg-white px-5 py-4"
                 >
@@ -68,7 +82,7 @@ function ProductStats({ summary }) {
                     <p className="mt-2 text-2xl font-semibold text-slate-900">
                         {summary?.[item.key] ?? 0}
                     </p>
-                </div>
+                </article>
             ))}
         </section>
     );
@@ -76,54 +90,66 @@ function ProductStats({ summary }) {
 
 function PageSkeleton() {
     return (
-        <div className="space-y-4 px-6 py-6">
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="space-y-5 px-6 py-6">
+            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 {Array.from({ length: 4 }).map((_, index) => (
                     <div
                         key={index}
-                        className="h-[96px] animate-pulse rounded-xl bg-slate-100"
+                        className="h-[96px] animate-pulse rounded-xl border border-slate-200 bg-white"
                     />
                 ))}
-            </div>
+            </section>
 
-            <div className="h-[420px] animate-pulse rounded-xl bg-slate-100" />
+            <section className="h-[420px] animate-pulse rounded-xl border border-slate-200 bg-white" />
         </div>
     );
 }
 
 export function OwnerProductsPage() {
     const { user } = useAuth();
+
     const farmId = user?.farmId;
 
     const {
-        products,
+        products = [],
         createdProduct,
         setCreatedProduct,
-        summary,
-        pageInfo,
+
+        summary = {},
+        pageInfo = {},
+
         initialLoading,
         tableLoading,
         submitting,
+
         error,
         actionError,
         actionSuccess,
+
         reload,
         setPage,
+
         createProduct,
         clearActionMessages,
     } = useOwnerProducts(farmId);
 
-    const [createOpen, setCreateOpen] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [createOpen, setCreateOpen] =
+        useState(false);
+
+    const [selectedProduct, setSelectedProduct] =
+        useState(null);
 
     useEffect(() => {
-        reload();
-    }, [reload]);
+        if (farmId) {
+            reload();
+        }
+    }, [farmId, reload]);
 
     if (!farmId) {
         return (
             <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-                Tài khoản OWNER chưa có farmId. Vui lòng kiểm tra dữ liệu user/farm.
+                Tài khoản OWNER chưa có farmId.
+                Vui lòng kiểm tra dữ liệu user/farm.
             </div>
         );
     }
@@ -154,37 +180,59 @@ export function OwnerProductsPage() {
         }
     }
 
+    if (initialLoading) {
+        return (
+            <div className="min-h-screen bg-slate-50">
+                <PageHeader
+                    onCreate={openCreateDrawer}
+                    onRefresh={reload}
+                />
+
+                <PageSkeleton />
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-slate-50">
-            <PageHeader onCreate={openCreateDrawer} onRefresh={reload} />
+            <PageHeader
+                onCreate={openCreateDrawer}
+                onRefresh={reload}
+            />
 
-            {initialLoading ? (
-                <PageSkeleton />
-            ) : error ? (
-                <div className="px-6 py-6">
+            <main className="space-y-6 px-6 py-6">
+                {actionSuccess && (
+                    <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-[#006948]">
+                        {actionSuccess}
+                    </div>
+                )}
+
+                {actionError && (
+                    <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+                        {actionError}
+                    </div>
+                )}
+
+                {error ? (
                     <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
                         {error}
                     </div>
-                </div>
-            ) : (
-                <main className="space-y-5 px-6 py-6">
-                    {actionSuccess && (
-                        <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-[#006948]">
-                            {actionSuccess}
-                        </div>
-                    )}
+                ) : (
+                    <>
+                        <ProductStats summary={summary} />
 
-                    <ProductStats summary={summary} />
-
-                    <OwnerProductTable
-                        products={products}
-                        pageInfo={pageInfo}
-                        loading={tableLoading}
-                        onPageChange={setPage}
-                        onViewDetail={openProductDetail}
-                    />
-                </main>
-            )}
+                        <OwnerProductTable
+                            products={products}
+                            pageInfo={pageInfo}
+                            loading={tableLoading}
+                            onPageChange={setPage}
+                            onViewDetail={
+                                openProductDetail
+                            }
+                        />
+                    </>
+                )}
+            </main>
 
             <OwnerProductCreateDrawer
                 open={createOpen}
@@ -197,7 +245,9 @@ export function OwnerProductsPage() {
             <OwnerProductDetailDrawer
                 open={Boolean(createdProduct)}
                 product={createdProduct}
-                onClose={() => setCreatedProduct(null)}
+                onClose={() =>
+                    setCreatedProduct(null)
+                }
             />
 
             <OwnerProductDetailDrawer

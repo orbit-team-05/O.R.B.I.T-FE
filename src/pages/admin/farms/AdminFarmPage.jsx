@@ -7,7 +7,7 @@ import { FarmStats } from "../../../features/admin/farms/components/FarmStats";
 import { FarmTable } from "../../../features/admin/farms/components/FarmTable";
 import { useAdminFarms } from "../../../features/admin/farms/hooks/useAdminFarms";
 
-function AdminFarmHeader({ onCreate }) {
+function AdminFarmHeader({ onCreate = () => {} }) {
     return (
         <header className="flex items-start justify-between gap-4">
             <div>
@@ -23,7 +23,7 @@ function AdminFarmHeader({ onCreate }) {
             <button
                 type="button"
                 onClick={onCreate}
-                className="h-9 rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white hover:bg-[#00583d]"
+                className="h-9 rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white transition hover:bg-[#00583d]"
             >
                 + Thêm Nông trại
             </button>
@@ -34,7 +34,7 @@ function AdminFarmHeader({ onCreate }) {
 function AdminFarmSkeleton() {
     return (
         <section className="space-y-5">
-            <AdminFarmHeader />
+            <AdminFarmHeader onCreate={() => {}} />
 
             <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {[1, 2].map((item) => (
@@ -68,9 +68,9 @@ export function AdminFarmPage() {
     const toast = useToast();
 
     const {
-        farms,
-        summary,
-        pageInfo,
+        farms = [],
+        summary = {},
+        pageInfo = {},
         error,
         setPage,
         reload,
@@ -78,14 +78,14 @@ export function AdminFarmPage() {
         initialLoading,
         tableLoading,
 
-        owners,
+        owners = [],
         actionLoading,
         actionError,
         clearActionError,
         createFarm,
         updateFarm,
         deleteFarm,
-    } = useAdminFarms();
+    } = useAdminFarms() || {};
 
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [drawerMode, setDrawerMode] = useState("create");
@@ -97,15 +97,15 @@ export function AdminFarmPage() {
     });
 
     function openCreateDrawer() {
-        clearActionError();
+        clearActionError?.();
         setSelectedFarm(null);
         setDrawerMode("create");
         setDrawerOpen(true);
     }
 
     function openEditDrawer(item) {
-        clearActionError();
-        setSelectedFarm(item);
+        clearActionError?.();
+        setSelectedFarm(item || null);
         setDrawerMode("edit");
         setDrawerOpen(true);
     }
@@ -115,38 +115,48 @@ export function AdminFarmPage() {
 
         setDrawerOpen(false);
         setSelectedFarm(null);
-        clearActionError();
+        clearActionError?.();
     }
 
-    async function handleSubmitFarm(payload) {
-        const isEdit = drawerMode === "edit" && selectedFarm;
+    async function handleSubmitFarm(payload = {}) {
+        try {
+            const isEdit = drawerMode === "edit" && selectedFarm;
 
-        const success = isEdit
-            ? await updateFarm(selectedFarm.id, payload)
-            : await createFarm(payload);
+            const success = isEdit
+                ? await updateFarm?.(selectedFarm?.id, payload)
+                : await createFarm?.(payload);
 
-        if (!success) {
-            toast.error(
-                isEdit ? "Không thể cập nhật nông trại." : "Không thể thêm nông trại.",
+            if (!success) {
+                toast.error(
+                    isEdit
+                        ? "Không thể cập nhật nông trại."
+                        : "Không thể thêm nông trại.",
+                );
+                return;
+            }
+
+            toast.success(
+                isEdit
+                    ? `Đã cập nhật nông trại "${payload?.farmName || ""}".`
+                    : `Đã thêm nông trại "${payload?.farmName || ""}".`,
             );
-            return;
+
+            closeDrawer();
+        } catch (err) {
+            console.error(err);
+
+            toast.error(
+                err?.message || "Có lỗi xảy ra khi xử lý nông trại.",
+            );
         }
-
-        toast.success(
-            isEdit
-                ? `Đã cập nhật nông trại "${payload.farmName}".`
-                : `Đã thêm nông trại "${payload.farmName}".`,
-        );
-
-        closeDrawer();
     }
 
     function handleDeleteFarm(item) {
-        clearActionError();
+        clearActionError?.();
 
         setConfirmState({
             open: true,
-            farm: item,
+            farm: item || null,
         });
     }
 
@@ -158,23 +168,39 @@ export function AdminFarmPage() {
             farm: null,
         });
 
-        clearActionError();
+        clearActionError?.();
     }
 
     async function confirmDelete() {
-        const item = confirmState.farm;
+        try {
+            const item = confirmState?.farm;
 
-        if (!item) return;
+            if (!item?.id) {
+                toast.error("Không tìm thấy thông tin nông trại.");
+                return;
+            }
 
-        const success = await deleteFarm(item.id);
+            const success = await deleteFarm?.(item.id);
 
-        if (!success) {
-            toast.error(`Không thể xóa nông trại "${item.farmName}".`);
-            return;
+            if (!success) {
+                toast.error(
+                    `Không thể xóa nông trại "${item?.farmName || ""}".`,
+                );
+                return;
+            }
+
+            toast.success(
+                `Đã xóa nông trại "${item?.farmName || ""}".`,
+            );
+
+            closeConfirmDialog();
+        } catch (err) {
+            console.error(err);
+
+            toast.error(
+                err?.message || "Có lỗi xảy ra khi xóa nông trại.",
+            );
         }
-
-        toast.success(`Đã xóa nông trại "${item.farmName}".`);
-        closeConfirmDialog();
     }
 
     if (initialLoading) {
@@ -187,12 +213,14 @@ export function AdminFarmPage() {
                 <AdminFarmHeader onCreate={openCreateDrawer} />
 
                 <div className="rounded-xl border border-red-200 bg-red-50 p-5">
-                    <p className="text-sm font-medium text-red-700">{error}</p>
+                    <p className="text-sm font-medium text-red-700">
+                        {error || "Không thể tải dữ liệu nông trại."}
+                    </p>
 
                     <button
                         type="button"
                         onClick={reload}
-                        className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white"
+                        className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"
                     >
                         Thử lại
                     </button>
@@ -201,24 +229,26 @@ export function AdminFarmPage() {
         );
     }
 
-    const confirmFarm = confirmState.farm;
+    const confirmFarm = confirmState?.farm;
 
     return (
         <>
             <section className="space-y-5">
                 <AdminFarmHeader onCreate={openCreateDrawer} />
 
-                {actionError && !drawerOpen && !confirmState.open && (
-                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                        {actionError}
-                    </div>
-                )}
+                {actionError &&
+                    !drawerOpen &&
+                    !confirmState.open && (
+                        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                            {actionError}
+                        </div>
+                    )}
 
-                <FarmStats summary={summary} />
+                <FarmStats summary={summary || {}} />
 
                 <FarmTable
-                    farms={farms}
-                    pageInfo={pageInfo}
+                    farms={Array.isArray(farms) ? farms : []}
+                    pageInfo={pageInfo || {}}
                     loading={tableLoading}
                     onPageChange={setPage}
                     onEdit={openEditDrawer}
@@ -230,7 +260,7 @@ export function AdminFarmPage() {
                 open={drawerOpen}
                 mode={drawerMode}
                 farm={selectedFarm}
-                ownersList={owners}
+                ownersList={Array.isArray(owners) ? owners : []}
                 submitting={actionLoading}
                 error={actionError}
                 onClose={closeDrawer}

@@ -1,14 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useToast } from "../../../components/common/toast/ToastProvider";
+
+import { useAuth } from "../../../features/auth/context/AuthContext";
+
 import { OwnerIotDeviceActivateCard } from "../../../features/owner/iot-devices/components/OwnerIotDeviceActivateCard";
 import { OwnerIotDeviceApiKeyDrawer } from "../../../features/owner/iot-devices/components/OwnerIotDeviceApiKeyDrawer";
 import { OwnerIotDeviceDetailDrawer } from "../../../features/owner/iot-devices/components/OwnerIotDeviceDetailDrawer";
 import { OwnerIotDeviceStats } from "../../../features/owner/iot-devices/components/OwnerIotDeviceStats";
 import { OwnerIotDeviceTable } from "../../../features/owner/iot-devices/components/OwnerIotDeviceTable";
-import { useOwnerIotDevices } from "../../../features/owner/iot-devices/hooks/useOwnerIotDevices";
-import { useAuth } from "../../../features/auth/context/AuthContext";
+
 import { IotExportSeasonSelectDrawer } from "../../../features/owner/iot-devices/components/IotExportSeasonSelectDrawer";
+
+import { useOwnerIotDevices } from "../../../features/owner/iot-devices/hooks/useOwnerIotDevices";
+
 import { getSeasonCards } from "../../../features/owner/seasons/services/ownerSeasonApi";
 
 function OwnerIotDevicesHeader() {
@@ -24,7 +29,8 @@ function OwnerIotDevicesHeader() {
                 </h1>
 
                 <p className="mt-1 text-sm text-slate-600">
-                    Kích hoạt, theo dõi và điều khiển chế độ làm việc của thiết bị cân-camera
+                    Kích hoạt, theo dõi và điều khiển chế độ làm việc
+                    của thiết bị cân-camera
                 </p>
             </div>
         </header>
@@ -52,7 +58,9 @@ function OwnerIotDevicesSkeleton() {
 
 export function OwnerIotDevicesPage() {
     const toast = useToast();
+
     const { user } = useAuth();
+
     const farmId = user?.farmId;
 
     const {
@@ -80,14 +88,45 @@ export function OwnerIotDevicesPage() {
         loadDeviceDetail,
     } = useOwnerIotDevices(farmId);
 
-    const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
-    const [apiKeyDevice, setApiKeyDevice] = useState(null);
+    const [detailDrawerOpen, setDetailDrawerOpen] =
+        useState(false);
 
-    const [exportDevice, setExportDevice] = useState(null);
-    const [harvestDevice, setHarvestDevice] = useState(null);
+    const [apiKeyDevice, setApiKeyDevice] =
+        useState(null);
+
+    const [exportDevice, setExportDevice] =
+        useState(null);
+
+    const [harvestDevice, setHarvestDevice] =
+        useState(null);
 
     const [seasons, setSeasons] = useState([]);
-    const [seasonLoading, setSeasonLoading] = useState(false);
+
+    const [seasonLoading, setSeasonLoading] =
+        useState(false);
+
+    /**
+     * Toast only for page load errors.
+     * Remove inline red error UI.
+     */
+    useEffect(() => {
+        if (error) {
+            toast.error(
+                "Không thể tải dữ liệu thiết bị IoT"
+            );
+        }
+    }, [error, toast]);
+
+    /**
+     * Toast for missing farmId.
+     */
+    useEffect(() => {
+        if (!farmId) {
+            toast.error(
+                "Tài khoản OWNER chưa có farm"
+            );
+        }
+    }, [farmId, toast]);
 
     const exportableSeasons = useMemo(() => {
         return seasons.filter(
@@ -98,62 +137,99 @@ export function OwnerIotDevicesPage() {
     }, [seasons]);
 
     const harvestableSeasons = useMemo(() => {
-        return seasons.filter((season) => season.status === "HARVESTING");
+        return seasons.filter(
+            (season) =>
+                season.status === "HARVESTING",
+        );
     }, [seasons]);
 
-    const loadSeasonsForIotMode = useCallback(async () => {
-        try {
-            setSeasonLoading(true);
+    const loadSeasonsForIotMode =
+        useCallback(async () => {
+            try {
+                setSeasonLoading(true);
 
-            const data = await getSeasonCards(0, 100);
-            setSeasons(data?.content ?? []);
-        } catch (err) {
-            console.error("Không thể tải danh sách mùa vụ cho IoT:", err);
-            setSeasons([]);
-        } finally {
-            setSeasonLoading(false);
-        }
-    }, []);
+                const data =
+                    await getSeasonCards(
+                        0,
+                        100,
+                    );
+
+                setSeasons(
+                    data?.content ?? [],
+                );
+            } catch (err) {
+                console.error(
+                    "Không thể tải danh sách mùa vụ cho IoT:",
+                    err,
+                );
+
+                setSeasons([]);
+
+                toast.error(
+                    "Không thể tải danh sách mùa vụ"
+                );
+            } finally {
+                setSeasonLoading(false);
+            }
+        }, [toast]);
 
     useEffect(() => {
         reload();
+
         void loadSeasonsForIotMode();
-    }, [reload, loadSeasonsForIotMode]);
+    }, [
+        reload,
+        loadSeasonsForIotMode,
+    ]);
 
-    if (!farmId) {
-        return (
-            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-                Tài khoản OWNER chưa có farmId. Vui lòng kiểm tra dữ liệu user/farm.
-            </div>
-        );
-    }
-
-    async function handleActivateDevice(payload) {
-        const activatedDevice = await activateDevice(payload);
+    async function handleActivateDevice(
+        payload,
+    ) {
+        const activatedDevice =
+            await activateDevice(payload);
 
         if (!activatedDevice) {
-            toast.error("Không thể kích hoạt thiết bị.");
+            toast.error(
+                "Không thể kích hoạt thiết bị.",
+            );
+
             return false;
         }
 
-        toast.success(`Đã kích hoạt thiết bị "${activatedDevice.deviceName}".`);
+        toast.success(
+            `Đã kích hoạt thiết bị "${activatedDevice.deviceName}".`,
+        );
 
         if (activatedDevice.apiKey) {
-            setApiKeyDevice(activatedDevice);
+            setApiKeyDevice(
+                activatedDevice,
+            );
         }
 
         return true;
     }
 
-    async function handleStartImportMode(device) {
-        if (!device?.deviceId) return;
+    async function handleStartImportMode(
+        device,
+    ) {
+        if (!device?.deviceId) {
+            return;
+        }
 
         clearActionError();
 
-        const result = await updateWorkMode(device.deviceId, "IMPORT", null);
+        const result =
+            await updateWorkMode(
+                device.deviceId,
+                "IMPORT",
+                null,
+            );
 
         if (!result) {
-            toast.error("Không thể gửi lệnh bật chế độ nhập kho.");
+            toast.error(
+                "Không thể gửi lệnh bật chế độ nhập kho.",
+            );
+
             return;
         }
 
@@ -162,33 +238,54 @@ export function OwnerIotDevicesPage() {
         );
     }
 
-    async function handleStartExportMode(device) {
-        if (!device?.deviceId) return;
+    async function handleStartExportMode(
+        device,
+    ) {
+        if (!device?.deviceId) {
+            return;
+        }
 
         clearActionError();
 
-        if (exportableSeasons.length === 0) {
-            toast.error("Chưa có mùa vụ đang hoạt động để xuất vật tư.");
+        if (
+            exportableSeasons.length === 0
+        ) {
+            toast.error(
+                "Chưa có mùa vụ đang hoạt động để xuất vật tư.",
+            );
+
             await loadSeasonsForIotMode();
+
             return;
         }
 
         setExportDevice(device);
     }
 
-    async function handleConfirmExportMode(seasonId) {
-        if (!exportDevice?.deviceId || !seasonId) return;
+    async function handleConfirmExportMode(
+        seasonId,
+    ) {
+        if (
+            !exportDevice?.deviceId ||
+            !seasonId
+        ) {
+            return;
+        }
 
         clearActionError();
 
-        const result = await updateWorkMode(
-            exportDevice.deviceId,
-            "EXPORT",
-            seasonId,
-        );
+        const result =
+            await updateWorkMode(
+                exportDevice.deviceId,
+                "EXPORT",
+                seasonId,
+            );
 
         if (!result) {
-            toast.error("Không thể gửi lệnh bật chế độ xuất vật tư.");
+            toast.error(
+                "Không thể gửi lệnh bật chế độ xuất vật tư.",
+            );
+
             return;
         }
 
@@ -199,33 +296,54 @@ export function OwnerIotDevicesPage() {
         setExportDevice(null);
     }
 
-    async function handleStartHarvestMode(device) {
-        if (!device?.deviceId) return;
+    async function handleStartHarvestMode(
+        device,
+    ) {
+        if (!device?.deviceId) {
+            return;
+        }
 
         clearActionError();
 
-        if (harvestableSeasons.length === 0) {
-            toast.error("Chưa có mùa vụ HARVESTING để thu hoạch.");
+        if (
+            harvestableSeasons.length === 0
+        ) {
+            toast.error(
+                "Chưa có mùa vụ HARVESTING để thu hoạch.",
+            );
+
             await loadSeasonsForIotMode();
+
             return;
         }
 
         setHarvestDevice(device);
     }
 
-    async function handleConfirmHarvestMode(seasonId) {
-        if (!harvestDevice?.deviceId || !seasonId) return;
+    async function handleConfirmHarvestMode(
+        seasonId,
+    ) {
+        if (
+            !harvestDevice?.deviceId ||
+            !seasonId
+        ) {
+            return;
+        }
 
         clearActionError();
 
-        const result = await updateWorkMode(
-            harvestDevice.deviceId,
-            "HARVEST",
-            seasonId,
-        );
+        const result =
+            await updateWorkMode(
+                harvestDevice.deviceId,
+                "HARVEST",
+                seasonId,
+            );
 
         if (!result) {
-            toast.error("Không thể gửi lệnh bật chế độ thu hoạch.");
+            toast.error(
+                "Không thể gửi lệnh bật chế độ thu hoạch.",
+            );
+
             return;
         }
 
@@ -236,15 +354,27 @@ export function OwnerIotDevicesPage() {
         setHarvestDevice(null);
     }
 
-    async function handleStopDeviceMode(device) {
-        if (!device?.deviceId) return;
+    async function handleStopDeviceMode(
+        device,
+    ) {
+        if (!device?.deviceId) {
+            return;
+        }
 
         clearActionError();
 
-        const result = await updateWorkMode(device.deviceId, "IDLE", null);
+        const result =
+            await updateWorkMode(
+                device.deviceId,
+                "IDLE",
+                null,
+            );
 
         if (!result) {
-            toast.error("Không thể gửi lệnh dừng thiết bị.");
+            toast.error(
+                "Không thể gửi lệnh dừng thiết bị.",
+            );
+
             return;
         }
 
@@ -253,15 +383,25 @@ export function OwnerIotDevicesPage() {
         );
     }
 
-    async function handleCancelPendingCommand(device) {
-        if (!device?.deviceId) return;
+    async function handleCancelPendingCommand(
+        device,
+    ) {
+        if (!device?.deviceId) {
+            return;
+        }
 
         clearActionError();
 
-        const result = await cancelPendingCommand(device.deviceId);
+        const result =
+            await cancelPendingCommand(
+                device.deviceId,
+            );
 
         if (!result) {
-            toast.error("Không thể hủy lệnh chờ của thiết bị.");
+            toast.error(
+                "Không thể hủy lệnh chờ của thiết bị.",
+            );
+
             return;
         }
 
@@ -270,49 +410,47 @@ export function OwnerIotDevicesPage() {
         );
     }
 
-    async function openDetailDrawer(device) {
+    async function openDetailDrawer(
+        device,
+    ) {
         clearActionError();
 
         setDetailDrawerOpen(true);
+
         setSelectedDevice(device);
 
-        await loadDeviceDetail(device.deviceId);
+        await loadDeviceDetail(
+            device.deviceId,
+        );
     }
 
     function closeDetailDrawer() {
         setDetailDrawerOpen(false);
+
         setSelectedDevice(null);
+
         clearActionError();
     }
 
-    async function handleCopyApiKey(apiKey) {
-        if (!apiKey) return;
+    async function handleCopyApiKey(
+        apiKey,
+    ) {
+        if (!apiKey) {
+            return;
+        }
 
-        await navigator.clipboard.writeText(apiKey);
-        toast.success("Đã copy API key.");
+        await navigator.clipboard.writeText(
+            apiKey,
+        );
+
+        toast.success(
+            "Đã copy API key.",
+        );
     }
 
     if (initialLoading) {
-        return <OwnerIotDevicesSkeleton />;
-    }
-
-    if (error) {
         return (
-            <section className="space-y-5">
-                <OwnerIotDevicesHeader />
-
-                <div className="rounded-xl border border-red-200 bg-red-50 p-5">
-                    <p className="text-sm font-medium text-red-700">{error}</p>
-
-                    <button
-                        type="button"
-                        onClick={reload}
-                        className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white"
-                    >
-                        Thử lại
-                    </button>
-                </div>
-            </section>
+            <OwnerIotDevicesSkeleton />
         );
     }
 
@@ -321,11 +459,15 @@ export function OwnerIotDevicesPage() {
             <section className="space-y-5">
                 <OwnerIotDevicesHeader />
 
-                <OwnerIotDeviceStats summary={summary} />
+                <OwnerIotDeviceStats
+                    summary={summary}
+                />
 
                 <OwnerIotDeviceActivateCard
                     submitting={actionLoading}
-                    onSubmit={handleActivateDevice}
+                    onSubmit={
+                        handleActivateDevice
+                    }
                 />
 
                 <OwnerIotDeviceTable
@@ -334,12 +476,24 @@ export function OwnerIotDevicesPage() {
                     loading={tableLoading}
                     actionLoading={actionLoading}
                     onPageChange={setPage}
-                    onViewDetail={openDetailDrawer}
-                    onStartImportMode={handleStartImportMode}
-                    onStartExportMode={handleStartExportMode}
-                    onStartHarvestMode={handleStartHarvestMode}
-                    onStopDeviceMode={handleStopDeviceMode}
-                    onCancelPendingCommand={handleCancelPendingCommand}
+                    onViewDetail={
+                        openDetailDrawer
+                    }
+                    onStartImportMode={
+                        handleStartImportMode
+                    }
+                    onStartExportMode={
+                        handleStartExportMode
+                    }
+                    onStartHarvestMode={
+                        handleStartHarvestMode
+                    }
+                    onStopDeviceMode={
+                        handleStopDeviceMode
+                    }
+                    onCancelPendingCommand={
+                        handleCancelPendingCommand
+                    }
                 />
             </section>
 
@@ -353,7 +507,9 @@ export function OwnerIotDevicesPage() {
             <OwnerIotDeviceApiKeyDrawer
                 open={Boolean(apiKeyDevice)}
                 device={apiKeyDevice}
-                onClose={() => setApiKeyDevice(null)}
+                onClose={() =>
+                    setApiKeyDevice(null)
+                }
                 onCopy={handleCopyApiKey}
             />
 
@@ -361,23 +517,37 @@ export function OwnerIotDevicesPage() {
                 mode="EXPORT"
                 open={Boolean(exportDevice)}
                 device={exportDevice}
-                seasons={exportableSeasons}
+                seasons={
+                    exportableSeasons
+                }
                 loading={seasonLoading}
                 submitting={actionLoading}
-                onClose={() => setExportDevice(null)}
-                onConfirm={handleConfirmExportMode}
+                onClose={() =>
+                    setExportDevice(null)
+                }
+                onConfirm={
+                    handleConfirmExportMode
+                }
             />
 
             <IotExportSeasonSelectDrawer
                 mode="HARVEST"
                 open={Boolean(harvestDevice)}
                 device={harvestDevice}
-                seasons={harvestableSeasons}
+                seasons={
+                    harvestableSeasons
+                }
                 loading={seasonLoading}
                 submitting={actionLoading}
-                onClose={() => setHarvestDevice(null)}
-                onConfirm={handleConfirmHarvestMode}
+                onClose={() =>
+                    setHarvestDevice(null)
+                }
+                onConfirm={
+                    handleConfirmHarvestMode
+                }
             />
         </>
     );
 }
+
+export default OwnerIotDevicesPage;
