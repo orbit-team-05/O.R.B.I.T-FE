@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Plus, RefreshCw } from "lucide-react";
 import { SeasonDashboardStats } from "../../../features/owner/seasons/components/SeasonDashboardStats";
@@ -14,11 +15,14 @@ function PageHeader({ onCreate, onRefresh, loading }) {
                 <p className="text-sm font-semibold text-[#006948]">
                     Bảng điều khiển
                 </p>
+
                 <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
                     Quản lý Mùa vụ
                 </h1>
+
                 <p className="mt-1 text-sm text-slate-500">
-                    Theo dõi tiến độ, chi phí giống, trạng thái sinh trưởng và sản lượng dự kiến của từng ao nuôi trồng.
+                    Theo dõi tiến độ, chi phí giống, trạng thái sinh trưởng
+                    và sản lượng dự kiến của từng ao nuôi trồng.
                 </p>
             </div>
 
@@ -29,7 +33,11 @@ function PageHeader({ onCreate, onRefresh, loading }) {
                     disabled={loading}
                     className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
                 >
-                    <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+                    <RefreshCw
+                        size={14}
+                        className={loading ? "animate-spin" : ""}
+                    />
+
                     Làm mới
                 </button>
 
@@ -39,6 +47,7 @@ function PageHeader({ onCreate, onRefresh, loading }) {
                     className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#006948] px-4 text-sm font-bold text-white hover:bg-[#00583d] shadow-sm transition-all"
                 >
                     <Plus size={16} />
+
                     Lên kế hoạch
                 </button>
             </div>
@@ -53,17 +62,19 @@ function PageSkeleton() {
                 {Array.from({ length: 4 }).map((_, idx) => (
                     <div
                         key={idx}
-                        className="h-[96px] animate-pulse rounded-xl bg-slate-100 border border-slate-200"
+                        className="h-[96px] animate-pulse rounded-xl border border-slate-200 bg-slate-100"
                     />
                 ))}
             </div>
-            <div className="h-[460px] animate-pulse rounded-xl bg-slate-100 border border-slate-200" />
+
+            <div className="h-[460px] animate-pulse rounded-xl border border-slate-200 bg-slate-100" />
         </div>
     );
 }
 
 export function OwnerSeasonsPage() {
     const toast = useToast();
+
     const {
         seasons,
         dashboard,
@@ -101,11 +112,24 @@ export function OwnerSeasonsPage() {
             toast.success(actionSuccess);
             clearActionMessages();
         }
+
         if (actionError) {
             toast.error(actionError);
             clearActionMessages();
         }
-    }, [actionSuccess, actionError, toast, clearActionMessages]);
+    }, [
+        actionSuccess,
+        actionError,
+        toast,
+        clearActionMessages,
+    ]);
+    useEffect(() => {
+        if (error) {
+            toast.error(
+                "Không thể tải dữ liệu mùa vụ"
+            );
+        }
+    }, [error, toast]);
 
     function handleOpenDetail(item) {
         loadDetail(item.id);
@@ -126,6 +150,7 @@ export function OwnerSeasonsPage() {
 
     async function handleCreateSeason(payload) {
         const id = await createSeason(payload);
+
         if (id) {
             setCreateOpen(false);
         }
@@ -141,15 +166,11 @@ export function OwnerSeasonsPage() {
 
             {initialLoading ? (
                 <PageSkeleton />
-            ) : error ? (
-                <div className="px-6 py-6">
-                    <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-                        {error}
-                    </div>
-                </div>
             ) : (
                 <main className="space-y-6 px-6 py-6">
-                    <SeasonDashboardStats dashboard={dashboard} />
+                    <SeasonDashboardStats
+                        dashboard={dashboard}
+                    />
 
                     <SeasonTable
                         seasons={seasons}
@@ -175,9 +196,15 @@ export function OwnerSeasonsPage() {
                 open={Boolean(selectedDetail)}
                 season={selectedDetail}
                 materialUsages={materialUsages}
-                materialUsagePageInfo={materialUsagePageInfo}
-                materialUsageLoading={materialUsageLoading}
-                onMaterialUsagePageChange={setMaterialUsagePage}
+                materialUsagePageInfo={
+                    materialUsagePageInfo
+                }
+                materialUsageLoading={
+                    materialUsageLoading
+                }
+                onMaterialUsagePageChange={
+                    setMaterialUsagePage
+                }
                 submitting={submitting}
                 actionError={actionError}
                 onClose={handleCloseDetail}
@@ -192,3 +219,4 @@ export function OwnerSeasonsPage() {
 }
 
 export default OwnerSeasonsPage;
+

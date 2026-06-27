@@ -9,7 +9,7 @@ import { useAdminMarketSources } from "../../../features/admin/market-sources/ho
 
 function AdminMarketSourcesHeader({ onCreate }) {
     return (
-        <header className="flex items-start justify-between gap-4">
+        <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
                 <h1 className="text-2xl font-semibold text-slate-900">
                     Nguồn dữ liệu
@@ -23,7 +23,7 @@ function AdminMarketSourcesHeader({ onCreate }) {
             <button
                 type="button"
                 onClick={onCreate}
-                className="h-9 rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white hover:bg-[#00583d]"
+                className="inline-flex h-10 items-center justify-center rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#00583d]"
             >
                 + Thêm nguồn
             </button>
@@ -34,7 +34,7 @@ function AdminMarketSourcesHeader({ onCreate }) {
 function AdminMarketSourcesSkeleton() {
     return (
         <section className="space-y-5">
-            <AdminMarketSourcesHeader />
+            <AdminMarketSourcesHeader onCreate={() => {}} />
 
             <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 {[1, 2, 3].map((item) => (
@@ -46,6 +46,28 @@ function AdminMarketSourcesSkeleton() {
             </section>
 
             <section className="h-[320px] animate-pulse rounded-xl border border-slate-200 bg-white" />
+        </section>
+    );
+}
+
+function ErrorState({ error, onRetry, onCreate }) {
+    return (
+        <section className="space-y-5">
+            <AdminMarketSourcesHeader onCreate={onCreate} />
+
+            <div className="rounded-xl border border-red-200 bg-red-50 p-5">
+                <p className="text-sm font-medium text-red-700">
+                    {error || "Đã xảy ra lỗi khi tải dữ liệu."}
+                </p>
+
+                <button
+                    type="button"
+                    onClick={onRetry}
+                    className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+                >
+                    Thử lại
+                </button>
+            </div>
         </section>
     );
 }
@@ -81,30 +103,38 @@ export function AdminMarketSourcesPage() {
         source: null,
     });
 
+    function resetDrawerState() {
+        setDrawerOpen(false);
+        setDrawerMode("create");
+        setSelectedSource(null);
+    }
+
     function openCreateDrawer() {
         clearActionError();
-        setSelectedSource(null);
+
         setDrawerMode("create");
+        setSelectedSource(null);
         setDrawerOpen(true);
     }
 
-    function openEditDrawer(item) {
+    function openEditDrawer(source) {
         clearActionError();
-        setSelectedSource(item);
+
         setDrawerMode("edit");
+        setSelectedSource(source);
         setDrawerOpen(true);
     }
 
     function closeDrawer() {
         if (actionLoading) return;
 
-        setDrawerOpen(false);
-        setSelectedSource(null);
+        resetDrawerState();
         clearActionError();
     }
 
     async function handleSubmitSource(payload) {
-        const isEdit = drawerMode === "edit" && selectedSource;
+        const isEdit =
+            drawerMode === "edit" && selectedSource;
 
         const success = isEdit
             ? await updateSource(selectedSource.id, payload)
@@ -116,6 +146,7 @@ export function AdminMarketSourcesPage() {
                     ? "Không thể cập nhật nguồn dữ liệu."
                     : "Không thể thêm nguồn dữ liệu.",
             );
+
             return;
         }
 
@@ -128,12 +159,12 @@ export function AdminMarketSourcesPage() {
         closeDrawer();
     }
 
-    function handleToggleStatus(item) {
+    function handleToggleStatus(source) {
         clearActionError();
 
         setConfirmState({
             open: true,
-            source: item,
+            source,
         });
     }
 
@@ -149,21 +180,32 @@ export function AdminMarketSourcesPage() {
     }
 
     async function confirmToggleStatus() {
-        const item = confirmState.source;
+        const source = confirmState.source;
 
-        if (!item) return;
+        if (!source) return;
 
-        const active = item.isActive ?? item.active;
-        const actionText = active ? "tắt" : "bật lại";
+        const isActive =
+            source.isActive ?? source.active;
 
-        const success = await toggleSourceStatus(item);
+        const actionText = isActive
+            ? "tắt"
+            : "bật lại";
+
+        const success =
+            await toggleSourceStatus(source);
 
         if (!success) {
-            toast.error(`Không thể ${actionText} nguồn "${item.sourceName}".`);
+            toast.error(
+                `Không thể ${actionText} nguồn "${source.sourceName}".`,
+            );
+
             return;
         }
 
-        toast.success(`Đã ${actionText} nguồn "${item.sourceName}".`);
+        toast.success(
+            `Đã ${actionText} nguồn "${source.sourceName}".`,
+        );
+
         closeConfirmDialog();
     }
 
@@ -173,39 +215,38 @@ export function AdminMarketSourcesPage() {
 
     if (error) {
         return (
-            <section className="space-y-5">
-                <AdminMarketSourcesHeader onCreate={openCreateDrawer} />
-
-                <div className="rounded-xl border border-red-200 bg-red-50 p-5">
-                    <p className="text-sm font-medium text-red-700">{error}</p>
-
-                    <button
-                        type="button"
-                        onClick={reload}
-                        className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white"
-                    >
-                        Thử lại
-                    </button>
-                </div>
-            </section>
+            <ErrorState
+                error={error}
+                onRetry={reload}
+                onCreate={openCreateDrawer}
+            />
         );
     }
 
     const confirmSource = confirmState.source;
-    const confirmSourceActive = confirmSource?.isActive ?? confirmSource?.active;
+
+    const confirmSourceActive =
+        confirmSource?.isActive ??
+        confirmSource?.active;
 
     return (
         <>
             <section className="space-y-5">
-                <AdminMarketSourcesHeader onCreate={openCreateDrawer} />
+                <AdminMarketSourcesHeader
+                    onCreate={openCreateDrawer}
+                />
 
-                {actionError && !drawerOpen && !confirmState.open && (
-                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                        {actionError}
-                    </div>
-                )}
+                {actionError &&
+                    !drawerOpen &&
+                    !confirmState.open && (
+                        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                            {actionError}
+                        </div>
+                    )}
 
-                <MarketSourceStats summary={summary} />
+                <MarketSourceStats
+                    summary={summary}
+                />
 
                 <MarketSourceTable
                     sources={sources}
@@ -213,7 +254,9 @@ export function AdminMarketSourcesPage() {
                     loading={tableLoading}
                     onPageChange={setPage}
                     onEdit={openEditDrawer}
-                    onToggleStatus={handleToggleStatus}
+                    onToggleStatus={
+                        handleToggleStatus
+                    }
                 />
             </section>
 
@@ -230,18 +273,32 @@ export function AdminMarketSourcesPage() {
             <ConfirmDialog
                 open={confirmState.open}
                 title={
-                    confirmSourceActive ? "Tắt nguồn dữ liệu" : "Bật lại nguồn dữ liệu"
+                    confirmSourceActive
+                        ? "Tắt nguồn dữ liệu"
+                        : "Bật lại nguồn dữ liệu"
                 }
                 description={
                     confirmSource
                         ? `Bạn có chắc muốn ${
-                            confirmSourceActive ? "tắt" : "bật lại"
-                        } nguồn "${confirmSource.sourceName}" không?`
+                              confirmSourceActive
+                                  ? "tắt"
+                                  : "bật lại"
+                          } nguồn "${
+                              confirmSource.sourceName
+                          }" không?`
                         : ""
                 }
-                confirmText={confirmSourceActive ? "Tắt nguồn" : "Bật lại"}
+                confirmText={
+                    confirmSourceActive
+                        ? "Tắt nguồn"
+                        : "Bật lại"
+                }
                 cancelText="Hủy"
-                variant={confirmSourceActive ? "danger" : "success"}
+                variant={
+                    confirmSourceActive
+                        ? "danger"
+                        : "success"
+                }
                 loading={actionLoading}
                 onCancel={closeConfirmDialog}
                 onConfirm={confirmToggleStatus}

@@ -9,7 +9,7 @@ import { useAdminSpecies } from "../../../features/admin/species/hooks/useAdminS
 
 function AdminSpeciesHeader({ onCreate }) {
     return (
-        <header className="flex items-start justify-between gap-4">
+        <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
                 <h1 className="text-2xl font-semibold text-slate-900">
                     Quản lý Species
@@ -23,7 +23,7 @@ function AdminSpeciesHeader({ onCreate }) {
             <button
                 type="button"
                 onClick={onCreate}
-                className="h-9 rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white hover:bg-[#00583d]"
+                className="inline-flex h-10 items-center justify-center rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#00583d]"
             >
                 + Thêm Species
             </button>
@@ -34,7 +34,7 @@ function AdminSpeciesHeader({ onCreate }) {
 function AdminSpeciesSkeleton() {
     return (
         <section className="space-y-5">
-            <AdminSpeciesHeader />
+            <AdminSpeciesHeader onCreate={() => {}} />
 
             <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 {[1, 2, 3].map((item) => (
@@ -60,6 +60,28 @@ function AdminSpeciesSkeleton() {
                     ))}
                 </div>
             </section>
+        </section>
+    );
+}
+
+function ErrorState({ error, onRetry, onCreate }) {
+    return (
+        <section className="space-y-5">
+            <AdminSpeciesHeader onCreate={onCreate} />
+
+            <div className="rounded-xl border border-red-200 bg-red-50 p-5">
+                <p className="text-sm font-medium text-red-700">
+                    {error || "Đã xảy ra lỗi khi tải dữ liệu."}
+                </p>
+
+                <button
+                    type="button"
+                    onClick={onRetry}
+                    className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+                >
+                    Thử lại
+                </button>
+            </div>
         </section>
     );
 }
@@ -95,39 +117,54 @@ export function AdminSpeciesPage() {
         species: null,
     });
 
+    function resetDrawerState() {
+        setDrawerOpen(false);
+        setDrawerMode("create");
+        setSelectedSpecies(null);
+    }
+
     function openCreateDrawer() {
         clearActionError();
-        setSelectedSpecies(null);
+
         setDrawerMode("create");
+        setSelectedSpecies(null);
         setDrawerOpen(true);
     }
 
     function openEditDrawer(item) {
         clearActionError();
-        setSelectedSpecies(item);
+
         setDrawerMode("edit");
+        setSelectedSpecies(item);
         setDrawerOpen(true);
     }
 
     function closeDrawer() {
         if (actionLoading) return;
 
-        setDrawerOpen(false);
-        setSelectedSpecies(null);
+        resetDrawerState();
         clearActionError();
     }
 
     async function handleSubmitSpecies(payload) {
-        const isEdit = drawerMode === "edit" && selectedSpecies;
+        const isEdit =
+            drawerMode === "edit" &&
+            selectedSpecies;
 
         const success = isEdit
-            ? await updateSpecies(selectedSpecies.id, payload)
+            ? await updateSpecies(
+                  selectedSpecies.id,
+                  payload,
+              )
             : await createSpecies(payload);
 
         if (!success) {
             toast.error(
-                isEdit ? "Không thể cập nhật species." : "Không thể thêm species.",
+                isEdit
+                    ? "Không thể cập nhật species."
+                    : "Không thể thêm species.",
             );
+
             return;
         }
 
@@ -165,17 +202,28 @@ export function AdminSpeciesPage() {
 
         if (!item) return;
 
-        const active = item.isActive ?? item.active;
-        const actionText = active ? "tắt" : "bật lại";
+        const isActive =
+            item.isActive ?? item.active;
 
-        const success = await toggleSpeciesStatus(item);
+        const actionText = isActive
+            ? "tắt"
+            : "bật lại";
+
+        const success =
+            await toggleSpeciesStatus(item);
 
         if (!success) {
-            toast.error(`Không thể ${actionText} species "${item.name}".`);
+            toast.error(
+                `Không thể ${actionText} species "${item.name}".`,
+            );
+
             return;
         }
 
-        toast.success(`Đã ${actionText} species "${item.name}".`);
+        toast.success(
+            `Đã ${actionText} species "${item.name}".`,
+        );
+
         closeConfirmDialog();
     }
 
@@ -185,39 +233,39 @@ export function AdminSpeciesPage() {
 
     if (error) {
         return (
-            <section className="space-y-5">
-                <AdminSpeciesHeader onCreate={openCreateDrawer} />
-
-                <div className="rounded-xl border border-red-200 bg-red-50 p-5">
-                    <p className="text-sm font-medium text-red-700">{error}</p>
-
-                    <button
-                        type="button"
-                        onClick={reload}
-                        className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white"
-                    >
-                        Thử lại
-                    </button>
-                </div>
-            </section>
+            <ErrorState
+                error={error}
+                onRetry={reload}
+                onCreate={openCreateDrawer}
+            />
         );
     }
 
-    const confirmSpecies = confirmState.species;
-    const confirmSpeciesActive = confirmSpecies?.isActive ?? confirmSpecies?.active;
+    const confirmSpecies =
+        confirmState.species;
+
+    const confirmSpeciesActive =
+        confirmSpecies?.isActive ??
+        confirmSpecies?.active;
 
     return (
         <>
             <section className="space-y-5">
-                <AdminSpeciesHeader onCreate={openCreateDrawer} />
+                <AdminSpeciesHeader
+                    onCreate={openCreateDrawer}
+                />
 
-                {actionError && !drawerOpen && !confirmState.open && (
-                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                        {actionError}
-                    </div>
-                )}
+                {actionError &&
+                    !drawerOpen &&
+                    !confirmState.open && (
+                        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                            {actionError}
+                        </div>
+                    )}
 
-                <SpeciesStats summary={summary} />
+                <SpeciesStats
+                    summary={summary}
+                />
 
                 <SpeciesTable
                     species={species}
@@ -225,7 +273,9 @@ export function AdminSpeciesPage() {
                     loading={tableLoading}
                     onPageChange={setPage}
                     onEdit={openEditDrawer}
-                    onToggleStatus={handleToggleStatus}
+                    onToggleStatus={
+                        handleToggleStatus
+                    }
                 />
             </section>
 
@@ -241,17 +291,33 @@ export function AdminSpeciesPage() {
 
             <ConfirmDialog
                 open={confirmState.open}
-                title={confirmSpeciesActive ? "Tắt Species" : "Bật lại Species"}
+                title={
+                    confirmSpeciesActive
+                        ? "Tắt Species"
+                        : "Bật lại Species"
+                }
                 description={
                     confirmSpecies
                         ? `Bạn có chắc muốn ${
-                            confirmSpeciesActive ? "tắt" : "bật lại"
-                        } species "${confirmSpecies.name}" không?`
+                              confirmSpeciesActive
+                                  ? "tắt"
+                                  : "bật lại"
+                          } species "${
+                              confirmSpecies.name
+                          }" không?`
                         : ""
                 }
-                confirmText={confirmSpeciesActive ? "Tắt Species" : "Bật lại"}
+                confirmText={
+                    confirmSpeciesActive
+                        ? "Tắt Species"
+                        : "Bật lại"
+                }
                 cancelText="Hủy"
-                variant={confirmSpeciesActive ? "danger" : "success"}
+                variant={
+                    confirmSpeciesActive
+                        ? "danger"
+                        : "success"
+                }
                 loading={actionLoading}
                 onCancel={closeConfirmDialog}
                 onConfirm={confirmToggleStatus}

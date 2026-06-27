@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 
+import { useToast } from "../../../components/common/toast/ToastProvider";
+
+import { useAuth } from "../../../features/auth/context/AuthContext";
+
 import { OwnerIotScanDetailDrawer } from "../../../features/owner/iot-scans/components/OwnerIotScanDetailDrawer";
 import { OwnerIotScanStats } from "../../../features/owner/iot-scans/components/OwnerIotScanStats";
 import { OwnerIotScanTable } from "../../../features/owner/iot-scans/components/OwnerIotScanTable";
+
 import { useOwnerIotScans } from "../../../features/owner/iot-scans/hooks/useOwnerIotScans";
-import { useAuth } from "../../../features/auth/context/AuthContext";
 
 const CURRENT_FARM_ID = 1;
 
@@ -21,7 +25,8 @@ function OwnerIotScansHeader() {
                 </h1>
 
                 <p className="mt-1 text-sm text-slate-600">
-                    Theo dõi các lần cân-camera đọc QR, nhận diện sản phẩm và tạo voice phản hồi
+                    Theo dõi các lần cân-camera đọc QR,
+                    nhận diện sản phẩm và tạo voice phản hồi
                 </p>
             </div>
         </header>
@@ -48,13 +53,19 @@ function OwnerIotScansSkeleton() {
 }
 
 export function OwnerIotScansPage() {
+    const toast = useToast();
+
     const { user } = useAuth();
-    const farmId = user?.farmId;
+
+    const farmId =
+        user?.farmId ??
+        CURRENT_FARM_ID;
 
     const {
         scans,
         selectedScan,
         setSelectedScan,
+
         summary,
         pageInfo,
 
@@ -65,61 +76,87 @@ export function OwnerIotScansPage() {
         error,
         actionError,
         clearActionError,
+
         reload,
         setPage,
         loadScanDetail,
     } = useOwnerIotScans(farmId);
 
-    const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
+    const [detailDrawerOpen,
+        setDetailDrawerOpen] =
+        useState(false);
 
+    /**
+     * Load page data
+     */
     useEffect(() => {
         reload();
     }, [reload]);
 
-    if (!farmId) {
-        return (
-            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-                Tài khoản OWNER chưa có farmId. Vui lòng kiểm tra dữ liệu user/farm.
-            </div>
-        );
-    }
+    /**
+     * Toast only for API errors
+     * Remove inline red UI
+     */
+    useEffect(() => {
+        if (error) {
+            toast.error(
+                "Không thể tải lịch sử scan IoT"
+            );
+        }
+    }, [error, toast]);
 
-    async function openDetailDrawer(scan) {
+    /**
+     * Toast for action errors
+     */
+    useEffect(() => {
+        if (
+            actionError &&
+            !detailDrawerOpen
+        ) {
+            toast.error(actionError);
+        }
+    }, [
+        actionError,
+        detailDrawerOpen,
+        toast,
+    ]);
+
+    /**
+     * Missing farm
+     */
+    useEffect(() => {
+        if (!user?.farmId) {
+            toast.error(
+                "Tài khoản OWNER chưa có farm"
+            );
+        }
+    }, [user, toast]);
+
+    async function openDetailDrawer(
+        scan,
+    ) {
         clearActionError();
 
         setDetailDrawerOpen(true);
+
         setSelectedScan(scan);
 
-        await loadScanDetail(scan.transactionId);
+        await loadScanDetail(
+            scan.transactionId,
+        );
     }
 
     function closeDetailDrawer() {
         setDetailDrawerOpen(false);
+
         setSelectedScan(null);
+
         clearActionError();
     }
 
     if (initialLoading) {
-        return <OwnerIotScansSkeleton />;
-    }
-
-    if (error) {
         return (
-            <section className="space-y-5">
-                <OwnerIotScansHeader />
-
-                <div className="rounded-xl border border-red-200 bg-red-50 p-5">
-                    <p className="text-sm font-medium text-red-700">{error}</p>
-
-                    <button
-                        type="button"
-                        onClick={reload}
-                        className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white"
-                    >
-                        Thử lại
-                    </button>
-                </div>
-            </section>
+            <OwnerIotScansSkeleton />
         );
     }
 
@@ -128,20 +165,18 @@ export function OwnerIotScansPage() {
             <section className="space-y-5">
                 <OwnerIotScansHeader />
 
-                {actionError && !detailDrawerOpen && (
-                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                        {actionError}
-                    </div>
-                )}
-
-                <OwnerIotScanStats summary={summary} />
+                <OwnerIotScanStats
+                    summary={summary}
+                />
 
                 <OwnerIotScanTable
                     scans={scans}
                     pageInfo={pageInfo}
                     loading={tableLoading}
                     onPageChange={setPage}
-                    onViewDetail={openDetailDrawer}
+                    onViewDetail={
+                        openDetailDrawer
+                    }
                 />
             </section>
 
@@ -154,3 +189,6 @@ export function OwnerIotScansPage() {
         </>
     );
 }
+
+export default OwnerIotScansPage;
+

@@ -3,6 +3,8 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../../features/auth/context/AuthContext";
+import { useToast } from "../../../components/common/toast/ToastProvider";
+
 import { OwnerMarketPriceStats } from "../../../features/owner/market-prices/components/OwnerMarketPriceStats";
 import { OwnerMarketPriceTable } from "../../../features/owner/market-prices/components/OwnerMarketPriceTable";
 import { useOwnerMarketPrices } from "../../../features/owner/market-prices/hooks/useOwnerMarketPrices";
@@ -29,6 +31,7 @@ function OwnerMarketPricesHeader({ onOpenWatchlist }) {
                 className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white hover:bg-[#00583d]"
             >
                 <Plus size={16} />
+
                 Quản lý watchlist
             </button>
         </header>
@@ -38,7 +41,9 @@ function OwnerMarketPricesHeader({ onOpenWatchlist }) {
 function OwnerMarketPricesSkeleton({ onOpenWatchlist }) {
     return (
         <section className="space-y-5">
-            <OwnerMarketPricesHeader onOpenWatchlist={onOpenWatchlist} />
+            <OwnerMarketPricesHeader
+                onOpenWatchlist={onOpenWatchlist}
+            />
 
             <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 {[1, 2, 3, 4].map((item) => (
@@ -56,8 +61,12 @@ function OwnerMarketPricesSkeleton({ onOpenWatchlist }) {
 
 export function OwnerMarketPricesPage() {
     const navigate = useNavigate();
+    const toast = useToast();
+
     const { user } = useAuth();
-    const farmId = user?.farmId ?? FALLBACK_FARM_ID;
+
+    const farmId =
+        user?.farmId ?? FALLBACK_FARM_ID;
 
     const {
         prices,
@@ -78,41 +87,39 @@ export function OwnerMarketPricesPage() {
         reload();
     }, [reload]);
 
+    /**
+     * Show toast only when API fails.
+     * Remove inline red error UI.
+     */
+    useEffect(() => {
+        if (error) {
+            toast.error(
+                "Không thể tải dữ liệu giá thị trường"
+            );
+        }
+    }, [error, toast]);
+
     function openWatchlistPage() {
         navigate("/owner/market-watchlist");
     }
 
     if (initialLoading) {
         return (
-            <OwnerMarketPricesSkeleton onOpenWatchlist={openWatchlistPage} />
-        );
-    }
-
-    if (error) {
-        return (
-            <section className="space-y-5">
-                <OwnerMarketPricesHeader onOpenWatchlist={openWatchlistPage} />
-
-                <div className="rounded-xl border border-red-200 bg-red-50 p-5">
-                    <p className="text-sm font-medium text-red-700">{error}</p>
-
-                    <button
-                        type="button"
-                        onClick={reload}
-                        className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white"
-                    >
-                        Thử lại
-                    </button>
-                </div>
-            </section>
+            <OwnerMarketPricesSkeleton
+                onOpenWatchlist={openWatchlistPage}
+            />
         );
     }
 
     return (
         <section className="space-y-5">
-            <OwnerMarketPricesHeader onOpenWatchlist={openWatchlistPage} />
+            <OwnerMarketPricesHeader
+                onOpenWatchlist={openWatchlistPage}
+            />
 
-            <OwnerMarketPriceStats summary={summary} />
+            <OwnerMarketPriceStats
+                summary={summary}
+            />
 
             <OwnerMarketPriceTable
                 prices={prices}
@@ -128,3 +135,4 @@ export function OwnerMarketPricesPage() {
         </section>
     );
 }
+
