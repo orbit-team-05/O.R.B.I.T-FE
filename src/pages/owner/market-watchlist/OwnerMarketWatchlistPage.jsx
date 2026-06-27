@@ -164,7 +164,7 @@ function WatchlistTable({
     items = [],
     pageInfo = {},
     loading,
-    removingSpeciesId,
+    removingTargetId,
     onPageChange,
     onRemove,
 }) {
@@ -192,7 +192,7 @@ function WatchlistTable({
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-600">
-                    Species đang được theo dõi giá thị trường.
+                    Cấu hình crawl đang được theo dõi giá thị trường.
                 </p>
             </header>
 
@@ -204,7 +204,7 @@ function WatchlistTable({
                 <div className="p-5">
                     <EmptyPanel
                         minHeight={420}
-                        message="Chưa có species nào trong watchlist."
+                        message="Chưa có mục tiêu nào trong watchlist."
                     />
                 </div>
             ) : (
@@ -213,62 +213,43 @@ function WatchlistTable({
                         <table className="w-full min-w-[760px] border-collapse text-left">
                             <thead className="bg-slate-50">
                                 <tr className="text-[11px] font-semibold uppercase text-slate-600">
-                                    <th className="px-5 py-4">
-                                        Species
-                                    </th>
-
-                                    <th className="px-5 py-4">
-                                        Nhóm
-                                    </th>
-
-                                    <th className="px-5 py-4">
-                                        Đơn vị
-                                    </th>
-
-                                    <th className="px-5 py-4">
-                                        Trạng thái
-                                    </th>
-
-                                    <th className="px-5 py-4">
-                                        Ngày thêm
-                                    </th>
-
-                                    <th className="px-5 py-4 text-right">
-                                        Hành động
-                                    </th>
+                                    <th className="px-5 py-4">Nguồn</th>
+                                    <th className="px-5 py-4">Mục tiêu theo dõi</th>
+                                    <th className="px-5 py-4">Mặt hàng</th>
+                                    <th className="px-5 py-4">Đơn vị</th>
+                                    <th className="px-5 py-4">Trạng thái</th>
+                                    <th className="px-5 py-4">Ngày thêm</th>
+                                    <th className="px-5 py-4 text-right">Hành động</th>
                                 </tr>
                             </thead>
 
                             <tbody>
                                 {items.map((item) => {
                                     const removing =
-                                        removingSpeciesId ===
-                                        item.speciesId;
+                                        removingTargetId ===
+                                        item.targetId;
 
                                     return (
                                         <tr
-                                            key={
-                                                item.id ||
-                                                item.speciesId
-                                            }
+                                            key={item.watchlistId}
                                             className="border-t border-slate-200 text-sm text-slate-700"
                                         >
-                                            <td className="max-w-[240px] px-5 py-4 font-semibold text-slate-900">
+                                            <td className="px-5 py-4 font-semibold text-slate-900">
+                                                {item.sourceName || "Không hiển thị dữ liệu"}
+                                            </td>
+
+                                            <td className="max-w-[240px] px-5 py-4">
                                                 <div className="line-clamp-2">
-                                                    {item.speciesName ||
-                                                        "Không hiển thị dữ liệu"}
+                                                    {item.targetName || "Không hiển thị dữ liệu"}
                                                 </div>
                                             </td>
 
                                             <td className="px-5 py-4">
-                                                {formatCategoryGroup(
-                                                    item.categoryGroup,
-                                                )}
+                                                {item.speciesName || "Không hiển thị dữ liệu"}
                                             </td>
 
                                             <td className="px-5 py-4">
-                                                {item.marketUnit ||
-                                                    "Không hiển thị dữ liệu"}
+                                                {item.defaultPriceUnit || "Không hiển thị dữ liệu"}
                                             </td>
 
                                             <td className="px-5 py-4">
@@ -314,7 +295,7 @@ function WatchlistTable({
                         <p className="text-xs text-slate-500">
                             Tổng{" "}
                             {pageInfo?.totalElements ?? 0}{" "}
-                            species
+                            mục tiêu
                         </p>
 
                         <div className="flex items-center gap-2">
@@ -365,21 +346,21 @@ export function OwnerMarketWatchlistPage() {
 
     const {
         watchlist = [],
-        availableSpecies = [],
+        availableTargets = [],
         stats = {},
         initialLoading,
         tableLoading,
         error,
         submitting,
-        removingSpeciesId,
+        removingTargetId,
         pageInfo = {},
         reload,
         setPage,
-        addSpecies,
-        removeSpecies,
+        addTarget,
+        removeTarget,
     } = useOwnerMarketWatchlist(farmId);
 
-    const [selectedSpeciesId, setSelectedSpeciesId] =
+    const [selectedTargetId, setSelectedTargetId] =
         useState("");
 
     useEffect(() => {
@@ -406,51 +387,46 @@ export function OwnerMarketWatchlistPage() {
         [stats],
     );
 
-    async function handleAddSpecies(event) {
+    async function handleAddTarget(event) {
         event.preventDefault();
 
-        if (!selectedSpeciesId) {
+        if (!selectedTargetId) {
             toast.error(
-                "Vui lòng chọn species.",
+                "Vui lòng chọn mục tiêu.",
             );
 
             return;
         }
 
         try {
-            const addedItem = await addSpecies(
-                Number(selectedSpeciesId),
+            await addTarget(
+                Number(selectedTargetId),
             );
 
             toast.success(
-                `Đã thêm "${
-                    addedItem?.speciesName ||
-                    "species"
-                }" vào watchlist.`,
+                "Đã thêm mục tiêu vào watchlist.",
             );
 
-            setSelectedSpeciesId("");
+            setSelectedTargetId("");
         } catch (err) {
             toast.error(
                 err?.message ||
-                    "Không thể thêm species.",
+                    "Không thể thêm mục tiêu.",
             );
         }
     }
 
-    async function handleRemoveSpecies(item) {
+    async function handleRemoveTarget(item) {
         try {
-            await removeSpecies(item.speciesId);
+            await removeTarget(item.targetId);
 
             toast.success(
-                `Đã xóa "${
-                    item?.speciesName || "species"
-                }" khỏi watchlist.`,
+                "Đã xóa mục tiêu khỏi watchlist.",
             );
         } catch (err) {
             toast.error(
                 err?.message ||
-                    "Không thể xóa species.",
+                    "Không thể xóa mục tiêu.",
             );
         }
     }
@@ -505,40 +481,40 @@ export function OwnerMarketWatchlistPage() {
                                 className="text-[#006948]"
                             />
 
-                            Thêm species
+                            Thêm mục tiêu
                         </h2>
 
                         <p className="mt-1 text-sm text-slate-600">
-                            Chọn species để thêm vào
+                            Chọn mục tiêu crawl để thêm vào
                             watchlist.
                         </p>
                     </header>
 
                     <form
-                        onSubmit={handleAddSpecies}
+                        onSubmit={handleAddTarget}
                         className="space-y-4 px-5 py-5"
                     >
                         <div>
                             <label className="text-sm font-medium text-slate-700">
-                                Chọn species
+                                Chọn mục tiêu crawl
                             </label>
 
                             <select
                                 value={
-                                    selectedSpeciesId
+                                    selectedTargetId
                                 }
                                 onChange={(event) =>
-                                    setSelectedSpeciesId(
+                                    setSelectedTargetId(
                                         event.target.value,
                                     )
                                 }
                                 className="mt-2 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/10"
                             >
                                 <option value="">
-                                    Chọn species
+                                    Chọn mục tiêu crawl
                                 </option>
 
-                                {availableSpecies.map(
+                                {availableTargets.map(
                                     (item) => (
                                         <option
                                             key={
@@ -548,25 +524,18 @@ export function OwnerMarketWatchlistPage() {
                                                 item.id
                                             }
                                         >
-                                            {item.name} -{" "}
-                                            {formatCategoryGroup(
-                                                item.categoryGroup,
-                                            )}{" "}
-                                            -{" "}
-                                            {
-                                                item.marketUnit
-                                            }
+                                            {item.targetName} ({item.sourceName} - {item.speciesName})
                                         </option>
                                     ),
                                 )}
                             </select>
                         </div>
 
-                        {availableSpecies.length ===
+                        {availableTargets.length ===
                         0 ? (
                             <EmptyPanel
                                 minHeight={120}
-                                message="Không còn species khả dụng."
+                                message="Không còn mục tiêu khả dụng."
                             />
                         ) : null}
 
@@ -574,7 +543,7 @@ export function OwnerMarketWatchlistPage() {
                             type="submit"
                             disabled={
                                 submitting ||
-                                availableSpecies.length ===
+                                availableTargets.length ===
                                     0
                             }
                             className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white hover:bg-[#00583d] disabled:cursor-not-allowed disabled:opacity-60"
@@ -592,12 +561,12 @@ export function OwnerMarketWatchlistPage() {
                     items={watchlist}
                     pageInfo={pageInfo}
                     loading={tableLoading}
-                    removingSpeciesId={
-                        removingSpeciesId
+                    removingTargetId={
+                        removingTargetId
                     }
                     onPageChange={setPage}
                     onRemove={
-                        handleRemoveSpecies
+                        handleRemoveTarget
                     }
                 />
             </section>
