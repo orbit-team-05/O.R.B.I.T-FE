@@ -31,8 +31,31 @@ function formatConfidence(value) {
     return `${Math.round(numberValue)}%`;
 }
 
+function isHarvestScan(scan) {
+    return (
+        scan?.requestedAction === "HARVEST" ||
+        scan?.transactionType === "HARVEST_EXPORT"
+    );
+}
+
+function getScanItemLabel(scan) {
+    return isHarvestScan(scan) ? "Mùa vụ thu hoạch" : "Sản phẩm nhận diện";
+}
+
+function getScanItemName(scan) {
+    if (isHarvestScan(scan)) {
+        return scan?.seasonName || scan?.aiPredictedName || "Mùa vụ thu hoạch";
+    }
+
+    return scan?.aiPredictedName || scan?.productName || "Chưa nhận diện";
+}
+
 function getScanStatusLabel(scan) {
     if (!scan) return "Chưa có";
+
+    if (isHarvestScan(scan)) {
+        return "Đã ghi nhận thu hoạch";
+    }
 
     if (scan.aiStatus === "CORRECTED") {
         return "Không nhận diện QR - đã nhập mã thủ công";
@@ -69,6 +92,10 @@ function getNextActionLabel(value) {
 
 function getKeypadLabel(scan) {
     if (!scan) return "Chưa có";
+
+    if (isHarvestScan(scan)) {
+        return "Không cần";
+    }
 
     if (scan.aiStatus === "CORRECTED") {
         return "Đã nhập mã keypad";
@@ -179,8 +206,8 @@ export function OwnerIotScanDetailDrawer({
                             />
 
                             <DetailItem
-                                label="Sản phẩm nhận diện"
-                                value={scan?.aiPredictedName}
+                                label={getScanItemLabel(scan)}
+                                value={getScanItemName(scan)}
                             />
 
                             <DetailItem

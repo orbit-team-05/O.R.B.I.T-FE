@@ -7,6 +7,13 @@ const AI_STATUS_LABELS = {
     CORRECTED: "Không nhận diện QR - đã nhập mã",
 };
 
+function isHarvestScan(item) {
+    return (
+        item?.requestedAction === "HARVEST" ||
+        item?.transactionType === "HARVEST_EXPORT"
+    );
+}
+
 const AI_STATUS_CLASSES = {
     SUCCESS: "bg-[#006948] text-white",
     LOW_CONFIDENCE: "bg-amber-50 text-amber-700",
@@ -15,6 +22,12 @@ const AI_STATUS_CLASSES = {
 };
 
 function getScanDisplayStatus(item) {
+    if (isHarvestScan(item)) {
+        return {
+            label: "Đã ghi nhận thu hoạch",
+            className: "bg-emerald-50 text-emerald-700",
+        };
+    }
     if (item?.aiStatus === "CORRECTED") {
         return {
             label: "Không nhận diện QR - đã nhập mã",
@@ -73,6 +86,12 @@ function AiStatusBadge({ item }) {
 }
 
 function getFlowLabel(item) {
+    if (isHarvestScan(item)) {
+        return {
+            label: "Thu hoạch",
+            className: "bg-emerald-50 text-emerald-700",
+        };
+    }
     if (
         item?.requestedAction === "EXPORT_FEED" ||
         item?.transactionType === "EXPORT_FEED"
@@ -113,6 +132,14 @@ function FlowBadge({ item }) {
             {flow.label}
         </span>
     );
+}
+
+function getScanItemName(item) {
+    if (isHarvestScan(item)) {
+        return item?.seasonName || item?.aiPredictedName || "Mùa vụ thu hoạch";
+    }
+
+    return item?.aiPredictedName || item?.productName || "Chưa nhận diện";
 }
 
 export function OwnerIotScanTable({
@@ -187,10 +214,10 @@ export function OwnerIotScanTable({
 
                                     <td className="max-w-[220px] px-5 py-4">
                                         <div className="line-clamp-2 font-medium text-slate-900">
-                                            {item.aiPredictedName || "Chưa nhận diện"}
+                                            {getScanItemName(item)}
                                         </div>
 
-                                        {item.needKeypadInput && (
+                                        {item.needKeypadInput && !isHarvestScan(item) && (
                                             <div className="mt-1 text-xs font-medium text-amber-600">
                                                 Cần nhập mã keypad
                                             </div>

@@ -95,6 +95,33 @@ function WorkModeBadge({ mode }) {
     );
 }
 
+function shouldShowSeasonForMode(mode) {
+    return mode === "EXPORT" || mode === "HARVEST";
+}
+
+function WorkModeWithSeason({
+                                mode,
+                                seasonName,
+                                seasonId,
+                            }) {
+    const safeMode = mode || "IDLE";
+
+    return (
+        <div className="space-y-1">
+            <WorkModeBadge mode={safeMode} />
+
+            {shouldShowSeasonForMode(safeMode) && (
+                <p className="max-w-[180px] break-words text-[11px] font-medium text-slate-600">
+                    Mùa vụ:{" "}
+                    <span className="text-slate-900">
+                        {seasonName || (seasonId ? `#${seasonId}` : "Chưa chọn")}
+                    </span>
+                </p>
+            )}
+        </div>
+    );
+}
+
 function CommandStatusBadge({ status }) {
     const safeStatus = status || "NONE";
 
@@ -117,7 +144,11 @@ function PendingModeText({ device }) {
 
     return (
         <div className="space-y-1">
-            <WorkModeBadge mode={device.pendingWorkMode} />
+            <WorkModeWithSeason
+                mode={device.pendingWorkMode}
+                seasonName={device.pendingWorkSeasonName}
+                seasonId={device.pendingWorkSeasonId}
+            />
 
             <p className="text-[11px] text-amber-700">
                 Đang chờ thiết bị nhận lệnh
@@ -254,7 +285,11 @@ export function OwnerIotDeviceTable({
                                     </td>
 
                                     <td className="px-5 py-4">
-                                        <WorkModeBadge mode={item.workMode} />
+                                        <WorkModeWithSeason
+                                            mode={item.workMode}
+                                            seasonName={item.activeWorkSeasonName}
+                                            seasonId={item.activeWorkSeasonId}
+                                        />
                                     </td>
 
                                     <td className="px-5 py-4">

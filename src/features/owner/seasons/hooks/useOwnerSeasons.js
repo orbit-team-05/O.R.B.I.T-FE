@@ -10,6 +10,7 @@ import {
     cancelSeason as apiCancelSeason,
     getActiveSpecies,
     getSpeciesSizes,
+    getSeasonHarvests,
 } from "../services/ownerSeasonApi";
 
 function getErrorMessage(error, fallbackMessage) {
@@ -41,6 +42,11 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
     const [actionSuccess, setActionSuccess] = useState("");
 
     const seasons = seasonPage?.content ?? [];
+
+    const [harvestPage, setHarvestPage] = useState(null);
+    const [harvestPageNumber, setHarvestPageNumber] = useState(0);
+    const [harvestSize] = useState(10);
+    const [harvestLoading, setHarvestLoading] = useState(false);
 
     const loadDashboard = useCallback(async () => {
         try {
@@ -131,6 +137,33 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
         [materialUsageSize],
     );
 
+    const loadHarvests = useCallback(
+        async (seasonId, nextPage = 0) => {
+            if (!seasonId) return null;
+
+            try {
+                setHarvestLoading(true);
+
+                const data = await getSeasonHarvests(
+                    seasonId,
+                    nextPage,
+                    harvestSize,
+                );
+
+                setHarvestPage(data);
+                return data;
+            } catch (err) {
+                setActionError(
+                    getErrorMessage(err, "Không thể tải lịch sử thu hoạch mùa vụ."),
+                );
+                return null;
+            } finally {
+                setHarvestLoading(false);
+            }
+        },
+        [harvestSize],
+    );
+
     const loadDetail = useCallback(
         async (id) => {
             if (!id) return;
@@ -141,11 +174,16 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
                 setActionError("");
                 setMaterialUsagePage(null);
                 setMaterialUsagePageNumber(0);
+                setHarvestPage(null);
+                setHarvestPageNumber(0);
 
                 const data = await getSeasonDetail(id);
                 setSelectedDetail(data);
 
-                await loadMaterialUsages(id, 0);
+                await Promise.all([
+                    loadMaterialUsages(id, 0),
+                    loadHarvests(id, 0),
+                ]);
 
                 return data;
             } catch (err) {
@@ -155,7 +193,7 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
                 setLoadingDetailId(null);
             }
         },
-        [loadMaterialUsages],
+        [loadMaterialUsages, loadHarvests],
     );
 
     const createSeason = async (payload) => {
@@ -245,6 +283,15 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
         }
     }
 
+    async function handleSetHarvestPage(nextPage) {
+        const normalizedPage = Math.max(Number(nextPage) || 0, 0);
+        setHarvestPageNumber(normalizedPage);
+
+        if (selectedDetail?.id) {
+            await loadHarvests(selectedDetail.id, normalizedPage);
+        }
+    }
+
     function handleSetPage(nextPage) {
         setPage(Math.max(Number(nextPage) || 0, 0));
     }
@@ -290,6 +337,18 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
             if (!selectedDetail?.id) return Promise.resolve(null);
             return loadMaterialUsages(selectedDetail.id, materialUsagePageNumber);
         },
+
+        harvests: harvestPage?.content ?? [],
+        harvestPageInfo: {
+            number: harvestPage?.number ?? harvestPageNumber,
+            size: harvestPage?.size ?? harvestSize,
+            totalPages: harvestPage?.totalPages ?? 0,
+            totalElements: harvestPage?.totalElements ?? 0,
+            first: harvestPage?.first ?? true,
+            last: harvestPage?.last ?? true,
+        },
+        harvestLoading,
+        setHarvestPage: handleSetHarvestPage,
 
         setPage: handleSetPage,
         reload,

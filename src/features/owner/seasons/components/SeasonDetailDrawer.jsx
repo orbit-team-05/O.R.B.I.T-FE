@@ -55,6 +55,190 @@ function inputClass(disabled = false) {
         } px-3 text-sm outline-none focus:ring-2`;
 }
 
+function SeasonHarvestHistory({
+                                  harvests = [],
+                                  pageInfo,
+                                  loading = false,
+                                  onPageChange,
+                              }) {
+    const currentPage = Math.max(Number(pageInfo?.number ?? 0), 0);
+    const totalPages = Math.max(Number(pageInfo?.totalPages ?? 1), 1);
+    const isFirstPage = currentPage <= 0 || pageInfo?.first;
+    const isLastPage = currentPage >= totalPages - 1 || pageInfo?.last;
+
+    const totalHarvestKg = harvests.reduce(
+        (sum, item) => sum + Number(item.quantityKg || 0),
+        0,
+    );
+
+    return (
+        <div className="space-y-4 rounded-xl border border-slate-200 p-4">
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                        Lịch sử thu hoạch
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-500">
+                        Dữ liệu lấy từ các lần cân IoT thu hoạch của riêng mùa vụ này.
+                    </p>
+                </div>
+
+                <div className="text-right">
+                    <p className="text-xs text-slate-500">Tổng trong trang</p>
+                    <p className="mt-0.5 text-sm font-bold text-emerald-700">
+                        {formatNumber(totalHarvestKg)} kg
+                    </p>
+                </div>
+            </div>
+
+            {loading ? (
+                <div className="rounded-lg bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+                    Đang tải lịch sử thu hoạch...
+                </div>
+            ) : harvests.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+                    Chưa có giao dịch thu hoạch nào trong mùa vụ này.
+                </div>
+            ) : (
+                <>
+                    <div className="overflow-hidden rounded-lg border border-slate-200">
+                        <div className="max-h-[280px] overflow-auto">
+                            <table className="w-full min-w-[760px] text-left text-sm">
+                                <thead className="sticky top-0 bg-slate-50 text-[11px] uppercase text-slate-500">
+                                <tr>
+                                    <th className="px-3 py-2">Giao dịch</th>
+                                    <th className="px-3 py-2">Khối lượng</th>
+                                    <th className="px-3 py-2">Đơn giá</th>
+                                    <th className="px-3 py-2">Doanh thu</th>
+                                    <th className="px-3 py-2">Thiết bị</th>
+                                    <th className="px-3 py-2">Ngày thu</th>
+                                    <th className="px-3 py-2">Ảnh</th>
+                                    <th className="px-3 py-2">Audio</th>
+                                </tr>
+                                </thead>
+
+                                <tbody>
+                                {harvests.map((item) => (
+                                    <tr
+                                        key={item.transactionId}
+                                        className="border-t border-slate-100 text-slate-700"
+                                    >
+                                        <td className="px-3 py-3">
+                                            <div className="font-semibold text-slate-900">
+                                                Thu hoạch #{item.transactionId}
+                                            </div>
+                                            <div className="mt-0.5 text-xs text-slate-500">
+                                                IoT Harvest Scan
+                                            </div>
+                                        </td>
+
+                                        <td className="px-3 py-3 font-medium text-emerald-700">
+                                            {formatNumber(item.quantityKg)} kg
+                                            <div className="mt-0.5 text-xs text-slate-400">
+                                                {formatNumber(item.quantityGrams)} g
+                                            </div>
+                                        </td>
+
+                                        <td className="px-3 py-3">
+                                            {formatCurrency(item.unitPrice)}
+                                        </td>
+
+                                        <td className="px-3 py-3 font-semibold text-emerald-700">
+                                            {formatCurrency(item.totalAmount)}
+                                        </td>
+
+                                        <td className="px-3 py-3">
+                                            <div className="font-medium text-slate-800">
+                                                {item.deviceName || "Thiết bị IoT"}
+                                            </div>
+                                            <div className="mt-0.5 text-xs text-slate-500">
+                                                {item.deviceId || "Không có mã"}
+                                            </div>
+                                        </td>
+
+                                        <td className="px-3 py-3 text-xs text-slate-500">
+                                            {formatDate(item.createdAt)}
+                                        </td>
+
+                                        <td className="px-3 py-3">
+                                            {item.imageUrl ? (
+                                                <a
+                                                    href={item.imageUrl}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="text-xs font-semibold text-blue-600 hover:underline"
+                                                >
+                                                    Mở ảnh
+                                                </a>
+                                            ) : (
+                                                <span className="text-xs text-slate-400">
+                                                        Không có
+                                                    </span>
+                                            )}
+                                        </td>
+
+                                        <td className="px-3 py-3">
+                                            {item.audioUrl ? (
+                                                <a
+                                                    href={item.audioUrl}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="text-xs font-semibold text-blue-600 hover:underline"
+                                                >
+                                                    Nghe
+                                                </a>
+                                            ) : (
+                                                <span className="text-xs text-slate-400">
+                                                        Không có
+                                                    </span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs text-slate-500">
+                            Tổng {pageInfo?.totalElements ?? harvests.length} giao dịch
+                        </p>
+
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                disabled={isFirstPage}
+                                onClick={() => {
+                                    if (!isFirstPage) onPageChange?.(currentPage - 1);
+                                }}
+                                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                                Trước
+                            </button>
+
+                            <span className="text-xs text-slate-600">
+                                Trang {currentPage + 1} / {totalPages}
+                            </span>
+
+                            <button
+                                type="button"
+                                disabled={isLastPage}
+                                onClick={() => {
+                                    if (!isLastPage) onPageChange?.(currentPage + 1);
+                                }}
+                                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                                Sau
+                            </button>
+                        </div>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
 function SeasonMaterialUsageHistory({
     usages = [],
     pageInfo,
@@ -205,12 +389,16 @@ function SeasonMaterialUsageHistory({
 }
 
 export function SeasonDetailDrawer({
-    open,
-    season,
-    materialUsages = [],
-    materialUsagePageInfo,
-    materialUsageLoading = false,
-    onMaterialUsagePageChange,
+       open,
+       season,
+       materialUsages = [],
+       materialUsagePageInfo,
+       materialUsageLoading = false,
+       onMaterialUsagePageChange,
+       harvests = [],
+       harvestPageInfo,
+       harvestLoading = false,
+       onHarvestPageChange,
     submitting = false,
     actionError = "",
     onClose,
@@ -743,6 +931,14 @@ export function SeasonDetailDrawer({
                                 )}
                             </div>
                         </div>
+                        {!isEditing && (
+                            <SeasonHarvestHistory
+                                harvests={harvests}
+                                pageInfo={harvestPageInfo}
+                                loading={harvestLoading}
+                                onPageChange={onHarvestPageChange}
+                            />
+                        )}
 
                         {!isEditing && (
                             <SeasonMaterialUsageHistory

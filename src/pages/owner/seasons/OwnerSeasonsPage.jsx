@@ -84,6 +84,10 @@ export function OwnerSeasonsPage() {
         materialUsagePageInfo,
         materialUsageLoading,
         setMaterialUsagePage,
+        harvests,
+        harvestPageInfo,
+        harvestLoading,
+        setHarvestPage,
         speciesList,
         pageInfo,
         initialLoading,
@@ -205,6 +209,10 @@ export function OwnerSeasonsPage() {
                 onMaterialUsagePageChange={
                     setMaterialUsagePage
                 }
+                harvests={harvests}
+                harvestPageInfo={harvestPageInfo}
+                harvestLoading={harvestLoading}
+                onHarvestPageChange={setHarvestPage}
                 submitting={submitting}
                 actionError={actionError}
                 onClose={handleCloseDetail}

@@ -54,3 +54,11 @@ export async function getSeasonMaterialUsages(id, page = 0, size = 10) {
 
     return response.data.data;
 }
+
+export async function getSeasonHarvests(id, page = 0, size = 10) {
+    const response = await httpClient.get(`/seasons/${id}/harvests`, {
+        params: { page, size },
+    });
+
+    return response.data.data;
+}

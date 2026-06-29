@@ -23,6 +23,34 @@ function formatNumber(value) {
     return Number(value).toLocaleString("vi-VN");
 }
 
+function getSeasonProgress(item) {
+    if (!item) return 0;
+
+    if (item.status === "COMPLETED") {
+        return 100;
+    }
+
+    if (item.status === "HARVESTING") {
+        const actualYieldKg = Number(item.actualYieldKg || 0);
+        const expectedYieldKg = Number(item.expectedYieldKg || 0);
+
+        if (expectedYieldKg <= 0) {
+            return 0;
+        }
+
+        return Math.min(
+            Math.round((actualYieldKg / expectedYieldKg) * 100),
+            100,
+        );
+    }
+
+    if (item.status === "ACTIVE") {
+        return Number(item.progressPercent ?? item.progress ?? 0);
+    }
+
+    return Number(item.progressPercent ?? item.progress ?? 0);
+}
+
 export function SeasonTable({
                                 seasons,
                                 pageInfo,
@@ -67,7 +95,10 @@ export function SeasonTable({
                             </thead>
 
                             <tbody>
-                            {seasons.map((item) => (
+                            {seasons.map((item) => {
+                                const progressPercent = getSeasonProgress(item);
+
+                                return (
                                 <tr
                                     key={item.id}
                                     className="border-t border-slate-200 text-sm text-slate-700 hover:bg-slate-50/55"
@@ -90,11 +121,11 @@ export function SeasonTable({
                                             <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
                                                 <div
                                                     className="h-full rounded-full bg-[#006948]"
-                                                    style={{ width: `${item.progressPercent ?? 0}%` }}
+                                                    style={{ width: `${progressPercent}%` }}
                                                 />
                                             </div>
                                             <span className="text-xs font-semibold text-slate-700 min-w-[32px]">
-                                                {item.progressPercent ?? 0}%
+                                                {progressPercent}%
                                             </span>
                                         </div>
                                     </td>
@@ -160,7 +191,8 @@ export function SeasonTable({
                                         </button>
                                     </td>
                                 </tr>
-                            ))}
+                                );
+                            })}
 
                              {seasons.length === 0 && (
                                  <tr>
