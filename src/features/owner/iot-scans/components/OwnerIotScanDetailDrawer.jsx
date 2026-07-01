@@ -128,14 +128,6 @@ function DetailItem({ label, value, children }) {
     );
 }
 
-function getBrowserAudioUrl(audioUrl) {
-    if (!audioUrl) return "";
-
-    return audioUrl
-        .replace("http://98.86.116.216:8080/api", "/api")
-        .replace("https://98.86.116.216:8080/api", "/api");
-}
-
 export function OwnerIotScanDetailDrawer({
                                              open,
                                              scan,
@@ -161,7 +153,7 @@ export function OwnerIotScanDetailDrawer({
                         </h2>
 
                         <p className="mt-0.5 text-xs text-slate-500">
-                            Ảnh scan, kết quả nhận diện và audio phản hồi
+                            Ảnh scan và kết quả nhận diện
                         </p>
                     </div>
 
@@ -235,29 +227,6 @@ export function OwnerIotScanDetailDrawer({
                                 value={getNextActionLabel(scan?.nextAction)}
                             />
 
-                            <DetailItem label="Audio message">
-                                <p className="whitespace-pre-line text-sm font-normal leading-6 text-slate-700">
-                                    {scan?.audioMessage || "Chưa có"}
-                                </p>
-                            </DetailItem>
-                        </section>
-
-                        <section className="rounded-xl border border-slate-200 bg-white px-4 py-4">
-                            <p className="text-xs font-medium uppercase text-slate-500">
-                                Voice phản hồi
-                            </p>
-
-                            {scan?.audioUrl ? (
-                                <audio
-                                    controls
-                                    src={getBrowserAudioUrl(scan.audioUrl)}
-                                    className="mt-3 w-full"
-                                />
-                            ) : (
-                                <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-500">
-                                    Chưa có file voice cho giao dịch này.
-                                </p>
-                            )}
                         </section>
 
                         {scan?.imageUrl && (

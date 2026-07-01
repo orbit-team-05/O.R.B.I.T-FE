@@ -23,6 +23,10 @@ function formatWeight(value) {
     return `${numberValue.toLocaleString("vi-VN")} g/ml`;
 }
 
+function formatMoney(value) {
+    return `${Number(value || 0).toLocaleString("vi-VN")}đ`;
+}
+
 export function IotImportPendingTable({
                                           title = "Scan nhập kho chờ xác nhận",
                                           description = "Dữ liệu từ cân IoT sẽ tự hiện ở đây qua WebSocket.",
@@ -66,7 +70,8 @@ export function IotImportPendingTable({
                                 <th className="px-5 py-3">Khối lượng</th>
                                 <th className="px-5 py-3">QR</th>
                                 <th className="px-5 py-3">Trạng thái</th>
-                                {/* 🛠 ĐÃ SỬA: Chỉ render tiêu đề cột nếu là tab pending */}
+                                {mode === "history" && <th className="px-5 py-3">Đơn giá</th>}
+                                {mode === "history" && <th className="px-5 py-3">Tổng tiền</th>}
                                 {mode === "pending" && <th className="w-[150px] px-5 py-3">Hành động</th>}
                             </tr>
                             </thead>
@@ -96,7 +101,7 @@ export function IotImportPendingTable({
                                     </td>
 
                                     <td className="px-5 py-4">
-                                        {formatDateTime(item.scannedAt)}
+                                        {formatDateTime(item.approvedAt || item.scannedAt)}
                                     </td>
 
                                     <td className="max-w-[240px] px-5 py-4">
@@ -136,6 +141,18 @@ export function IotImportPendingTable({
                                             </span>
                                         )}
                                     </td>
+                                    {mode === "history" && (
+                                        <td className="px-5 py-4 font-medium text-slate-900">
+                                            {formatMoney(item.unitPrice)}
+                                        </td>
+                                    )}
+
+                                    {mode === "history" && (
+                                        <td className="px-5 py-4 font-semibold text-[#006948]">
+                                            {formatMoney(item.totalAmount)}
+                                        </td>
+                                    )}
+                                    
 
                                     {/* 🛠 ĐÃ SỬA: Chỉ hiển thị ô chứa nút Xác nhận ở tab Chờ xác nhận */}
                                     {mode === "pending" && (

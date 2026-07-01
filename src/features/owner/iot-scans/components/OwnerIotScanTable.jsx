@@ -162,7 +162,7 @@ export function OwnerIotScanTable({
                 </h2>
 
                 <p className="mt-1 text-xs text-slate-600">
-                    Hiển thị toàn bộ scan từ thiết bị IoT: nhập kho, xuất vật tư, nhập keypad và voice phản hồi.
+                    Hiển thị toàn bộ scan từ thiết bị IoT: nhập kho, xuất vật tư và nhập keypad.
                 </p>
             </header>
 
@@ -171,7 +171,7 @@ export function OwnerIotScanTable({
             ) : (
                 <>
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[1050px] border-collapse text-left">
+                        <table className="w-full min-w-[960px] border-collapse text-left">
                             <thead className="bg-slate-50">
                             <tr className="text-[11px] font-medium uppercase text-slate-600">
                                 <th className="px-5 py-3">Transaction</th>
@@ -181,7 +181,6 @@ export function OwnerIotScanTable({
                                 <th className="px-5 py-3">Sản phẩm / QR</th>
                                 <th className="px-5 py-3">Khối lượng</th>
                                 <th className="px-5 py-3">Trạng thái</th>
-                                <th className="px-5 py-3">Voice</th>
                                 <th className="w-[120px] px-5 py-3">Hành động</th>
                             </tr>
                             </thead>
@@ -232,18 +231,6 @@ export function OwnerIotScanTable({
                                         <AiStatusBadge item={item} />
                                     </td>
 
-                                    <td className="px-5 py-4">
-                                        {item.hasAudio ? (
-                                            <span className="rounded bg-emerald-50 px-2 py-1 text-[11px] font-medium text-[#006948]">
-            Có voice
-        </span>
-                                        ) : (
-                                            <span className="rounded bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-500">
-            Chưa có
-        </span>
-                                        )}
-                                    </td>
-
                                     <td className="w-[120px] px-5 py-4">
                                         <button
                                             type="button"
@@ -259,7 +246,7 @@ export function OwnerIotScanTable({
                             {scans.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={8}
+                                        colSpan={7}
                                         className="px-5 py-10 text-center text-sm text-slate-500"
                                     >
                                         Chưa có lịch sử scan IoT nào.

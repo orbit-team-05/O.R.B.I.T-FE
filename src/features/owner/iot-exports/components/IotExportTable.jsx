@@ -14,6 +14,10 @@ function formatDateTime(value) {
     }).format(new Date(value));
 }
 
+function formatMoney(value) {
+    return `${Number(value || 0).toLocaleString("vi-VN")}đ`;
+}
+
 function formatQuantity(value, storageUnit) {
     const numberValue = Number(value || 0);
 

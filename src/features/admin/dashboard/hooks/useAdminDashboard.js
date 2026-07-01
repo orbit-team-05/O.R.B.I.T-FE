@@ -7,6 +7,15 @@ import {
     getMarketSourcesForDashboard,
     getSpeciesPage,
 } from "../services/adminDashboardApi";
+import { useAdminRealtimeRefresh } from "../../../../hooks/useFarmTopic";
+
+const ADMIN_DASHBOARD_REALTIME_TOPICS = [
+    "species",
+    "market-sources",
+    "market-crawl-targets",
+    "iot-devices",
+    "market-prices",
+];
 
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
@@ -80,6 +89,11 @@ export function useAdminDashboard() {
     useEffect(() => {
         loadDashboard();
     }, [loadDashboard]);
+
+    useAdminRealtimeRefresh(
+        ADMIN_DASHBOARD_REALTIME_TOPICS,
+        () => loadDashboard(true),
+    );
 
     const dashboard = useMemo(() => {
         const sources = getPageContent(sourcePage);

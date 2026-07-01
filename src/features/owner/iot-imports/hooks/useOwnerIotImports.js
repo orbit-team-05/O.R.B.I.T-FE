@@ -4,6 +4,7 @@ import {
     getImportScans,
     getPendingImportScans,
 } from "../services/ownerIotImportApi";
+import { useFarmTopic } from "../../../../hooks/useFarmTopic";
 
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
@@ -91,6 +92,58 @@ export function useOwnerIotImports(farmId, initialPage = 0, initialSize = 10) {
         void loadImportHistory();
     }, [loadImportHistory]);
 
+    const reload = useCallback(async () => {
+        await Promise.all([
+            loadPendingImports(),
+            loadImportHistory(),
+        ]);
+    }, [loadImportHistory, loadPendingImports]);
+
+    useFarmTopic(farmId, "iot-imports", (scan) => {
+        if (!scan?.transactionId) {
+            void reload();
+            return;
+        }
+
+        setPendingScans((prev) => {
+            const existingIndex = prev.findIndex(
+                (item) => item.transactionId === scan.transactionId,
+            );
+
+            if (existingIndex >= 0) {
+                return prev.map((item, index) =>
+                    index === existingIndex ? scan : item,
+                );
+            }
+
+            return [scan, ...prev];
+        });
+
+        setPendingPage((prev) => {
+            if (!prev) return prev;
+
+            const content = prev.content ?? [];
+            const alreadyExists = content.some(
+                (item) => item.transactionId === scan.transactionId,
+            );
+
+            if (alreadyExists) {
+                return {
+                    ...prev,
+                    content: content.map((item) =>
+                        item.transactionId === scan.transactionId ? scan : item,
+                    ),
+                };
+            }
+
+            return {
+                ...prev,
+                content: [scan, ...content],
+                totalElements: Number(prev.totalElements ?? 0) + 1,
+            };
+        });
+    });
+
     async function confirmImport(transactionId, totalImportCost, packageCount = 1) {
         try {
             setSubmittingId(transactionId);
@@ -170,12 +223,7 @@ export function useOwnerIotImports(farmId, initialPage = 0, initialSize = 10) {
         setPendingPage: setPendingPageNumber,
         setHistoryPage: setHistoryPageNumber,
 
-        reload: async () => {
-            await Promise.all([
-                loadPendingImports(),
-                loadImportHistory(),
-            ]);
-        },
+        reload,
 
         confirmImport,
 

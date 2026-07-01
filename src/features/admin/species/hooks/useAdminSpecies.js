@@ -7,12 +7,15 @@ import {
     updateSpecies,
     updateSpeciesStatus,
 } from "../services/speciesApi";
+import { useAdminRealtimeRefresh } from "../../../../hooks/useFarmTopic";
 
 const INITIAL_SUMMARY = {
     totalSpecies: 0,
     activeSpecies: 0,
     inactiveSpecies: 0,
 };
+
+const SPECIES_REALTIME_TOPICS = ["species"];
 
 function getErrorMessage(error, fallbackMessage) {
     return (
@@ -56,6 +59,8 @@ export function useAdminSpecies(initialPage = 0, initialSize = 10) {
     useEffect(() => {
         loadSpecies();
     }, [loadSpecies]);
+
+    useAdminRealtimeRefresh(SPECIES_REALTIME_TOPICS, loadSpecies);
 
     async function handleCreateSpecies(payload) {
         try {

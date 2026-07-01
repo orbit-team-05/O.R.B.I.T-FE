@@ -17,8 +17,6 @@ function normalizeIotScan(item) {
         nextAction:
             item.nextAction ??
             (item.productId ? "DONE" : "ENTER_KEYPAD_CODE"),
-
-        hasAudio: item.hasAudio ?? Boolean(item.audioUrl),
     };
 }
 

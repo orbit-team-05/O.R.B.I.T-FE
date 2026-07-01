@@ -4,6 +4,13 @@ import {
     getOwnerReviewProducts,
     reviewOwnerAiTransaction,
 } from "../services/ownerAiReviewApi";
+import { useFarmRealtimeRefresh } from "../../../../hooks/useFarmTopic";
+
+const AI_REVIEW_REALTIME_TOPICS = [
+    "ai-reviews",
+    "iot-scans",
+    "products",
+];
 
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
@@ -64,6 +71,13 @@ export function useOwnerAiReviews(farmId, initialPage = 0, initialSize = 10) {
             pending: reviews.filter((item) => item.aiStatus === "PENDING").length,
         };
     }, [reviewPage?.totalElements, reviews]);
+
+    useFarmRealtimeRefresh(farmId, AI_REVIEW_REALTIME_TOPICS, async () => {
+        await Promise.all([
+            loadReviews(),
+            loadProducts(),
+        ]);
+    });
 
     async function reviewTransaction(transactionId, productId) {
         if (!farmId || !transactionId || !productId) return null;

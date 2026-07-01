@@ -8,6 +8,7 @@ import {
     getOwnerDashboardStockAlerts,
     getOwnerDashboardSummary,
 } from "../services/ownerDashboardApi";
+import { useFarmRealtimeRefresh } from "../../../../hooks/useFarmTopic";
 
 const EMPTY_PAGE = {
     content: [],
@@ -19,6 +20,18 @@ const EMPTY_PAGE = {
     last: true,
     empty: true,
 };
+
+const OWNER_DASHBOARD_REALTIME_TOPICS = [
+    "inventory",
+    "iot-devices",
+    "iot-imports",
+    "iot-exports",
+    "iot-scans",
+    "market-prices",
+    "market-watchlist",
+    "products",
+    "seasons",
+];
 
 function getErrorMessage(error) {
     return error?.response?.data?.message || error?.message || "Không có dữ liệu";
@@ -95,6 +108,12 @@ export function useOwnerDashboard(farmId) {
     const loadInitial = useCallback(() => {
         void loadDashboard(false);
     }, [loadDashboard]);
+
+    useFarmRealtimeRefresh(
+        farmId,
+        OWNER_DASHBOARD_REALTIME_TOPICS,
+        () => loadDashboard(true),
+    );
 
     const stats = useMemo(
         () => [

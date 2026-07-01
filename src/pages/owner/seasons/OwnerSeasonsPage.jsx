@@ -7,6 +7,7 @@ import { SeasonCreateDrawer } from "../../../features/owner/seasons/components/S
 import { SeasonDetailDrawer } from "../../../features/owner/seasons/components/SeasonDetailDrawer";
 import { useOwnerSeasons } from "../../../features/owner/seasons/hooks/useOwnerSeasons";
 import { useToast } from "../../../components/common/toast/ToastProvider";
+import { useAuth } from "../../../features/auth/context/AuthContext";
 
 function PageHeader({ onCreate, onRefresh, loading }) {
     return (
@@ -74,6 +75,8 @@ function PageSkeleton() {
 
 export function OwnerSeasonsPage() {
     const toast = useToast();
+    const { user } = useAuth();
+    const farmId = user?.farmId;
 
     const {
         seasons,
@@ -107,7 +110,7 @@ export function OwnerSeasonsPage() {
         clearActionMessages,
         speciesSizes,
         loadSpeciesSizes,
-    } = useOwnerSeasons();
+    } = useOwnerSeasons(farmId);
 
     const [createOpen, setCreateOpen] = useState(false);
 

@@ -13,8 +13,11 @@ import { OwnerIotDeviceTable } from "../../../features/owner/iot-devices/compone
 import { IotExportSeasonSelectDrawer } from "../../../features/owner/iot-devices/components/IotExportSeasonSelectDrawer";
 
 import { useOwnerIotDevices } from "../../../features/owner/iot-devices/hooks/useOwnerIotDevices";
+import { useFarmRealtimeRefresh } from "../../../hooks/useFarmTopic";
 
 import { getSeasonCards } from "../../../features/owner/seasons/services/ownerSeasonApi";
+
+const DEVICE_SEASON_REALTIME_TOPICS = ["seasons"];
 
 function OwnerIotDevicesHeader() {
     return (
@@ -172,6 +175,12 @@ export function OwnerIotDevicesPage() {
                 setSeasonLoading(false);
             }
         }, [toast]);
+
+    useFarmRealtimeRefresh(
+        farmId,
+        DEVICE_SEASON_REALTIME_TOPICS,
+        loadSeasonsForIotMode,
+    );
 
     useEffect(() => {
         reload();

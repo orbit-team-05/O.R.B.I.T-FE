@@ -3,6 +3,9 @@ import {
     createOwnerProduct,
     getOwnerProducts,
 } from "../services/ownerProductApi";
+import { useFarmRealtimeRefresh } from "../../../../hooks/useFarmTopic";
+
+const PRODUCT_REALTIME_TOPICS = ["products"];
 
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
@@ -72,6 +75,8 @@ export function useOwnerProducts(farmId, initialPage = 0, initialSize = 10) {
             chemical: products.filter((item) => item.category === "CHEMICAL").length,
         };
     }, [productPage?.totalElements, products]);
+
+    useFarmRealtimeRefresh(farmId, PRODUCT_REALTIME_TOPICS, loadProducts);
 
     function handleSetPage(nextPage) {
         setPage(Math.max(Number(nextPage) || 0, 0));

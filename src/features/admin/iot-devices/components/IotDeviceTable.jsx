@@ -117,6 +117,7 @@ export function IotDeviceTable({
                     {devices.map((item) => {
                         const isActive = item.status === "ACTIVE";
                         const isInactive = item.status === "INACTIVE";
+                        const canReclaim = item.status === "ACTIVE" || item.status === "INACTIVE";
 
                         return (
                             <tr
@@ -166,7 +167,7 @@ export function IotDeviceTable({
                                 </td>
 
                                 <td className="w-[210px] px-5 py-4">
-                                    <div className="grid grid-cols-[84px_84px] items-center gap-2">
+                                    <div className="flex flex-wrap items-center gap-2">
                                         <ActionButton onClick={() => onViewDetail?.(item)}>
                                             Chi tiết
                                         </ActionButton>
@@ -186,6 +187,15 @@ export function IotDeviceTable({
                                                 onClick={() => onToggleStatus?.(item, "ACTIVE")}
                                             >
                                                 Bật lại
+                                            </ActionButton>
+                                        )}
+
+                                        {canReclaim && (
+                                            <ActionButton
+                                                variant="danger"
+                                                onClick={() => onToggleStatus?.(item, "UNASSIGNED")}
+                                            >
+                                                Thu hồi
                                             </ActionButton>
                                         )}
 

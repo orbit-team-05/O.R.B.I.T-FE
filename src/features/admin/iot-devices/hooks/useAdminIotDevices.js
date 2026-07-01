@@ -8,11 +8,14 @@ import {
     replaceIotDeviceComponent,
     updateIotDeviceStatus,
 } from "../services/iotDeviceApi";
+import { useAdminRealtimeRefresh } from "../../../../hooks/useFarmTopic";
 
 export const DEVICE_TABLE_VIEW = {
     ALL: "ALL",
     UNASSIGNED: "UNASSIGNED",
 };
+
+const IOT_DEVICE_REALTIME_TOPICS = ["iot-devices"];
 
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
@@ -126,6 +129,8 @@ export function useAdminIotDevices(initialView = DEVICE_TABLE_VIEW.ALL) {
 
         reloadTable();
     }, [activeView, allPage, unassignedPage, initialLoading, reloadTable]);
+
+    useAdminRealtimeRefresh(IOT_DEVICE_REALTIME_TOPICS, reloadAll);
 
     function handleChangeView(nextView) {
         setActionError("");

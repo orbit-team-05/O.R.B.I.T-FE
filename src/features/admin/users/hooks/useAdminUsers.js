@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { getUsers, getUserDashboard, createUser, updateUser, updateUserStatus, getRoles, getFarms } from "../services/userApi";
+import { useAdminRealtimeRefresh } from "../../../../hooks/useFarmTopic";
 
 const INITIAL_SUMMARY = {
     totalUsers: 0,
@@ -7,6 +8,8 @@ const INITIAL_SUMMARY = {
     totalStaffs: 0,
     totalAdmins: 0,
 };
+
+const USER_REALTIME_TOPICS = ["users", "farms"];
 
 function getErrorMessage(error, fallbackMessage) {
     return (
@@ -69,6 +72,8 @@ export function useAdminUsers(initialPage = 0, initialSize = 10) {
     useEffect(() => {
         loadUsers();
     }, [loadUsers]);
+
+    useAdminRealtimeRefresh(USER_REALTIME_TOPICS, loadUsers);
 
     async function handleCreateUser(payload) {
         try {

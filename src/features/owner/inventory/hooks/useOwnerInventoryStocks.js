@@ -3,6 +3,14 @@ import {
     getOwnerInventoryStocks,
     getOwnerInventoryStockDetail,
 } from "../services/ownerInventoryApi.js";
+import { useFarmRealtimeRefresh } from "../../../../hooks/useFarmTopic";
+
+const INVENTORY_REALTIME_TOPICS = [
+    "inventory",
+    "iot-imports",
+    "iot-exports",
+    "products",
+];
 
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
@@ -84,6 +92,14 @@ export function useOwnerInventoryStocks(farmId, initialPage = 0, initialSize = 1
             inventoryValue,
         };
     }, [stocks]);
+
+    useFarmRealtimeRefresh(farmId, INVENTORY_REALTIME_TOPICS, async () => {
+        await loadStocks();
+
+        if (selectedStockDetail?.id) {
+            await loadStockDetail(selectedStockDetail.id);
+        }
+    });
 
     return {
         stocks,

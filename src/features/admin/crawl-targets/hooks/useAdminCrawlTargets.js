@@ -8,6 +8,13 @@ import {
     updateCrawlTarget,
     updateCrawlTargetStatus,
 } from "../services/crawlTargetApi";
+import { useAdminRealtimeRefresh } from "../../../../hooks/useFarmTopic";
+
+const CRAWL_TARGET_REALTIME_TOPICS = [
+    "market-crawl-targets",
+    "market-sources",
+    "species",
+];
 
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
@@ -85,6 +92,13 @@ export function useAdminCrawlTargets(initialPage = 0, initialSize = 10) {
     useEffect(() => {
         loadOptions();
     }, [loadOptions]);
+
+    useAdminRealtimeRefresh(CRAWL_TARGET_REALTIME_TOPICS, async () => {
+        await Promise.all([
+            loadTargets(),
+            loadOptions(),
+        ]);
+    });
 
     async function handleCreateTarget(payload) {
         try {

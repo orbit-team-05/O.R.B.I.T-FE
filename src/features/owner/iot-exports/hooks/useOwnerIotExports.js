@@ -5,6 +5,12 @@ import {
     getExportScans,
     getPendingExportScans,
 } from "../services/ownerIotExportApi";
+import { useFarmRealtimeRefresh } from "../../../../hooks/useFarmTopic";
+
+const IOT_EXPORT_REALTIME_TOPICS = [
+    "iot-exports",
+    "inventory",
+];
 
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
@@ -114,6 +120,17 @@ export function useOwnerIotExports(farmId, initialPage = 0, initialSize = 10) {
             setDetailLoading(false);
         }
     }
+
+    useFarmRealtimeRefresh(farmId, IOT_EXPORT_REALTIME_TOPICS, async () => {
+        await Promise.all([
+            loadPendingExports(),
+            loadExportHistory(),
+        ]);
+
+        if (selectedExport?.transactionId) {
+            await loadExportDetail(selectedExport.transactionId);
+        }
+    });
 
     async function confirmExport(transactionId) {
         try {

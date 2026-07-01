@@ -27,7 +27,7 @@ function StatCard({ label, value, description, tone = "default" }) {
 
 export function OwnerIotScanStats({ summary }) {
     return (
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <StatCard
                 label="Tổng scan"
                 value={summary.totalScans}
@@ -46,12 +46,6 @@ export function OwnerIotScanStats({ summary }) {
                 value={summary.needReviewScans}
                 description="QR lỗi / cần keypad"
                 tone="danger"
-            />
-
-            <StatCard
-                label="Có voice"
-                value={summary.withAudio}
-                description="Audio phản hồi"
             />
         </section>
     );

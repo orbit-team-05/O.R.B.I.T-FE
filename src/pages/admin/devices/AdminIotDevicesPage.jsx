@@ -17,6 +17,7 @@ import {
 const STATUS_ACTION_LABELS = {
     ACTIVE: "bật lại",
     INACTIVE: "tắt",
+    UNASSIGNED: "thu hồi",
 };
 
 function AdminIotDevicesHeader({ onCreate, onReload }) {
@@ -416,6 +417,13 @@ export function AdminIotDevicesPage() {
     const confirmActionText =
         STATUS_ACTION_LABELS[confirmState.nextStatus] ?? "cập nhật";
 
+    const confirmDescription =
+        confirmState.nextStatus === "UNASSIGNED" && confirmDevice
+            ? `Bạn có chắc muốn thu hồi thiết bị "${confirmDevice.deviceId}" không? Thiết bị sẽ bị gỡ khỏi farm hiện tại, revoke API key và cấp mã kích hoạt mới.`
+            : confirmDevice
+                ? `Bạn có chắc muốn ${confirmActionText} thiết bị "${confirmDevice.deviceId}" không?`
+                : "";
+
     return (
         <>
             <section className="space-y-5">
@@ -492,11 +500,7 @@ export function AdminIotDevicesPage() {
             <ConfirmDialog
                 open={confirmState.open}
                 title="Cập nhật trạng thái thiết bị"
-                description={
-                    confirmDevice
-                        ? `Bạn có chắc muốn ${confirmActionText} thiết bị "${confirmDevice.deviceId}" không?`
-                        : ""
-                }
+                description={confirmDescription}
                 confirmText="Xác nhận"
                 cancelText="Hủy"
                 variant={

@@ -12,12 +12,20 @@ import {
     getSpeciesSizes,
     getSeasonHarvests,
 } from "../services/ownerSeasonApi";
+import { useFarmRealtimeRefresh } from "../../../../hooks/useFarmTopic";
+
+const SEASON_REALTIME_TOPICS = [
+    "seasons",
+    "inventory",
+    "iot-imports",
+    "iot-exports",
+];
 
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
 }
 
-export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
+export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
     const [seasonPage, setSeasonPage] = useState(null);
     const [dashboard, setDashboard] = useState(null);
     const [selectedDetail, setSelectedDetail] = useState(null);
@@ -195,6 +203,14 @@ export function useOwnerSeasons(initialPage = 0, initialSize = 10) {
         },
         [loadMaterialUsages, loadHarvests],
     );
+
+    useFarmRealtimeRefresh(farmId, SEASON_REALTIME_TOPICS, async () => {
+        await reload();
+
+        if (selectedDetail?.id) {
+            await loadDetail(selectedDetail.id);
+        }
+    });
 
     const createSeason = async (payload) => {
         try {

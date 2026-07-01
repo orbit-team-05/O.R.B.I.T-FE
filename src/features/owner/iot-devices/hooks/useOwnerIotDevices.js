@@ -7,6 +7,9 @@ import {
     getOwnerIotDevices,
     updateOwnerIotDeviceWorkMode,
 } from "../services/ownerIotDeviceApi";
+import { useFarmRealtimeRefresh } from "../../../../hooks/useFarmTopic";
+
+const IOT_DEVICE_REALTIME_TOPICS = ["iot-devices"];
 
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
@@ -85,6 +88,14 @@ export function useOwnerIotDevices(farmId, initialPage = 0, initialSize = 10) {
             setDetailLoading(false);
         }
     }
+
+    useFarmRealtimeRefresh(farmId, IOT_DEVICE_REALTIME_TOPICS, async () => {
+        await loadDevices();
+
+        if (selectedDevice?.deviceId) {
+            await loadDeviceDetail(selectedDevice.deviceId);
+        }
+    });
 
     async function handleActivateDevice(payload) {
         if (!farmId) return null;

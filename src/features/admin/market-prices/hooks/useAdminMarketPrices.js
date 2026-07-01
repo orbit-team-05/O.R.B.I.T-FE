@@ -7,6 +7,7 @@ import {
     getMarketPriceSpeciesOptions,
     runActiveCrawl,
 } from "../services/marketPriceApi";
+import { useAdminRealtimeRefresh } from "../../../../hooks/useFarmTopic";
 
 const DEFAULT_SUMMARY = {
     totalPrices: 0,
@@ -14,6 +15,13 @@ const DEFAULT_SUMMARY = {
     totalSpecies: 0,
     latestUpdatedAt: null,
 };
+
+const MARKET_PRICE_REALTIME_TOPICS = [
+    "market-prices",
+    "market-crawl-targets",
+    "market-sources",
+    "species",
+];
 
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
@@ -81,6 +89,13 @@ export function useAdminMarketPrices(initialPage = 0, initialSize = 10) {
     useEffect(() => {
         loadPrices();
     }, [loadPrices]);
+
+    useAdminRealtimeRefresh(MARKET_PRICE_REALTIME_TOPICS, async () => {
+        await Promise.all([
+            loadOptions(),
+            loadPrices(),
+        ]);
+    });
 
     function updateFilter(name, value) {
         setPage(0);

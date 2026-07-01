@@ -4,6 +4,14 @@ import {
     getOwnerIotScanDetail,
     getOwnerIotScans,
 } from "../services/ownerIotScanApi";
+import { useFarmRealtimeRefresh } from "../../../../hooks/useFarmTopic";
+
+const IOT_SCAN_REALTIME_TOPICS = [
+    "iot-scans",
+    "iot-imports",
+    "iot-exports",
+    "ai-reviews",
+];
 
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
@@ -50,15 +58,10 @@ export function useOwnerIotScans(farmId, initialPage = 0, initialSize = 10) {
             (item) => item.needKeypadInput || item.aiStatus === "UNRECOGNIZED",
         ).length;
 
-        const withAudio = scans.filter(
-            (item) => Boolean(item.audioUrl),
-        ).length;
-
         return {
             totalScans,
             successScans,
             needReviewScans,
-            withAudio,
         };
     }, [scanPage?.totalElements, scans]);
 
@@ -80,6 +83,14 @@ export function useOwnerIotScans(farmId, initialPage = 0, initialSize = 10) {
             setDetailLoading(false);
         }
     }
+
+    useFarmRealtimeRefresh(farmId, IOT_SCAN_REALTIME_TOPICS, async () => {
+        await loadScans();
+
+        if (selectedScan?.transactionId) {
+            await loadScanDetail(selectedScan.transactionId);
+        }
+    });
 
     function handleSetPage(nextPage) {
         setPage(Math.max(Number(nextPage) || 0, 0));

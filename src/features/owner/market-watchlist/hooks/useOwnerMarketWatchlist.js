@@ -7,6 +7,7 @@ import {
     getOwnerMarketWatchlistSummary,
     removeOwnerMarketWatchlistTarget,
 } from "../services/ownerMarketWatchlistApi";
+import { useFarmRealtimeRefresh } from "../../../../hooks/useFarmTopic";
 
 const EMPTY_PAGE = {
     content: [],
@@ -18,6 +19,11 @@ const EMPTY_PAGE = {
     last: true,
     empty: true,
 };
+
+const MARKET_WATCHLIST_REALTIME_TOPICS = [
+    "market-watchlist",
+    "market-prices",
+];
 
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
@@ -93,6 +99,12 @@ export function useOwnerMarketWatchlist(
         watchlistPage?.number,
         watchlistPage?.totalPages,
     ]);
+
+    useFarmRealtimeRefresh(
+        farmId,
+        MARKET_WATCHLIST_REALTIME_TOPICS,
+        loadData,
+    );
 
     async function addTarget(targetId) {
         if (!farmId || !targetId) return null;

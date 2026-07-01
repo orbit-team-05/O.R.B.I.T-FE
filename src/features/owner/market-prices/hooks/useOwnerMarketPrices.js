@@ -6,6 +6,7 @@ import {
     getOwnerMarketWatchlistSummary,
 } from "../services/ownerMarketPriceApi";
 import { enrichMarketPrice } from "../utils/marketPriceUtils";
+import { useFarmRealtimeRefresh } from "../../../../hooks/useFarmTopic";
 
 const DEFAULT_SUMMARY = {
     watchlistCount: 0,
@@ -14,6 +15,11 @@ const DEFAULT_SUMMARY = {
     decreasedPrices: 0,
     unchangedPrices: 0,
 };
+
+const MARKET_PRICE_REALTIME_TOPICS = [
+    "market-prices",
+    "market-watchlist",
+];
 
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
@@ -91,6 +97,8 @@ export function useOwnerDashboardMarketPrices(farmId, initialSize = 3) {
         () => (pricePage?.content ?? []).map(enrichMarketPrice),
         [pricePage?.content],
     );
+
+    useFarmRealtimeRefresh(farmId, MARKET_PRICE_REALTIME_TOPICS, loadPrices);
 
     return {
         prices,
@@ -187,6 +195,8 @@ export function useOwnerMarketPrices(farmId, initialPage = 0, initialSize = 8) {
         () => buildSummary(watchlistSummary, summaryPrices, summaryPricePage),
         [summaryPricePage, summaryPrices, watchlistSummary],
     );
+
+    useFarmRealtimeRefresh(farmId, MARKET_PRICE_REALTIME_TOPICS, loadPrices);
 
     function updateFilter(name, value) {
         setFilters((prev) => ({

@@ -8,6 +8,9 @@ import {
     updateFarm,
     getOwnersList,
 } from "../services/farmApi";
+import { useAdminRealtimeRefresh } from "../../../../hooks/useFarmTopic";
+
+const FARM_REALTIME_TOPICS = ["farms", "users"];
 
 const INITIAL_SUMMARY = {
     totalFarms: 0,
@@ -59,6 +62,8 @@ export function useAdminFarms(initialPage = 0, initialSize = 10) {
     useEffect(() => {
         loadFarms();
     }, [loadFarms]);
+
+    useAdminRealtimeRefresh(FARM_REALTIME_TOPICS, loadFarms);
 
     async function handleCreateFarm(payload) {
         try {

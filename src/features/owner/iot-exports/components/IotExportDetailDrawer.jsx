@@ -35,14 +35,6 @@ function formatMoney(value) {
     return `${Number(value || 0).toLocaleString("vi-VN")}đ`;
 }
 
-function getBrowserAudioUrl(audioUrl) {
-    if (!audioUrl) return "";
-
-    return audioUrl
-        .replace("http://98.86.116.216:8080/api", "/api")
-        .replace("https://98.86.116.216:8080/api", "/api");
-}
-
 function DetailItem({ label, value, children }) {
     return (
         <div className="rounded-lg border border-slate-200 bg-white px-3 py-3">
@@ -82,7 +74,7 @@ export function IotExportDetailDrawer({
                         </h2>
 
                         <p className="mt-0.5 text-xs text-slate-500">
-                            Ảnh scan, vật tư, mùa vụ, chi phí FIFO và voice phản hồi
+                            Ảnh scan, vật tư, mùa vụ và chi phí FIFO
                         </p>
                     </div>
 
@@ -146,28 +138,6 @@ export function IotExportDetailDrawer({
                             <DetailItem label="AI status" value={scan?.aiStatus} />
                             <DetailItem label="QR type" value={scan?.qrType} />
                             <DetailItem label="QR value" value={scan?.qrCodeValue} />
-                        </section>
-
-                        <section className="rounded-xl border border-slate-200 bg-white px-4 py-4">
-                            <p className="text-xs font-medium uppercase text-slate-500">
-                                Audio message
-                            </p>
-
-                            <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-700">
-                                {scan?.audioMessage || "Chưa có"}
-                            </p>
-
-                            {scan?.audioUrl ? (
-                                <audio
-                                    controls
-                                    src={getBrowserAudioUrl(scan.audioUrl)}
-                                    className="mt-3 w-full"
-                                />
-                            ) : (
-                                <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-500">
-                                    Chưa có voice cho giao dịch này.
-                                </p>
-                            )}
                         </section>
 
                         {scan?.imageUrl && (

@@ -26,7 +26,7 @@ function OwnerIotScansHeader() {
 
                 <p className="mt-1 text-sm text-slate-600">
                     Theo dõi các lần cân-camera đọc QR,
-                    nhận diện sản phẩm và tạo voice phản hồi
+                    nhận diện sản phẩm và nhập keypad
                 </p>
             </div>
         </header>

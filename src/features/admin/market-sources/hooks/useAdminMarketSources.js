@@ -6,6 +6,9 @@ import {
     updateMarketSource,
     updateMarketSourceStatus,
 } from "../services/marketSourceApi";
+import { useAdminRealtimeRefresh } from "../../../../hooks/useFarmTopic";
+
+const MARKET_SOURCE_REALTIME_TOPICS = ["market-sources"];
 
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
@@ -66,6 +69,8 @@ export function useAdminMarketSources(initialPage = 0, initialSize = 10) {
             inactiveSources: Math.max(totalSources - activeSources, 0),
         };
     }, [sourcePage?.totalElements, sources]);
+
+    useAdminRealtimeRefresh(MARKET_SOURCE_REALTIME_TOPICS, loadSources);
 
     async function handleCreateSource(payload) {
         try {

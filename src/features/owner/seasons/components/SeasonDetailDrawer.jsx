@@ -103,7 +103,7 @@ function SeasonHarvestHistory({
                 <>
                     <div className="overflow-hidden rounded-lg border border-slate-200">
                         <div className="max-h-[280px] overflow-auto">
-                            <table className="w-full min-w-[760px] text-left text-sm">
+                            <table className="w-full min-w-[680px] text-left text-sm">
                                 <thead className="sticky top-0 bg-slate-50 text-[11px] uppercase text-slate-500">
                                 <tr>
                                     <th className="px-3 py-2">Giao dịch</th>
@@ -113,7 +113,6 @@ function SeasonHarvestHistory({
                                     <th className="px-3 py-2">Thiết bị</th>
                                     <th className="px-3 py-2">Ngày thu</th>
                                     <th className="px-3 py-2">Ảnh</th>
-                                    <th className="px-3 py-2">Audio</th>
                                 </tr>
                                 </thead>
 
@@ -169,23 +168,6 @@ function SeasonHarvestHistory({
                                                     className="text-xs font-semibold text-blue-600 hover:underline"
                                                 >
                                                     Mở ảnh
-                                                </a>
-                                            ) : (
-                                                <span className="text-xs text-slate-400">
-                                                        Không có
-                                                    </span>
-                                            )}
-                                        </td>
-
-                                        <td className="px-3 py-3">
-                                            {item.audioUrl ? (
-                                                <a
-                                                    href={item.audioUrl}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="text-xs font-semibold text-blue-600 hover:underline"
-                                                >
-                                                    Nghe
                                                 </a>
                                             ) : (
                                                 <span className="text-xs text-slate-400">
