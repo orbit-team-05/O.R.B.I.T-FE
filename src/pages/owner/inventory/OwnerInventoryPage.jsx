@@ -133,8 +133,8 @@ export function OwnerInventoryPage() {
                         </p>
 
                         <p className="mt-2 text-2xl font-semibold text-[#006948]">
-                            {Number(
-                                summary?.inventoryValue || 0,
+                            {Math.floor(
+                                Number(summary?.inventoryValue || 0),
                             ).toLocaleString("vi-VN")}
                             đ
                         </p>
