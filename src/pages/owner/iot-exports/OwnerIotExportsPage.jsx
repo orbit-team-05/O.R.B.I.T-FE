@@ -178,11 +178,9 @@ export function OwnerIotExportsPage() {
         }
 
         toast.success(
-            `Đã xác nhận xuất ${
-                result.productName ||
-                "vật tư"
-            } cho mùa vụ ${
-                result.seasonName || ""
+            `Đã xác nhận xuất ${result.productName ||
+            "vật tư"
+            } cho mùa vụ ${result.seasonName || ""
             }.`,
         );
 
@@ -254,7 +252,7 @@ export function OwnerIotExportsPage() {
                         className={[
                             "h-10 rounded-lg px-4 text-sm font-medium transition-colors",
                             activeTab ===
-                            "pending"
+                                "pending"
                                 ? "bg-[#006948] text-white"
                                 : "text-slate-600 hover:bg-slate-50",
                         ].join(" ")}
@@ -272,7 +270,7 @@ export function OwnerIotExportsPage() {
                         className={[
                             "h-10 rounded-lg px-4 text-sm font-medium transition-colors",
                             activeTab ===
-                            "history"
+                                "history"
                                 ? "bg-[#006948] text-white"
                                 : "text-slate-600 hover:bg-slate-50",
                         ].join(" ")}
@@ -283,53 +281,53 @@ export function OwnerIotExportsPage() {
 
                 {activeTab ===
                     "pending" && (
-                    <IotExportTable
-                        title="Scan xuất vật tư chờ xác nhận"
-                        description="Dữ liệu từ cân IoT ở chế độ xuất sẽ hiện ở đây. Khi xác nhận, hệ thống trừ tồn kho FIFO và ghi chi phí vào mùa vụ."
-                        scans={pendingScans}
-                        pageInfo={
-                            pendingPageInfo
-                        }
-                        loading={
-                            pendingLoading
-                        }
-                        submittingId={
-                            submittingId
-                        }
-                        mode="pending"
-                        onConfirm={
-                            handleConfirmExport
-                        }
-                        onViewDetail={
-                            handleOpenDetail
-                        }
-                        onPageChange={
-                            setPendingPage
-                        }
-                    />
-                )}
+                        <IotExportTable
+                            title="Scan xuất vật tư chờ xác nhận"
+                            description="Dữ liệu từ cân IoT ở chế độ xuất sẽ hiện ở đây. Khi xác nhận, hệ thống trừ tồn kho FIFO và ghi chi phí vào mùa vụ."
+                            scans={pendingScans}
+                            pageInfo={
+                                pendingPageInfo
+                            }
+                            loading={
+                                pendingLoading
+                            }
+                            submittingId={
+                                submittingId
+                            }
+                            mode="pending"
+                            onConfirm={
+                                handleConfirmExport
+                            }
+                            onViewDetail={
+                                handleOpenDetail
+                            }
+                            onPageChange={
+                                setPendingPage
+                            }
+                        />
+                    )}
 
                 {activeTab ===
                     "history" && (
-                    <IotExportTable
-                        title="Lịch sử xuất vật tư"
-                        description="Danh sách giao dịch xuất vật tư đã được xác nhận."
-                        scans={historyScans}
-                        pageInfo={
-                            historyPageInfo
-                        }
-                        loading={
-                            historyLoading
-                        }
-                        mode="history"
-                        onViewDetail={
-                            handleOpenDetail
-                        }
-                        onPageChange={
-                            setHistoryPage
-                        }
-                    />
-                )}
+                        <IotExportTable
+                            title="Lịch sử xuất vật tư"
+                            description="Danh sách giao dịch xuất vật tư đã được xác nhận."
+                            scans={historyScans}
+                            pageInfo={
+                                historyPageInfo
+                            }
+                            loading={
+                                historyLoading
+                            }
+                            mode="history"
+                            onViewDetail={
+                                handleOpenDetail
+                            }
+                            onPageChange={
+                                setHistoryPage
+                            }
+                        />
+                    )}
             </main>
 
             <IotExportDetailDrawer

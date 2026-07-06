@@ -18,14 +18,18 @@ function formatQuantity(value, storageUnit) {
 
     if (storageUnit === "MILLILITER") {
         if (numberValue >= 1000) {
-            return `${(numberValue / 1000).toLocaleString("vi-VN")} lít`;
+            return `${(
+                numberValue / 1000
+            ).toLocaleString("vi-VN")} lít`;
         }
 
         return `${numberValue.toLocaleString("vi-VN")} ml`;
     }
 
     if (numberValue >= 1000) {
-        return `${(numberValue / 1000).toLocaleString("vi-VN")} kg`;
+        return `${(
+            numberValue / 1000
+        ).toLocaleString("vi-VN")} kg`;
     }
 
     return `${numberValue.toLocaleString("vi-VN")} g`;
@@ -35,7 +39,57 @@ function formatMoney(value) {
     return `${Number(value || 0).toLocaleString("vi-VN")}đ`;
 }
 
-function DetailItem({ label, value, children }) {
+function formatApprovalStatus(status) {
+    const labels = {
+        APPROVED: "Đã duyệt",
+        PENDING: "Chờ duyệt",
+        REJECTED: "Từ chối",
+        COMPLETED: "Hoàn thành",
+        CANCELLED: "Đã hủy",
+    };
+
+    return labels[status] || "Chưa có";
+}
+
+function formatAiStatus(status) {
+    const labels = {
+        SUCCESS: "Thành công",
+        FAILED: "Thất bại",
+        LOW_CONFIDENCE: "Độ tin cậy thấp",
+        UNRECOGNIZED: "Không nhận diện được",
+        CORRECTED: "Đã nhập mã thủ công",
+        PENDING: "Đang xử lý",
+    };
+
+    return labels[status] || "Chưa có";
+}
+
+function formatStorageUnit(unit) {
+    const labels = {
+        GRAM: "Gram",
+        KILOGRAM: "Kilogram",
+        MILLILITER: "Mililít",
+        LITER: "Lít",
+    };
+
+    return labels[unit] || unit || "Chưa có";
+}
+
+function formatQrType(type) {
+    const labels = {
+        PRODUCT: "QR vật tư",
+        SEASON: "QR mùa vụ",
+        UNKNOWN: "Không xác định",
+    };
+
+    return labels[type] || type || "Chưa có";
+}
+
+function DetailItem({
+    label,
+    value,
+    children,
+}) {
     return (
         <div className="rounded-lg border border-slate-200 bg-white px-3 py-3">
             <p className="text-xs font-medium uppercase text-slate-500">
@@ -43,18 +97,22 @@ function DetailItem({ label, value, children }) {
             </p>
 
             <div className="mt-1 break-all text-sm font-medium text-slate-900">
-                {children || value || <span className="text-slate-400">Chưa có</span>}
+                {children || value || (
+                    <span className="text-slate-400">
+                        Chưa có
+                    </span>
+                )}
             </div>
         </div>
     );
 }
 
 export function IotExportDetailDrawer({
-                                          open,
-                                          scan,
-                                          loading = false,
-                                          onClose,
-                                      }) {
+    open,
+    scan,
+    loading = false,
+    onClose,
+}) {
     if (!open) return null;
 
     return (
@@ -99,45 +157,112 @@ export function IotExportDetailDrawer({
                             </p>
 
                             <p className="mt-1 text-base font-semibold text-slate-900">
-                                #{scan?.transactionId || "Chưa có"}
+                                #
+                                {scan?.transactionId ||
+                                    "Chưa có"}
                             </p>
 
                             <p className="mt-2 text-xs text-slate-500">
-                                Tạo lúc: {formatDateTime(scan?.createdAt)}
+                                Tạo lúc:{" "}
+                                {formatDateTime(
+                                    scan?.createdAt,
+                                )}
                             </p>
 
                             <p className="mt-1 text-xs text-slate-500">
-                                Xác nhận: {formatDateTime(scan?.approvedAt)}
+                                Xác nhận:{" "}
+                                {formatDateTime(
+                                    scan?.approvedAt,
+                                )}
                             </p>
                         </section>
 
                         <section className="grid grid-cols-2 gap-3">
-                            <DetailItem label="Vật tư" value={scan?.productName} />
-                            <DetailItem label="Mã vật tư" value={scan?.productCode} />
-                            <DetailItem label="Mùa vụ" value={scan?.seasonName} />
-                            <DetailItem label="Season ID" value={scan?.seasonId} />
+                            <DetailItem
+                                label="Vật tư"
+                                value={
+                                    scan?.productName
+                                }
+                            />
+
+                            <DetailItem
+                                label="Mã vật tư"
+                                value={
+                                    scan?.productCode
+                                }
+                            />
+
+                            <DetailItem
+                                label="Mùa vụ"
+                                value={
+                                    scan?.seasonName
+                                }
+                            />
+
+                            <DetailItem
+                                label="Mã mùa vụ"
+                                value={
+                                    scan?.seasonId
+                                }
+                            />
 
                             <DetailItem
                                 label="Khối lượng"
-                                value={formatQuantity(scan?.quantity ?? scan?.quantityGrams, scan?.storageUnit)}
+                                value={formatQuantity(
+                                    scan?.quantity ??
+                                        scan?.quantityGrams,
+                                    scan?.storageUnit,
+                                )}
                             />
 
-                            <DetailItem label="Đơn vị lưu kho" value={scan?.storageUnit} />
+                            <DetailItem
+                                label="Đơn vị lưu kho"
+                                value={formatStorageUnit(
+                                    scan?.storageUnit,
+                                )}
+                            />
 
                             <DetailItem
                                 label="Đơn giá FIFO"
-                                value={formatMoney(scan?.unitPrice)}
+                                value={formatMoney(
+                                    scan?.unitPrice,
+                                )}
                             />
 
                             <DetailItem
                                 label="Tổng chi phí"
-                                value={formatMoney(scan?.totalAmount)}
+                                value={formatMoney(
+                                    scan?.totalAmount,
+                                )}
                             />
 
-                            <DetailItem label="Trạng thái" value={scan?.approvalStatus} />
-                            <DetailItem label="AI status" value={scan?.aiStatus} />
-                            <DetailItem label="QR type" value={scan?.qrType} />
-                            <DetailItem label="QR value" value={scan?.qrCodeValue} />
+                            <DetailItem
+                                label="Trạng thái"
+                                value={formatApprovalStatus(
+                                    scan?.approvalStatus,
+                                )}
+                            />
+
+                            <DetailItem
+                                label="AI Status"
+                                value={formatAiStatus(
+                                    scan?.aiStatus,
+                                )}
+                            />
+
+                            <DetailItem
+                                label="QR Type"
+                                value={formatQrType(
+                                    scan?.qrType,
+                                )}
+                            />
+
+                            <DetailItem
+                                label="QR Value"
+                                value={
+                                    scan?.qrCodeValue
+                                }
+                            />
                         </section>
 
                         {scan?.imageUrl && (
@@ -148,7 +273,9 @@ export function IotExportDetailDrawer({
                                     </p>
 
                                     <a
-                                        href={scan.imageUrl}
+                                        href={
+                                            scan.imageUrl
+                                        }
                                         target="_blank"
                                         rel="noreferrer"
                                         className="text-xs font-medium text-blue-600 hover:underline"

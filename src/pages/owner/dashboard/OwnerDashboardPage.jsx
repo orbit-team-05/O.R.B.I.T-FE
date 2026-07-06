@@ -85,32 +85,49 @@ function formatRelativeTime(value) {
 }
 
 function getScanTypeMeta(status) {
-    const normalizedStatus = String(status || "").toUpperCase();
+    const normalizedStatus =
+        String(status || "").toUpperCase();
 
     switch (normalizedStatus) {
         case "SUCCESS":
             return {
-                label: "SUCCESS",
-                className: "bg-emerald-50 text-[#006948]",
+                label: "Nhận diện QR",
+                className:
+                    "bg-emerald-50 text-[#006948]",
             };
+
         case "CORRECTED":
             return {
-                label: "CORRECTED",
-                className: "bg-blue-50 text-blue-700",
+                label:
+                    "Đã nhập mã thủ công",
+                className:
+                    "bg-blue-50 text-blue-700",
             };
+
         case "UNRECOGNIZED":
             return {
-                label: "UNRECOGNIZED",
-                className: "bg-amber-50 text-amber-700",
+                label:
+                    "Không nhận diện",
+                className:
+                    "bg-amber-50 text-amber-700",
             };
+
+        case "PENDING":
+            return {
+                label: "Đang xử lý",
+                className:
+                    "bg-slate-100 text-slate-700",
+            };
+
         default:
             return {
-                label: normalizedStatus || "UNKNOWN",
-                className: "bg-slate-100 text-slate-600",
+                label:
+                    "Không hiển thị dữ liệu",
+                className:
+                    "bg-slate-100 text-slate-600",
             };
     }
 }
-
 function getReviewMeta(reviewed) {
     if (reviewed === true) {
         return {
@@ -505,7 +522,11 @@ export default function OwnerDashboardPage() {
                                         </p>
 
                                         <span className="rounded-full bg-orange-100 px-2 py-1 text-xs text-orange-700">
-                                            {item.alertLevel || "Không hiển thị dữ liệu"}
+                                            {item.alertLevel === "LOW_STOCK"
+                                                ? "Sắp hết hàng"
+                                                : item.alertLevel === "OUT_OF_STOCK"
+                                                    ? "Hết hàng"
+                                                    : "Không hiển thị dữ liệu"}
                                         </span>
                                     </div>
                                 </div>
