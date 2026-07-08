@@ -1,17 +1,5 @@
 import { Calendar, CheckCircle2, DollarSign, Sprout, TrendingUp } from "lucide-react";
-
-function formatCurrency(value) {
-    if (value == null) return "0 ₫";
-    return new Intl.NumberFormat("vi-VN", {
-        style: "currency",
-        currency: "VND",
-    }).format(value);
-}
-
-function formatNumber(value) {
-    if (value == null) return "0";
-    return Number(value).toLocaleString("vi-VN");
-}
+import { formatCurrency, formatNumber } from "../../../../utils/formatUtils";
 
 export function SeasonDashboardStats({ dashboard }) {
     const stats = [

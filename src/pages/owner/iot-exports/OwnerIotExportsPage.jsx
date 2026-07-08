@@ -9,6 +9,7 @@ import { IotExportTable } from "../../../features/owner/iot-exports/components/I
 import { IotExportDetailDrawer } from "../../../features/owner/iot-exports/components/IotExportDetailDrawer";
 
 import { useOwnerIotExports } from "../../../features/owner/iot-exports/hooks/useOwnerIotExports";
+import { formatCurrency } from "../../../utils/formatUtils";
 
 function PageHeader({ onRefresh }) {
     return (
@@ -237,13 +238,7 @@ export function OwnerIotExportsPage() {
                         </p>
 
                         <p className="mt-2 text-2xl font-semibold text-[#006948]">
-                            {Number(
-                                summary?.totalExportCost ||
-                                    0,
-                            ).toLocaleString(
-                                "vi-VN",
-                            )}
-                            đ
+                            {formatCurrency(summary?.totalExportCost)}
                         </p>
                     </div>
                 </section>

@@ -9,6 +9,7 @@ import { InventoryStockTable } from "../../../features/owner/inventory/component
 import { InventoryStockDetailDrawer } from "../../../features/owner/inventory/components/InventoryStockDetailDrawer";
 
 import { useOwnerInventoryStocks } from "../../../features/owner/inventory/hooks/useOwnerInventoryStocks";
+import { formatCurrency } from "../../../utils/formatUtils";
 
 function PageHeader({ onRefresh }) {
     return (
@@ -133,10 +134,7 @@ export function OwnerInventoryPage() {
                         </p>
 
                         <p className="mt-2 text-2xl font-semibold text-[#006948]">
-                            {Number(
-                                summary?.inventoryValue || 0,
-                            ).toLocaleString("vi-VN")}
-                            đ
+                            {formatCurrency(summary?.inventoryValue)}
                         </p>
                     </div>
                 </section>

@@ -3,6 +3,7 @@ import { X, Edit2, Check, ArrowLeftRight, Trash2 } from "lucide-react";
 import { SeasonStatusBadge } from "./SeasonStatusBadge";
 import { ConfirmDialog } from "../../../../components/common/dialog/ConfirmDialog";
 import { useToast } from "../../../../components/common/toast/ToastProvider";
+import { formatCurrency, formatNumber } from "../../../../utils/formatUtils";
 
 function formatDate(value) {
     if (!value) return "Chưa có";
@@ -17,19 +18,6 @@ function formatDate(value) {
     } catch {
         return String(value);
     }
-}
-
-function formatCurrency(value) {
-    if (value == null) return "0 ₫";
-    return new Intl.NumberFormat("vi-VN", {
-        style: "currency",
-        currency: "VND",
-    }).format(value);
-}
-
-function formatNumber(value) {
-    if (value == null) return "0";
-    return Number(value).toLocaleString("vi-VN");
 }
 
 function formatQuantity(value, storageUnit) {

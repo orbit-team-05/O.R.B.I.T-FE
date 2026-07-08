@@ -13,7 +13,9 @@ import { useOwnerDashboard } from "../../../features/owner/dashboard/hooks/useOw
 import {
     formatPrice,
     formatPriceChange,
+    formatPriceWithUnit,
 } from "../../../features/owner/market-prices/utils/marketPriceUtils";
+import { formatCurrency } from "../../../utils/formatUtils";
 
 const FALLBACK_FARM_ID = 1;
 
@@ -36,13 +38,6 @@ const STAT_ICON_MAP = {
     },
 };
 
-function formatCurrency(value) {
-    if (value === null || value === undefined) {
-        return null;
-    }
-
-    return `${formatPrice(value)}đ`;
-}
 
 function formatNumber(value) {
     if (value === null || value === undefined) return "-";
@@ -247,7 +242,13 @@ function DashboardMarketPriceTable({ prices, loading }) {
 
                 <tbody>
                     {prices.map((item) => {
-                        const positive = Number(item.priceChangeValue) >= 0;
+                        const positive = Number(item.priceChangeValue) > 0;
+                        const neutral = Number(item.priceChangeValue) === 0 || item.priceChangeValue === null || item.priceChangeValue === undefined;
+                        const changeColorClass = neutral
+                            ? "text-slate-500"
+                            : positive
+                              ? "text-[#006948]"
+                              : "text-red-600";
 
                         return (
                             <tr
@@ -265,15 +266,10 @@ function DashboardMarketPriceTable({ prices, loading }) {
                                 </td>
 
                                 <td className="py-3 pr-3 text-sm font-semibold text-slate-900">
-                                    {formatPrice(item.price)}
-                                    {item.priceUnit?.startsWith("đ") ? "đ" : ""}
+                                    {formatPriceWithUnit(item.price, item.priceUnit)}
                                 </td>
 
-                                <td
-                                    className={`py-3 text-sm font-semibold ${
-                                        positive ? "text-[#006948]" : "text-red-600"
-                                    }`}
-                                >
+                                <td className={`py-3 text-sm font-semibold ${changeColorClass}`}>
                                     {formatPriceChange(item.priceChangeValue)}
                                 </td>
                             </tr>

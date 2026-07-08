@@ -1,5 +1,6 @@
 import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
 import { SeasonStatusBadge } from "./SeasonStatusBadge";
+import { formatCurrency, formatNumber } from "../../../../utils/formatUtils";
 
 function formatDate(value) {
     if (!value) return "Chưa có";
@@ -8,19 +9,6 @@ function formatDate(value) {
         month: "2-digit",
         year: "numeric",
     }).format(new Date(value));
-}
-
-function formatCurrency(value) {
-    if (value == null) return "0 ₫";
-    return new Intl.NumberFormat("vi-VN", {
-        style: "currency",
-        currency: "VND",
-    }).format(value);
-}
-
-function formatNumber(value) {
-    if (value == null) return "0";
-    return Number(value).toLocaleString("vi-VN");
 }
 
 function getSeasonProgress(item) {
