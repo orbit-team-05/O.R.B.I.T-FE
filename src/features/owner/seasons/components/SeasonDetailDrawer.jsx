@@ -815,19 +815,24 @@ export function SeasonDetailDrawer({
 
                                         <div>
                                             <label className="text-xs font-semibold text-slate-500">Size (phân hạng)</label>
-                                            <input
-                                                list="size-suggestions"
+                                            <select
                                                 value={form.sizeCategory}
                                                 onChange={(e) => setForm({ ...form, sizeCategory: e.target.value })}
                                                 disabled={isFieldDisabled("sizeCategory")}
-                                                placeholder="Ví dụ: 30 con/kg"
                                                 className={inputClass(isFieldDisabled("sizeCategory"))}
-                                            />
-                                            <datalist id="size-suggestions">
+                                            >
+                                                <option value="">-- Chọn size (phân hạng) --</option>
+                                                {form.sizeCategory && !speciesSizes.includes(form.sizeCategory) && (
+                                                    <option value={form.sizeCategory}>
+                                                        {form.sizeCategory} (Hiện tại)
+                                                    </option>
+                                                )}
                                                 {speciesSizes.map(size => (
-                                                    <option key={size} value={size} />
+                                                    <option key={size} value={size}>
+                                                        {size}
+                                                    </option>
                                                 ))}
-                                            </datalist>
+                                            </select>
                                         </div>
                                     </div>
                                 )}
