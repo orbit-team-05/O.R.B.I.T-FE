@@ -11,7 +11,6 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../../features/auth/context/AuthContext";
 import { useOwnerDashboard } from "../../../features/owner/dashboard/hooks/useOwnerDashboard";
 import {
-    formatPrice,
     formatPriceChange,
     formatPriceWithUnit,
 } from "../../../features/owner/market-prices/utils/marketPriceUtils";

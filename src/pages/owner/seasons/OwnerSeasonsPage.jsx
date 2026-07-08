@@ -1,6 +1,6 @@
-
 import { useEffect, useState } from "react";
 import { Plus, RefreshCw } from "lucide-react";
+
 import { SeasonDashboardStats } from "../../../features/owner/seasons/components/SeasonDashboardStats";
 import { SeasonTable } from "../../../features/owner/seasons/components/SeasonTable";
 import { SeasonCreateDrawer } from "../../../features/owner/seasons/components/SeasonCreateDrawer";
@@ -9,47 +9,55 @@ import { useOwnerSeasons } from "../../../features/owner/seasons/hooks/useOwnerS
 import { useToast } from "../../../components/common/toast/ToastProvider";
 import { useAuth } from "../../../features/auth/context/AuthContext";
 
-function PageHeader({ onCreate, onRefresh, loading }) {
+function PageHeader({
+    onCreate,
+    onRefresh,
+    loading,
+}) {
     return (
-        <header className="flex flex-col gap-3 border-b border-slate-200 bg-white px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
-            <div>
+        <header className="flex flex-col gap-4 overflow-hidden border-b border-slate-200 bg-white px-4 py-5 lg:flex-row lg:items-center lg:justify-between lg:px-6">
+            <div className="min-w-0">
                 <p className="text-sm font-semibold text-[#006948]">
                     Bảng điều khiển
                 </p>
 
-                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
+                <h1 className="mt-1 text-2xl font-bold tracking-tight break-words text-slate-900">
                     Quản lý Mùa vụ
                 </h1>
 
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm leading-6 text-slate-500">
                     Theo dõi tiến độ, chi phí giống, trạng thái sinh trưởng
                     và sản lượng dự kiến của từng ao nuôi trồng.
                 </p>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
                 <button
                     type="button"
                     onClick={onRefresh}
                     disabled={loading}
-                    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
                 >
                     <RefreshCw
                         size={14}
                         className={loading ? "animate-spin" : ""}
                     />
 
-                    Làm mới
+                    <span className="whitespace-nowrap">
+                        Làm mới
+                    </span>
                 </button>
 
                 <button
                     type="button"
                     onClick={onCreate}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#006948] px-4 text-sm font-bold text-white hover:bg-[#00583d] shadow-sm transition-all"
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#006948] px-4 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#00583d]"
                 >
                     <Plus size={16} />
 
-                    Lên kế hoạch
+                    <span className="whitespace-nowrap">
+                        Lên kế hoạch
+                    </span>
                 </button>
             </div>
         </header>
@@ -58,8 +66,8 @@ function PageHeader({ onCreate, onRefresh, loading }) {
 
 function PageSkeleton() {
     return (
-        <div className="space-y-6 px-6 py-6">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="space-y-6 px-4 py-6 lg:px-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {Array.from({ length: 4 }).map((_, idx) => (
                     <div
                         key={idx}
@@ -76,6 +84,7 @@ function PageSkeleton() {
 export function OwnerSeasonsPage() {
     const toast = useToast();
     const { user } = useAuth();
+
     const farmId = user?.farmId;
 
     const {
@@ -130,10 +139,11 @@ export function OwnerSeasonsPage() {
         toast,
         clearActionMessages,
     ]);
+
     useEffect(() => {
         if (error) {
             toast.error(
-                "Không thể tải dữ liệu mùa vụ"
+                "Không thể tải dữ liệu mùa vụ",
             );
         }
     }, [error, toast]);
@@ -164,7 +174,7 @@ export function OwnerSeasonsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50/50">
+        <div className="min-h-screen overflow-x-hidden bg-slate-50/50">
             <PageHeader
                 onCreate={handleOpenCreate}
                 onRefresh={reload}
@@ -174,7 +184,7 @@ export function OwnerSeasonsPage() {
             {initialLoading ? (
                 <PageSkeleton />
             ) : (
-                <main className="space-y-6 px-6 py-6">
+                <main className="space-y-6 px-4 py-6 lg:px-6">
                     <SeasonDashboardStats
                         dashboard={dashboard}
                     />
@@ -230,4 +240,3 @@ export function OwnerSeasonsPage() {
 }
 
 export default OwnerSeasonsPage;
-
