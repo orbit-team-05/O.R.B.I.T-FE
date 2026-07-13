@@ -14,7 +14,8 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "../../features/auth/context/AuthContext";
-import orbitLogo from "../../assets/images/orbit-logo.png";
+
+const orbitLogo = `${import.meta.env.BASE_URL}orbit-logo.png`;
 
 const ADMIN_NAV_ITEMS = [
     { label: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },

@@ -10,8 +10,9 @@ import {
     Loader2,
 } from "lucide-react";
 
-import orbitLogo from "../../assets/images/orbit-logo.png";
 import { useAuth } from "../../features/auth/context/AuthContext";
+
+const orbitLogo = `${import.meta.env.BASE_URL}orbit-logo.png`;
 
 const loginSchema = z.object({
     identifier: z
