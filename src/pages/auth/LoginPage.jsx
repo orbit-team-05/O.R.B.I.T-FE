@@ -130,7 +130,8 @@ export function LoginPage() {
                     <img
                         src={orbitLogo}
                         alt="ORBIT"
-                        className="mx-auto mb-8 h-16 w-auto brightness-0 invert"
+                        className="mx-auto mb-8 h-16 w-auto"
+                        style={{ mixBlendMode: 'screen' }}
                     />
 
                     <h1 className="text-3xl font-bold tracking-tight text-white">
