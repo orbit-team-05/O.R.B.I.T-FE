@@ -57,13 +57,11 @@ export function AdminSidebar() {
     return (
         <aside className="fixed left-0 top-0 z-40 flex h-screen w-[248px] shrink-0 flex-col border-r border-slate-200 bg-white">
             <div className="flex h-[68px] items-center gap-3 border-b border-slate-200 px-4">
-                <div className="h-11 w-[120px] shrink-0 overflow-hidden">
-                    <img
-                        src={orbitLogo}
-                        alt="ORBIT"
-                        className="h-full w-full object-contain"
-                    />
-                </div>
+                <img
+                    src={orbitLogo}
+                    alt="ORBIT"
+                    style={{ height: '44px', width: 'auto', maxWidth: '120px', display: 'block' }}
+                />
 
                 <span className="text-[22px] font-semibold leading-none text-[#006948]">
                     Admin
