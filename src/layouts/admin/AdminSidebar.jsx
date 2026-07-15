@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "../../features/auth/context/AuthContext";
-import orbitLogo from "../../assets/images/orbit-logo.png";
+import { ORBIT_LOGO } from "../../assets/orbitLogoData";
 
 const ADMIN_NAV_ITEMS = [
     { label: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
@@ -58,7 +58,7 @@ export function AdminSidebar() {
         <aside className="fixed left-0 top-0 z-40 flex h-screen w-[248px] shrink-0 flex-col border-r border-slate-200 bg-white">
             <div className="flex h-[68px] items-center gap-3 border-b border-slate-200 px-4">
                 <img
-                    src={orbitLogo}
+                    src={ORBIT_LOGO}
                     alt="ORBIT"
                     style={{ height: '44px', width: 'auto', maxWidth: '120px', display: 'block' }}
                 />

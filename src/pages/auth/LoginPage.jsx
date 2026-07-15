@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "../../features/auth/context/AuthContext";
-import orbitLogo from "../../assets/images/orbit-logo.png";
+import { ORBIT_LOGO } from "../../assets/orbitLogoData";
 
 const loginSchema = z.object({
     identifier: z
@@ -127,7 +127,7 @@ export function LoginPage() {
 
                 <div className="relative z-10 max-w-md px-10 text-center">
                     <img
-                        src={orbitLogo}
+                        src={ORBIT_LOGO}
                         alt="ORBIT"
                         className="mx-auto mb-8 h-16 w-auto brightness-0 invert"
                     />
@@ -162,7 +162,7 @@ export function LoginPage() {
                     {/* Mobile Logo */}
                     <div className="mb-8 flex justify-center lg:hidden">
                         <img
-                            src={orbitLogo}
+                            src={ORBIT_LOGO}
                             alt="ORBIT"
                             className="h-12 w-auto"
                         />

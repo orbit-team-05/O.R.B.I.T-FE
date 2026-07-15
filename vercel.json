@@ -5,7 +5,7 @@
       "destination": "http://98.86.116.216:8080/api/:path*"
     },
     {
-      "source": "/((?!assets/).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
