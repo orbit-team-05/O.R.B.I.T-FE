@@ -15,7 +15,7 @@ import {
 
 import { useAuth } from "../../features/auth/context/AuthContext";
 
-const orbitLogo = `${import.meta.env.BASE_URL}orbit-logo.png`;
+const orbitLogo = `${import.meta.env.BASE_URL}orbit_logo.jpg`;
 
 const ADMIN_NAV_ITEMS = [
     { label: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
