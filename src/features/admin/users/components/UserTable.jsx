@@ -1,5 +1,8 @@
+import { useMemo, useState } from "react";
 import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
 import Pagination from "../../../../components/common/pagination/Pagination";
+import { SortSelect } from "../../../../components/common/sort/SortSelect";
+import { sortItems } from "../../../../utils/listSort";
 import { UserStatusBadge } from "./UserStatusBadge";
 
 function UserAvatar({ user }) {
@@ -55,10 +58,28 @@ export function UserTable({
     onToggleStatus,
     currentUserId,
 }) {
+    const [sortKey, setSortKey] = useState("createdDesc");
+    const sortedUsers = useMemo(() => sortItems(users, sortKey, {
+        nameAsc: { value: (item) => item.fullName || item.username, direction: "asc" },
+        nameDesc: { value: (item) => item.fullName || item.username, direction: "desc" },
+        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
+        createdAsc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "asc" },
+        status: { value: (item) => item.status === "ACTIVE" ? 0 : 1, direction: "asc" },
+    }), [users, sortKey]);
+
     return (
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <header className="border-b border-slate-100 bg-slate-50/60 px-5 py-4">
-                <h2 className="text-base font-semibold text-slate-900">Danh sách Người dùng</h2>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h2 className="text-base font-semibold text-slate-900">Danh sách Người dùng</h2>
+                    <SortSelect value={sortKey} onChange={setSortKey} options={[
+                        { value: "createdDesc", label: "Mới tạo trước" },
+                        { value: "createdAsc", label: "Cũ nhất trước" },
+                        { value: "nameAsc", label: "Tên A → Z" },
+                        { value: "nameDesc", label: "Tên Z → A" },
+                        { value: "status", label: "Đang hoạt động" },
+                    ]} />
+                </div>
                 <p className="mt-1 text-xs text-slate-500">Tài khoản hệ thống, quyền truy cập và Farm scope.</p>
             </header>
 
@@ -82,7 +103,7 @@ export function UserTable({
                             </thead>
 
                             <tbody>
-                                {users.map((item) => (
+                                {sortedUsers.map((item) => (
                                     <tr key={item.id} onClick={() => onView?.(item)} className="cursor-pointer border-t border-slate-100 text-sm text-slate-700 transition hover:bg-slate-50">
                                         <td className="px-5 py-4">
                                             #{String(item.id).padStart(2, "0")}
@@ -187,6 +208,8 @@ export function UserTable({
                         page={pageInfo.number}
                         totalPages={pageInfo.totalPages}
                         totalElements={pageInfo.totalElements}
+                        pageSize={pageInfo.size}
+                        itemCount={users.length}
                         loading={loading}
                         onPageChange={onPageChange}
                     />

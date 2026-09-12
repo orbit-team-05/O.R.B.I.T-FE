@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PendingTransactionList } from "./PendingTransactionList";
 import { ApproveTransactionDrawer } from "./ApproveTransactionDrawer";
 import { useOwnerPendingTransactions } from "../hooks/useOwnerPendingTransactions";
 import Pagination from "../../../../components/common/pagination/Pagination";
+import { SortSelect } from "../../../../components/common/sort/SortSelect";
+import { sortItems } from "../../../../utils/listSort";
 
 export function OwnerPendingTransactionsTab({ farmId, warehouseType = "MATERIAL" }) {
     const {
@@ -16,6 +18,13 @@ export function OwnerPendingTransactionsTab({ farmId, warehouseType = "MATERIAL"
     } = useOwnerPendingTransactions(farmId, warehouseType);
 
     const [selectedTx, setSelectedTx] = useState(null);
+    const [sortKey, setSortKey] = useState("createdDesc");
+    const sortedTransactions = useMemo(() => sortItems(transactions, sortKey, {
+        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
+        createdAsc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "asc" },
+        quantityDesc: { value: (item) => Number(item.quantityGrams || 0), direction: "desc" },
+        status: { value: (item) => item.approvalStatus, direction: "asc" },
+    }), [transactions, sortKey]);
 
     const handleApprove = async (txId, updates = {}) => {
         const success = await approveTransaction(txId, true, updates);
@@ -36,11 +45,20 @@ export function OwnerPendingTransactionsTab({ farmId, warehouseType = "MATERIAL"
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900">Danh sách chờ duyệt</h3>
+                <div>
+                    <h3 className="text-lg font-semibold text-slate-900">Danh sách chờ duyệt</h3>
+                    <p className="mt-1 text-xs text-slate-500">Sắp xếp các giao dịch đang chờ xử lý.</p>
+                </div>
+                <SortSelect value={sortKey} onChange={setSortKey} options={[
+                    { value: "createdDesc", label: "Mới tạo trước" },
+                    { value: "createdAsc", label: "Cũ nhất trước" },
+                    { value: "quantityDesc", label: "Khối lượng cao nhất" },
+                    { value: "status", label: "Theo trạng thái" },
+                ]} />
             </div>
 
             <PendingTransactionList
-                transactions={transactions}
+                transactions={sortedTransactions}
                 loading={loading}
                 onApprove={handleApprove}
                 onReject={(txId) => handleReject(txId)}
@@ -53,6 +71,8 @@ export function OwnerPendingTransactionsTab({ farmId, warehouseType = "MATERIAL"
                     page={page}
                     totalPages={pageInfo.totalPages}
                     totalElements={pageInfo.totalElements}
+                    pageSize={pageInfo.size}
+                    itemCount={transactions.length}
                     loading={loading}
                     onPageChange={setPage}
                 />

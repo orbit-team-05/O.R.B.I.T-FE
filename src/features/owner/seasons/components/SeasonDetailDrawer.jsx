@@ -7,6 +7,8 @@ import { ImagePreviewModal } from "../../../../components/ui/ImagePreviewModal";
 import { useToast } from "../../../../components/common/toast/ToastProvider";
 import { formatCurrency, formatNumber } from "../../../../utils/formatUtils";
 import Pagination from "../../../../components/common/pagination/Pagination";
+import { SortSelect } from "../../../../components/common/sort/SortSelect";
+import { sortItems } from "../../../../utils/listSort";
 
 function formatDate(value) {
     if (!value) return "Chưa có";
@@ -116,10 +118,17 @@ function NumberInput({ value, onChange, disabled, className }) {
 
 function SeasonHarvestHistory({
                                   harvests = [],
-                                  pageInfo,
+                              pageInfo,
                                   loading = false,
                                   onPageChange,
                               }) {
+    const [sortKey, setSortKey] = useState("createdDesc");
+    const sortedHarvests = useMemo(() => sortItems(harvests, sortKey, {
+        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
+        createdAsc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "asc" },
+        quantityDesc: { value: (item) => Number(item.quantityGrams || 0), direction: "desc" },
+        revenueDesc: { value: (item) => Number(item.totalAmount || 0), direction: "desc" },
+    }), [harvests, sortKey]);
     const totalHarvestKg = harvests.reduce(
         (sum, item) => sum + Number(item.quantityKg || 0),
         0,
@@ -137,11 +146,17 @@ function SeasonHarvestHistory({
                     </p>
                 </div>
 
-                <div className="text-right">
+                <div className="flex flex-col items-end gap-2 text-right">
                     <p className="text-xs text-slate-500">Tổng trong trang</p>
                     <p className="mt-0.5 text-sm font-bold text-emerald-700">
                         {formatNumber(totalHarvestKg)} kg
                     </p>
+                    <SortSelect value={sortKey} onChange={setSortKey} options={[
+                        { value: "createdDesc", label: "Mới nhất trước" },
+                        { value: "createdAsc", label: "Cũ nhất trước" },
+                        { value: "quantityDesc", label: "Khối lượng giảm dần" },
+                        { value: "revenueDesc", label: "Doanh thu giảm dần" },
+                    ]} />
                 </div>
             </div>
 
@@ -171,7 +186,7 @@ function SeasonHarvestHistory({
                                 </thead>
 
                                 <tbody>
-                                {harvests.map((item) => (
+                                {sortedHarvests.map((item) => (
                                     <tr
                                         key={item.transactionId}
                                         className="border-t border-slate-100 text-slate-700"
@@ -245,6 +260,8 @@ function SeasonHarvestHistory({
                             page={pageInfo?.number}
                             totalPages={pageInfo?.totalPages}
                             totalElements={pageInfo?.totalElements ?? harvests.length}
+                            pageSize={pageInfo?.size}
+                            itemCount={harvests.length}
                             loading={loading}
                             onPageChange={onPageChange}
                         />
@@ -262,6 +279,14 @@ function SeasonMaterialUsageHistory({
     onPageChange,
     consumedMaterialCost,
 }) {
+    const [sortKey, setSortKey] = useState("createdDesc");
+    const sortedUsages = useMemo(() => sortItems(usages, sortKey, {
+        createdDesc: { value: (item) => new Date(item.approvedAt || item.createdAt || 0).getTime(), direction: "desc" },
+        createdAsc: { value: (item) => new Date(item.approvedAt || item.createdAt || 0).getTime(), direction: "asc" },
+        quantityDesc: { value: (item) => Number(item.quantity || 0), direction: "desc" },
+        amountDesc: { value: (item) => Number(item.totalAmount || 0), direction: "desc" },
+        product: { value: (item) => item.productName, direction: "asc" },
+    }), [usages, sortKey]);
     return (
         <div className="space-y-4 rounded-xl border border-slate-200 p-4">
             <div className="flex items-start justify-between gap-3">
@@ -274,11 +299,18 @@ function SeasonMaterialUsageHistory({
                     </p>
                 </div>
 
-                <div className="text-right">
+                <div className="flex flex-col items-end gap-2 text-right">
                     <p className="text-xs text-slate-500">Tổng chi phí vật tư</p>
                     <p className="mt-0.5 text-sm font-bold text-red-600">
                         {formatCurrency(consumedMaterialCost)}
                     </p>
+                    <SortSelect value={sortKey} onChange={setSortKey} options={[
+                        { value: "createdDesc", label: "Mới xuất trước" },
+                        { value: "createdAsc", label: "Cũ nhất trước" },
+                        { value: "quantityDesc", label: "Khối lượng giảm dần" },
+                        { value: "amountDesc", label: "Thành tiền giảm dần" },
+                        { value: "product", label: "Sản phẩm A → Z" },
+                    ]} />
                 </div>
             </div>
 
@@ -307,7 +339,7 @@ function SeasonMaterialUsageHistory({
                                 </thead>
 
                                 <tbody>
-                                    {usages.map((item) => (
+                                    {sortedUsages.map((item) => (
                                         <tr
                                             key={item.transactionId}
                                             className="border-t border-slate-100 text-slate-700"
@@ -369,6 +401,8 @@ function SeasonMaterialUsageHistory({
                             page={pageInfo?.number}
                             totalPages={pageInfo?.totalPages}
                             totalElements={pageInfo?.totalElements ?? usages.length}
+                            pageSize={pageInfo?.size}
+                            itemCount={usages.length}
                             loading={loading}
                             onPageChange={onPageChange}
                         />

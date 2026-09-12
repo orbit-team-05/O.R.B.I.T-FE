@@ -6,6 +6,8 @@ import { getOwnerFarmTransactionReport } from "../../../features/owner/dashboard
 import { formatCurrency, formatDateTime } from "../../../utils/formatUtils";
 import { OwnerPageHeader } from "../common/OwnerPageHeader";
 import Pagination from "../../../components/common/pagination/Pagination";
+import { SortSelect } from "../../../components/common/sort/SortSelect";
+import { sortItems } from "../../../utils/listSort";
 
 function getDefaultDates() {
     const to = new Date();
@@ -123,6 +125,14 @@ export function OwnerTransactionsPage() {
     }, [farmId, loadTransactions]);
 
     const rows = useMemo(() => report?.items ?? [], [report]);
+    const [sortKey, setSortKey] = useState("createdDesc");
+    const sortedRows = useMemo(() => sortItems(rows, sortKey, {
+        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
+        createdAsc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "asc" },
+        quantityDesc: { value: (item) => Number(item.quantityGrams || 0), direction: "desc" },
+        amountDesc: { value: (item) => Number(item.totalAmount || 0), direction: "desc" },
+        status: { value: (item) => item.approvalStatus, direction: "asc" },
+    }), [rows, sortKey]);
     const currentPage = Number(report?.page ?? 0);
     const totalPages = Number(report?.totalPages ?? 0);
 
@@ -164,9 +174,9 @@ export function OwnerTransactionsPage() {
                 {error ? <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div> : null}
 
                 <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-                    <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4"><div><h2 className="font-semibold text-slate-900">Lịch sử giao dịch</h2><p className="mt-1 text-xs text-slate-500">Chọn một dòng để xem chi tiết nghiệp vụ.</p></div><span className="text-xs text-slate-500">{report?.totalElements ?? 0} bản ghi</span></div>
-                    {loading ? <div className="h-80 animate-pulse bg-slate-50" /> : rows.length === 0 ? <div className="flex h-64 items-center justify-center text-sm text-slate-500">Không có giao dịch trong khoảng thời gian đã chọn.</div> : <div className="overflow-x-auto"><table className="min-w-full text-left text-sm"><thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="px-5 py-3">Thời gian</th><th className="px-5 py-3">Loại</th><th className="px-5 py-3">Sản phẩm</th><th className="px-5 py-3">Khối lượng</th><th className="px-5 py-3">Người tạo</th><th className="px-5 py-3">Trạng thái</th><th className="px-5 py-3 text-right"> </th></tr></thead><tbody className="divide-y divide-slate-100">{rows.map((row) => <tr key={row.transactionId} className="cursor-pointer transition hover:bg-emerald-50/40" onClick={() => setSelectedRow(row)}><td className="whitespace-nowrap px-5 py-4 text-slate-500">{formatDateTime(row.createdAt)}</td><td className="px-5 py-4 font-medium text-slate-800">{actionLabel(row.requestedAction || row.transactionType)}</td><td className="px-5 py-4 text-slate-600">{row.productName || "-"}</td><td className="px-5 py-4 text-slate-600">{formatKg(row.quantityGrams)}</td><td className="px-5 py-4 text-slate-600">{row.createdByName || "-"}</td><td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass(row.approvalStatus)}`}>{STATUS_LABELS[row.approvalStatus] || row.approvalStatus || "-"}</span></td><td className="px-5 py-4 text-right"><button type="button" onClick={(event) => { event.stopPropagation(); setSelectedRow(row); }} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-[#006948] hover:bg-emerald-50"><Eye size={15} />Xem</button></td></tr>)}</tbody></table></div>}
-                    <Pagination page={currentPage} totalPages={totalPages} totalElements={report?.totalElements ?? rows.length} loading={loading} onPageChange={(nextPage) => void loadTransactions(filters, nextPage)} />
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4"><div><h2 className="font-semibold text-slate-900">Lịch sử giao dịch</h2><p className="mt-1 text-xs text-slate-500">Chọn một dòng để xem chi tiết nghiệp vụ.</p></div><div className="flex items-center gap-3"><span className="text-xs text-slate-500">{report?.totalElements ?? 0} bản ghi</span><SortSelect value={sortKey} onChange={setSortKey} options={[{ value: "createdDesc", label: "Mới nhất trước" }, { value: "createdAsc", label: "Cũ nhất trước" }, { value: "quantityDesc", label: "Khối lượng giảm dần" }, { value: "amountDesc", label: "Giá trị giảm dần" }, { value: "status", label: "Theo trạng thái" }]} /></div></div>
+                    {loading ? <div className="h-80 animate-pulse bg-slate-50" /> : rows.length === 0 ? <div className="flex h-64 items-center justify-center text-sm text-slate-500">Không có giao dịch trong khoảng thời gian đã chọn.</div> : <div className="overflow-x-auto"><table className="min-w-full text-left text-sm"><thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="px-5 py-3">Thời gian</th><th className="px-5 py-3">Loại</th><th className="px-5 py-3">Sản phẩm</th><th className="px-5 py-3">Khối lượng</th><th className="px-5 py-3">Người tạo</th><th className="px-5 py-3">Trạng thái</th><th className="px-5 py-3 text-right"> </th></tr></thead><tbody className="divide-y divide-slate-100">{sortedRows.map((row) => <tr key={row.transactionId} className="cursor-pointer transition hover:bg-emerald-50/40" onClick={() => setSelectedRow(row)}><td className="whitespace-nowrap px-5 py-4 text-slate-500">{formatDateTime(row.createdAt)}</td><td className="px-5 py-4 font-medium text-slate-800">{actionLabel(row.requestedAction || row.transactionType)}</td><td className="px-5 py-4 text-slate-600">{row.productName || "-"}</td><td className="px-5 py-4 text-slate-600">{formatKg(row.quantityGrams)}</td><td className="px-5 py-4 text-slate-600">{row.createdByName || "-"}</td><td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass(row.approvalStatus)}`}>{STATUS_LABELS[row.approvalStatus] || row.approvalStatus || "-"}</span></td><td className="px-5 py-4 text-right"><button type="button" onClick={(event) => { event.stopPropagation(); setSelectedRow(row); }} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-[#006948] hover:bg-emerald-50"><Eye size={15} />Xem</button></td></tr>)}</tbody></table></div>}
+                    <Pagination page={currentPage} totalPages={totalPages} totalElements={report?.totalElements ?? rows.length} pageSize={report?.size ?? 20} itemCount={rows.length} loading={loading} onPageChange={(nextPage) => void loadTransactions(filters, nextPage)} />
                 </section>
             </main>
             <TransactionDetailDrawer row={selectedRow} onClose={() => setSelectedRow(null)} />

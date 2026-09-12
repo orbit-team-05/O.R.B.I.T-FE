@@ -1,5 +1,8 @@
+import { useMemo, useState } from "react";
 import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
 import Pagination from "../../../../components/common/pagination/Pagination";
+import { SortSelect } from "../../../../components/common/sort/SortSelect";
+import { sortItems } from "../../../../utils/listSort";
 
 function formatMoney(value) {
     return `${Number(value || 0).toLocaleString("vi-VN")}đ`;
@@ -42,12 +45,28 @@ export function InventoryStockTable({
     onPageChange,
     onViewDetail,
 }) {
+    const [sortKey, setSortKey] = useState("updatedDesc");
+    const sortedStocks = useMemo(() => sortItems(stocks, sortKey, {
+        nameAsc: { value: (item) => item.productName, direction: "asc" },
+        nameDesc: { value: (item) => item.productName, direction: "desc" },
+        quantityDesc: { value: (item) => Number(item.actualQuantityGrams || item.quantityGrams || 0), direction: "desc" },
+        quantityAsc: { value: (item) => Number(item.actualQuantityGrams || item.quantityGrams || 0), direction: "asc" },
+        updatedDesc: { value: (item) => new Date(item.updatedAt || 0).getTime(), direction: "desc" },
+    }), [stocks, sortKey]);
+
     return (
         <section className="flex w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
             <header className="border-b border-slate-200 px-5 py-4">
-                <h2 className="text-base font-semibold text-slate-900">
-                    Tồn kho hiện tại
-                </h2>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h2 className="text-base font-semibold text-slate-900">Tồn kho hiện tại</h2>
+                    <SortSelect value={sortKey} onChange={setSortKey} options={[
+                        { value: "updatedDesc", label: "Cập nhật gần đây" },
+                        { value: "nameAsc", label: "Tên A → Z" },
+                        { value: "nameDesc", label: "Tên Z → A" },
+                        { value: "quantityDesc", label: "Số lượng cao nhất" },
+                        { value: "quantityAsc", label: "Sắp hết trước" },
+                    ]} />
+                </div>
 
                 <p className="mt-1 text-xs text-slate-600">
                     Danh sách sản phẩm đã xác nhận nhập kho, gồm ảnh nhập gần nhất, số lượng còn tồn và giá trị tồn kho.
@@ -76,7 +95,7 @@ export function InventoryStockTable({
                             </thead>
 
                             <tbody>
-                                {stocks.map((item) => (
+                                {sortedStocks.map((item) => (
                                     <tr
                                         key={item.stockId}
                                         className="border-t border-slate-200 text-[13px] text-slate-700 hover:bg-slate-50/55"
@@ -176,6 +195,8 @@ export function InventoryStockTable({
                         page={pageInfo?.number}
                         totalPages={pageInfo?.totalPages}
                         totalElements={pageInfo?.totalElements}
+                        pageSize={pageInfo?.size}
+                        itemCount={stocks.length}
                         loading={loading}
                         onPageChange={onPageChange}
                     />

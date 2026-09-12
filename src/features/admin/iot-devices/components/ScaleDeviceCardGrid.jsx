@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import {
     Activity,
     Clock3,
@@ -9,6 +10,8 @@ import {
     WifiOff,
 } from "lucide-react";
 import Pagination from "../../../../components/common/pagination/Pagination";
+import { SortSelect } from "../../../../components/common/sort/SortSelect";
+import { sortItems } from "../../../../utils/listSort";
 
 const STATUS_META = {
     UNCREATED: {
@@ -180,6 +183,15 @@ export function ScaleDeviceCardGrid({
     onViewDetail,
     onToggleStatus,
 }) {
+    const [sortKey, setSortKey] = useState("createdDesc");
+    const sortedDevices = useMemo(() => sortItems(devices, sortKey, {
+        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
+        createdAsc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "asc" },
+        nameAsc: { value: (item) => item.deviceName || item.deviceId || item.macAddress, direction: "asc" },
+        nameDesc: { value: (item) => item.deviceName || item.deviceId || item.macAddress, direction: "desc" },
+        status: { value: (item) => item.status, direction: "asc" },
+    }), [devices, sortKey]);
+
     return (
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 p-4 sm:p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
@@ -191,9 +203,17 @@ export function ScaleDeviceCardGrid({
                         {view === "UNCREATED" ? "Các địa chỉ MAC đang chờ Admin tạo thiết bị cân." : "Các thiết bị cân được quản lý trong hệ thống."}
                     </p>
                 </div>
-                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-500 ring-1 ring-slate-200">
-                    {pageInfo.totalElements ?? 0} thiết bị
-                </span>
+                <div className="flex flex-wrap items-center justify-end gap-3">
+                    <SortSelect value={sortKey} onChange={setSortKey} options={[
+                        { value: "createdDesc", label: "Mới tạo trước" },
+                        { value: "createdAsc", label: "Cũ nhất trước" },
+                        { value: "nameAsc", label: "Tên/MAC A → Z" },
+                        { value: "status", label: "Theo trạng thái" },
+                    ]} />
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-500 ring-1 ring-slate-200">
+                        {pageInfo.totalElements ?? 0} thiết bị
+                    </span>
+                </div>
             </div>
 
             {loading ? (
@@ -209,7 +229,7 @@ export function ScaleDeviceCardGrid({
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    {devices.map((device) => (
+                    {sortedDevices.map((device) => (
                         <DeviceCard
                             key={device.id || device.deviceId || device.macAddress}
                             device={device}
@@ -226,6 +246,8 @@ export function ScaleDeviceCardGrid({
                 page={pageInfo.number}
                 totalPages={pageInfo.totalPages}
                 totalElements={pageInfo.totalElements}
+                pageSize={pageInfo.size}
+                itemCount={devices.length}
                 loading={loading}
                 onPageChange={onPageChange}
             />

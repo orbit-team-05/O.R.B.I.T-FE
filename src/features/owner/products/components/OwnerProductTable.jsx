@@ -1,6 +1,9 @@
+import { useMemo, useState } from "react";
 import { Image } from "lucide-react";
 import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
 import Pagination from "../../../../components/common/pagination/Pagination";
+import { SortSelect } from "../../../../components/common/sort/SortSelect";
+import { sortItems } from "../../../../utils/listSort";
 
 const CATEGORY_LABELS = {
     FEED: "Thức ăn",
@@ -34,12 +37,28 @@ export function OwnerProductTable({
                                       onViewDetail,
                                       onPageChange,
                                   }) {
+    const [sortKey, setSortKey] = useState("createdDesc");
+    const sortedProducts = useMemo(() => sortItems(products, sortKey, {
+        nameAsc: { value: (item) => item.productName, direction: "asc" },
+        nameDesc: { value: (item) => item.productName, direction: "desc" },
+        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
+        stockAsc: { value: (item) => Number(item.minimumStockGrams || 0), direction: "asc" },
+        category: { value: (item) => item.category, direction: "asc" },
+    }), [products, sortKey]);
+
     return (
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
             <header className="border-b border-slate-200 px-5 py-4">
-                <h2 className="text-base font-semibold text-slate-900">
-                    Danh sách sản phẩm
-                </h2>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h2 className="text-base font-semibold text-slate-900">Danh sách sản phẩm</h2>
+                    <SortSelect value={sortKey} onChange={setSortKey} options={[
+                        { value: "createdDesc", label: "Mới tạo trước" },
+                        { value: "nameAsc", label: "Tên A → Z" },
+                        { value: "nameDesc", label: "Tên Z → A" },
+                        { value: "stockAsc", label: "Tồn tối thiểu tăng" },
+                        { value: "category", label: "Theo loại" },
+                    ]} />
+                </div>
 
                 <p className="mt-1 text-xs text-slate-600">
                     Sản phẩm dùng cho kho, keypad, QR và nhận diện IoT.
@@ -64,7 +83,7 @@ export function OwnerProductTable({
                             </thead>
 
                             <tbody>
-                            {products.map((item) => (
+                            {sortedProducts.map((item) => (
                                 <tr
                                     key={item.id}
                                     className="border-t border-slate-200 text-sm text-slate-700"
@@ -127,6 +146,8 @@ export function OwnerProductTable({
                         page={pageInfo?.number}
                         totalPages={pageInfo?.totalPages}
                         totalElements={pageInfo?.totalElements}
+                        pageSize={pageInfo?.size}
+                        itemCount={products.length}
                         loading={loading}
                         onPageChange={onPageChange}
                     />

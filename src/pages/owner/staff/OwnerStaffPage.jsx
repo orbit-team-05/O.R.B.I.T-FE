@@ -18,6 +18,7 @@ import {
 
 import { AdminPageSkeleton } from "../../../components/common/loading/AdminPageSkeleton";
 import Pagination from "../../../components/common/pagination/Pagination";
+import { SortSelect } from "../../../components/common/sort/SortSelect";
 import { PasswordInput } from "../../../components/common/form/PasswordInput";
 import { ImagePreviewModal } from "../../../components/ui/ImagePreviewModal";
 import { useToast } from "../../../components/common/toast/ToastProvider";
@@ -33,6 +34,7 @@ import {
     updateStaff,
     uploadStaffAvatar,
 } from "../../../features/owner/services/ownerStaffApi";
+import { sortItems } from "../../../utils/listSort";
 
 const EMPTY_FORM = {
     username: "",
@@ -216,6 +218,15 @@ export function OwnerStaffPage() {
             ]
             : [{ value: "STAFF", label: "Nhân viên" }]
     ), [isOwner]);
+
+    const [sortKey, setSortKey] = useState("createdDesc");
+    const sortedStaffs = useMemo(() => sortItems(staffs, sortKey, {
+        nameAsc: { value: (item) => item.fullName || item.username, direction: "asc" },
+        nameDesc: { value: (item) => item.fullName || item.username, direction: "desc" },
+        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
+        lastLoginDesc: { value: (item) => new Date(item.lastLoginAt || 0).getTime(), direction: "desc" },
+        status: { value: (item) => item.status, direction: "asc" },
+    }), [staffs, sortKey]);
 
     function openCreate() {
         setFormData({ ...EMPTY_FORM, role: roleOptions[0].value });
@@ -401,6 +412,13 @@ export function OwnerStaffPage() {
                         <option value="ACTIVE">Đang hoạt động</option>
                         <option value="INACTIVE">Đã khóa</option>
                     </select>
+                    <SortSelect value={sortKey} onChange={setSortKey} options={[
+                        { value: "createdDesc", label: "Mới tạo trước" },
+                        { value: "nameAsc", label: "Tên A → Z" },
+                        { value: "nameDesc", label: "Tên Z → A" },
+                        { value: "lastLoginDesc", label: "Đăng nhập gần đây" },
+                        { value: "status", label: "Theo trạng thái" },
+                    ]} />
                 </div>
 
                 <div className="overflow-x-auto">
@@ -424,7 +442,7 @@ export function OwnerStaffPage() {
                                         <p className="mt-1 text-sm text-slate-400">Thử thay đổi bộ lọc hoặc tạo tài khoản mới.</p>
                                     </td>
                                 </tr>
-                            ) : staffs.map((staff) => (
+                            ) : sortedStaffs.map((staff) => (
                                 <tr key={staff.id} className="cursor-pointer transition hover:bg-slate-50" onClick={() => loadDetail(staff)}>
                                     <td className="px-5 py-4">
                                         <div className="flex items-center gap-3">
@@ -464,6 +482,8 @@ export function OwnerStaffPage() {
                     page={page}
                     totalPages={totalPages}
                     totalElements={totalElements}
+                    pageSize={10}
+                    itemCount={staffs.length}
                     loading={loading}
                     onPageChange={setPage}
                 />

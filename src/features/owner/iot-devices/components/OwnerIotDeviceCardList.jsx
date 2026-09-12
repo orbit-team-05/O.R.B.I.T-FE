@@ -1,5 +1,8 @@
+import { useMemo, useState } from "react";
 import { Server, Scale, Cpu } from "lucide-react";
 import Pagination from "../../../../components/common/pagination/Pagination";
+import { SortSelect } from "../../../../components/common/sort/SortSelect";
+import { sortItems } from "../../../../utils/listSort";
 
 const STATUS_LABELS = {
     ACTIVE: "Đang hoạt động",
@@ -36,6 +39,15 @@ export function OwnerIotDeviceCardList({
     onViewDetail,
     onPageChange,
 }) {
+    const [sortKey, setSortKey] = useState("createdDesc");
+    const sortedDevices = useMemo(() => sortItems(devices, sortKey, {
+        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
+        createdAsc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "asc" },
+        nameAsc: { value: (item) => item.deviceName || item.deviceId, direction: "asc" },
+        status: { value: (item) => item.status, direction: "asc" },
+        lastSeenDesc: { value: (item) => new Date(item.lastSeenAt || 0).getTime(), direction: "desc" },
+    }), [devices, sortKey]);
+
     if (loading && devices.length === 0) {
         return (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -51,8 +63,17 @@ export function OwnerIotDeviceCardList({
 
     return (
         <div className="space-y-6">
+            <div className="flex justify-end">
+                <SortSelect value={sortKey} onChange={setSortKey} options={[
+                    { value: "createdDesc", label: "Mới tạo trước" },
+                    { value: "createdAsc", label: "Cũ nhất trước" },
+                    { value: "nameAsc", label: "Tên thiết bị A → Z" },
+                    { value: "status", label: "Theo trạng thái" },
+                    { value: "lastSeenDesc", label: "Hoạt động gần đây" },
+                ]} />
+            </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {devices.map((item) => (
+                {sortedDevices.map((item) => (
                     <div
                         key={item.deviceId}
                         onClick={() => onViewDetail?.(item)}
@@ -115,6 +136,8 @@ export function OwnerIotDeviceCardList({
                 page={pageInfo?.number}
                 totalPages={pageInfo?.totalPages}
                 totalElements={pageInfo?.totalElements}
+                pageSize={pageInfo?.size}
+                itemCount={devices.length}
                 loading={loading}
                 onPageChange={onPageChange}
             />

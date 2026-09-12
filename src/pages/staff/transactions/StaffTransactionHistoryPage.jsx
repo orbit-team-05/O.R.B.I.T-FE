@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CheckCircle2, Clock3, FileImage, RefreshCw, XCircle } from "lucide-react";
 import { ImagePreviewModal } from "../../../components/ui/ImagePreviewModal";
 import { useStaffTransactionHistory } from "../../../features/staff/transactions/hooks/useStaffTransactionHistory";
 import { OwnerPageHeader } from "../../owner/common/OwnerPageHeader";
 import Pagination from "../../../components/common/pagination/Pagination";
+import { SortSelect } from "../../../components/common/sort/SortSelect";
 import { formatNumber } from "../../../utils/formatUtils";
+import { sortItems } from "../../../utils/listSort";
 
 const FILTERS = [
     { value: "", label: "Tất cả" },
@@ -60,13 +62,22 @@ export function StaffTransactionHistoryPage() {
     const [status, setStatus] = useState("");
     const [previewImage, setPreviewImage] = useState(null);
     const { transactions, pageInfo, page, setPage, loading, error, reload } = useStaffTransactionHistory(status);
+    const [sortKey, setSortKey] = useState("createdDesc");
+    const sortedTransactions = useMemo(() => sortItems(transactions, sortKey, {
+        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
+        createdAsc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "asc" },
+        quantityDesc: { value: (item) => Number(item.quantityGrams || 0), direction: "desc" },
+        status: { value: (item) => item.approvalStatus, direction: "asc" },
+        product: { value: (item) => item.productName, direction: "asc" },
+    }), [sortKey, transactions]);
 
     return <>
         <section className="space-y-6 animate-fade-in"><OwnerPageHeader title="Lịch sử giao dịch" description="Theo dõi các giao dịch do chính tài khoản Staff tạo và trạng thái phê duyệt." actions={<button type="button" onClick={reload} disabled={loading} className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"><RefreshCw size={15} className={loading ? "animate-spin" : ""} />Làm mới</button>} />
             <div className="flex flex-wrap gap-2">{FILTERS.map((filter) => <button type="button" key={filter.value || "all"} onClick={() => { setStatus(filter.value); setPage(0); }} className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${status === filter.value ? "bg-[#006948] text-white" : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>{filter.label}</button>)}</div>
             {error && <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
-            {loading && !pageInfo.content ? <HistorySkeleton /> : transactions.length ? <div className="space-y-3">{transactions.map((transaction) => <TransactionCard key={transaction.transactionId} transaction={transaction} onPreview={setPreviewImage} />)}</div> : <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-sm text-slate-500">Chưa có giao dịch nào ở bộ lọc này.</div>}
-            <Pagination page={page} totalPages={pageInfo.totalPages} totalElements={pageInfo.totalElements} loading={loading} onPageChange={setPage} />
+            <div className="flex flex-wrap justify-end"><SortSelect value={sortKey} onChange={setSortKey} options={[{ value: "createdDesc", label: "Mới nhất trước" }, { value: "createdAsc", label: "Cũ nhất trước" }, { value: "quantityDesc", label: "Khối lượng giảm dần" }, { value: "status", label: "Theo trạng thái" }, { value: "product", label: "Sản phẩm A → Z" }]} /></div>
+            {loading && !pageInfo.content ? <HistorySkeleton /> : sortedTransactions.length ? <div className="space-y-3">{sortedTransactions.map((transaction) => <TransactionCard key={transaction.transactionId} transaction={transaction} onPreview={setPreviewImage} />)}</div> : <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-sm text-slate-500">Chưa có giao dịch nào ở bộ lọc này.</div>}
+            <Pagination page={page} totalPages={pageInfo.totalPages} totalElements={pageInfo.totalElements} pageSize={pageInfo.size} itemCount={transactions.length} loading={loading} onPageChange={setPage} />
         </section><ImagePreviewModal open={Boolean(previewImage)} src={previewImage} onClose={() => setPreviewImage(null)} />
     </>;
 }

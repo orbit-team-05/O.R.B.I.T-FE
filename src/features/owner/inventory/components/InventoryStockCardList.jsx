@@ -1,5 +1,8 @@
+import { useMemo, useState } from "react";
 import { Package, AlertTriangle, CheckCircle, Image as ImageIcon } from "lucide-react";
 import Pagination from "../../../../components/common/pagination/Pagination";
+import { SortSelect } from "../../../../components/common/sort/SortSelect";
+import { sortItems } from "../../../../utils/listSort";
 
 const CATEGORY_LABELS = {
     FEED: 'Thức ăn',
@@ -45,6 +48,15 @@ export function InventoryStockCardList({
     onPageChange,
     onViewDetail,
 }) {
+    const [sortKey, setSortKey] = useState("updatedDesc");
+    const sortedStocks = useMemo(() => sortItems(stocks, sortKey, {
+        nameAsc: { value: (item) => item.productName, direction: "asc" },
+        nameDesc: { value: (item) => item.productName, direction: "desc" },
+        quantityDesc: { value: (item) => Number(item.actualQuantityGrams || item.quantityGrams || 0), direction: "desc" },
+        quantityAsc: { value: (item) => Number(item.actualQuantityGrams || item.quantityGrams || 0), direction: "asc" },
+        updatedDesc: { value: (item) => new Date(item.updatedAt || 0).getTime(), direction: "desc" },
+    }), [stocks, sortKey]);
+
     if (loading && stocks.length === 0) {
         return (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -74,8 +86,17 @@ export function InventoryStockCardList({
 
     return (
         <div className="space-y-6">
+            <div className="flex justify-end">
+                <SortSelect value={sortKey} onChange={setSortKey} options={[
+                    { value: "updatedDesc", label: "Cập nhật gần đây" },
+                    { value: "nameAsc", label: "Tên A → Z" },
+                    { value: "nameDesc", label: "Tên Z → A" },
+                    { value: "quantityDesc", label: "Số lượng cao nhất" },
+                    { value: "quantityAsc", label: "Sắp hết trước" },
+                ]} />
+            </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {stocks.map((item) => (
+                {sortedStocks.map((item) => (
                     <div
                         key={item.stockId}
                         onClick={() => onViewDetail?.(item)}
@@ -174,6 +195,8 @@ export function InventoryStockCardList({
                 page={pageInfo?.number}
                 totalPages={pageInfo?.totalPages}
                 totalElements={pageInfo?.totalElements}
+                pageSize={pageInfo?.size}
+                itemCount={stocks.length}
                 loading={loading}
                 onPageChange={onPageChange}
             />

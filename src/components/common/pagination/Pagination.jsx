@@ -8,15 +8,25 @@ export default function Pagination({
     page = 0,
     totalPages = 0,
     totalElements = 0,
+    pageSize = 10,
+    itemCount = 0,
     loading = false,
     onPageChange,
 }) {
-    const safeTotalPages = Math.max(Number(totalPages) || 0, 0);
+    const safeTotalElements = Math.max(Number(totalElements) || Number(itemCount) || 0, 0);
+    const safePageSize = Math.max(Number(pageSize) || 10, 1);
+    const calculatedTotalPages = safeTotalElements > 0
+        ? Math.ceil(safeTotalElements / safePageSize)
+        : itemCount > 0 ? 1 : 0;
+    const safeTotalPages = Math.max(
+        Number(totalPages) > 0 ? Number(totalPages) : calculatedTotalPages,
+        0,
+    );
     const safePage = safeTotalPages > 0
         ? Math.min(Math.max(Number(page) || 0, 0), safeTotalPages - 1)
         : 0;
 
-    if (safeTotalPages <= 1) {
+    if (safeTotalPages === 0) {
         return null;
     }
 
@@ -29,7 +39,7 @@ export default function Pagination({
         <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 py-3">
             <p className="text-xs text-slate-500">
                 Trang <span className="font-semibold text-slate-700">{safePage + 1}</span> / {safeTotalPages}
-                <span className="ml-2 text-slate-400">({totalElements} mục)</span>
+                <span className="ml-2 text-slate-400">({safeTotalElements} mục)</span>
             </p>
             <div className="flex items-center gap-2">
                 <button
