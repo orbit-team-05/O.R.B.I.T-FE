@@ -56,7 +56,9 @@ export function useAdminSpecies(initialPage = 0, initialSize = 10) {
         }
     }, [page, size]);
 
+    // Load the current page when pagination changes.
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadSpecies();
     }, [loadSpecies]);
 

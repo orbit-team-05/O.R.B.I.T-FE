@@ -29,6 +29,8 @@ export function SpeciesDrawer({
 
     const isEditMode = mode === "edit";
 
+    // Reset the draft whenever the drawer switches between create/edit mode.
+    /* eslint-disable react-hooks/set-state-in-effect */
     useEffect(() => {
         if (!open) return;
 
@@ -44,6 +46,7 @@ export function SpeciesDrawer({
 
         setForm(INITIAL_FORM);
     }, [open, isEditMode, species]);
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     function handleChange(event) {
         const { name, value } = event.target;

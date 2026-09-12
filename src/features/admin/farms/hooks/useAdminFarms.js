@@ -2,11 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 
 import {
     createFarm,
-    deleteFarm,
+    updateFarmStatus,
     getFarms,
     getFarmSummary,
     updateFarm,
     getOwnersList,
+    uploadFarmImage,
 } from "../services/farmApi";
 import { useAdminRealtimeRefresh } from "../../../../hooks/useFarmTopic";
 
@@ -30,6 +31,7 @@ export function useAdminFarms(initialPage = 0, initialSize = 10) {
     const [summary, setSummary] = useState(INITIAL_SUMMARY);
     const [page, setPage] = useState(initialPage);
     const [size] = useState(initialSize);
+    const [filters, setFilters] = useState({ keyword: "", active: "" });
 
     const [owners, setOwners] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -44,7 +46,10 @@ export function useAdminFarms(initialPage = 0, initialSize = 10) {
             setError("");
 
             const [farmsData, summaryData, ownersList] = await Promise.all([
-                getFarms(page, size),
+                getFarms(page, size, {
+                    keyword: filters.keyword || undefined,
+                    active: filters.active === "" ? undefined : filters.active === "ACTIVE",
+                }),
                 getFarmSummary(),
                 getOwnersList(),
             ]);
@@ -57,9 +62,11 @@ export function useAdminFarms(initialPage = 0, initialSize = 10) {
         } finally {
             setLoading(false);
         }
-    }, [page, size]);
+    }, [filters, page, size]);
 
     useEffect(() => {
+        // This effect synchronizes the list with page and filter state.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadFarms();
     }, [loadFarms]);
 
@@ -99,17 +106,17 @@ export function useAdminFarms(initialPage = 0, initialSize = 10) {
         }
     }
 
-    async function handleDeleteFarm(farmId) {
+    async function handleUpdateFarmStatus(farmId, active) {
         try {
             setActionLoading(true);
             setActionError("");
 
-            await deleteFarm(farmId);
+            await updateFarmStatus(farmId, active);
             await loadFarms();
 
             return true;
         } catch (err) {
-            setActionError(getErrorMessage(err, "Không thể xóa Farm."));
+            setActionError(getErrorMessage(err, "Không thể cập nhật trạng thái Farm."));
             return false;
         } finally {
             setActionLoading(false);
@@ -118,6 +125,11 @@ export function useAdminFarms(initialPage = 0, initialSize = 10) {
 
     function handleSetPage(nextPage) {
         setPage(Math.max(Number(nextPage) || 0, 0));
+    }
+
+    function updateFilters(nextFilters) {
+        setFilters((previous) => ({ ...previous, ...nextFilters }));
+        setPage(0);
     }
 
     return {
@@ -133,6 +145,8 @@ export function useAdminFarms(initialPage = 0, initialSize = 10) {
         },
         page,
         setPage: handleSetPage,
+        filters,
+        updateFilters,
         loading,
         initialLoading: loading && farmsPage === null,
         tableLoading: loading && farmsPage !== null,
@@ -145,6 +159,20 @@ export function useAdminFarms(initialPage = 0, initialSize = 10) {
         clearActionError: () => setActionError(""),
         createFarm: handleCreateFarm,
         updateFarm: handleUpdateFarm,
-        deleteFarm: handleDeleteFarm,
+        updateFarmStatus: handleUpdateFarmStatus,
+        uploadFarmImage: async (farmId, file) => {
+            try {
+                setActionLoading(true);
+                setActionError("");
+                const updated = await uploadFarmImage(farmId, file);
+                await loadFarms();
+                return updated;
+            } catch (err) {
+                setActionError(getErrorMessage(err, "Không thể tải ảnh Farm."));
+                return null;
+            } finally {
+                setActionLoading(false);
+            }
+        },
     };
 }

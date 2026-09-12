@@ -1,516 +1,172 @@
+import { RefreshCw } from "lucide-react";
 import { useState } from "react";
 
+import { AdminPageSkeleton } from "../../../components/common/loading/AdminPageSkeleton";
 import { ConfirmDialog } from "../../../components/common/dialog/ConfirmDialog";
 import { useToast } from "../../../components/common/toast/ToastProvider";
 import { IotDeviceDetailDrawer } from "../../../features/admin/iot-devices/components/IotDeviceDetailDrawer";
 import { IotDeviceDrawer } from "../../../features/admin/iot-devices/components/IotDeviceDrawer";
-import { IotDeviceReplaceDrawer } from "../../../features/admin/iot-devices/components/IotDeviceReplaceDrawer";
 import { IotDeviceStats } from "../../../features/admin/iot-devices/components/IotDeviceStats";
-import { IotDeviceTable } from "../../../features/admin/iot-devices/components/IotDeviceTable";
-import { UnassignedIotDeviceTable } from "../../../features/admin/iot-devices/components/UnassignedIotDeviceTable";
-
+import { ScaleDeviceCardGrid } from "../../../features/admin/iot-devices/components/ScaleDeviceCardGrid";
 import {
     DEVICE_TABLE_VIEW,
     useAdminIotDevices,
 } from "../../../features/admin/iot-devices/hooks/useAdminIotDevices";
+import { getIotDeviceDetail, uploadIotDeviceImage } from "../../../features/admin/iot-devices/services/iotDeviceApi";
 
-const STATUS_ACTION_LABELS = {
-    ACTIVE: "bật lại",
-    INACTIVE: "tắt",
-    UNASSIGNED: "thu hồi",
-};
-
-function AdminIotDevicesHeader({ onCreate, onReload }) {
+function Header({ onReload }) {
     return (
         <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-                <h1 className="text-2xl font-semibold text-slate-900">
-                    Thiết bị IoT
-                </h1>
-
-                <p className="mt-1 text-sm text-slate-600">
-                    Quản lý thiết bị cân, camera và trạng thái kết nối trong hệ thống.
-                </p>
+                <h1 className="text-2xl font-semibold text-slate-900">Thiết bị cân</h1>
+                <p className="mt-1 max-w-2xl text-sm text-slate-600">Quản lý thiết bị cân và theo dõi khối lượng gửi lên trong các giao dịch của Farm.</p>
             </div>
-
-            <div className="flex items-center gap-2">
-                <button
-                    type="button"
-                    onClick={onReload}
-                    className="h-10 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                >
-                    Làm mới
-                </button>
-
-                <button
-                    type="button"
-                    onClick={onCreate}
-                    className="h-10 rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white transition hover:bg-[#00583d]"
-                >
-                    + Tạo thiết bị
-                </button>
-            </div>
+            <button type="button" onClick={onReload} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"><RefreshCw size={15} /> Làm mới</button>
         </header>
     );
 }
 
-function AdminIotDevicesSkeleton() {
-    return (
-        <section className="space-y-5">
-            <AdminIotDevicesHeader />
-
-            <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {[1, 2, 3, 4].map((item) => (
-                    <div
-                        key={item}
-                        className="h-[96px] animate-pulse rounded-xl border border-slate-200 bg-white"
-                    />
-                ))}
-            </section>
-
-            <section className="h-[360px] animate-pulse rounded-xl border border-slate-200 bg-white" />
-        </section>
-    );
-}
-
-function DeviceTableTabs({ activeView, onChange }) {
+function Tabs({ activeView, onChange, summary }) {
     const tabs = [
-        {
-            label: "Tất cả thiết bị",
-            value: DEVICE_TABLE_VIEW.ALL,
-        },
-        {
-            label: "Chưa gắn farm",
-            value: DEVICE_TABLE_VIEW.UNASSIGNED,
-        },
+        [DEVICE_TABLE_VIEW.ALL, "Thiết bị cân", summary.totalDevices],
+        [DEVICE_TABLE_VIEW.UNCREATED, "Thiết bị chưa tạo", summary.uncreatedDevices],
+        [DEVICE_TABLE_VIEW.UNASSIGNED, "Chưa gắn Farm", summary.unassignedDevices],
     ];
 
     return (
-        <div className="flex flex-wrap items-center gap-2">
-            {tabs.map((tab) => {
-                const active = activeView === tab.value;
-
-                return (
-                    <button
-                        key={tab.value}
-                        type="button"
-                        onClick={() => onChange(tab.value)}
-                        className={[
-                            "h-10 rounded-lg px-4 text-sm font-medium transition-colors",
-                            active
-                                ? "bg-[#006948] text-white"
-                                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
-                        ].join(" ")}
-                    >
-                        {tab.label}
-                    </button>
-                );
-            })}
-        </div>
-    );
-}
-
-function EmptyState({ onReload }) {
-    return (
-        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center">
-            <p className="text-sm text-slate-500">
-                Không có dữ liệu thiết bị để hiển thị.
-            </p>
-
-            <button
-                type="button"
-                onClick={onReload}
-                className="mt-4 inline-flex h-10 items-center justify-center rounded-lg bg-[#006948] px-4 text-sm font-medium text-white hover:bg-[#00583d]"
-            >
-                Tải lại dữ liệu
-            </button>
+        <div className="flex flex-wrap gap-2">
+            {tabs.map(([value, label, count]) => (
+                <button key={value} type="button" onClick={() => onChange(value)} className={`inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-semibold transition ${activeView === value ? "bg-[#006948] text-white shadow-sm" : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
+                    {label}
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] ${activeView === value ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>{count ?? 0}</span>
+                </button>
+            ))}
         </div>
     );
 }
 
 export function AdminIotDevicesPage() {
     const toast = useToast();
-
     const {
         activeView,
         setActiveView,
-
         devices,
         summary,
         pageInfo,
-
         initialLoading,
         tableLoading,
-
         error,
-
         setPage,
         reload,
-
         actionLoading,
         actionError,
-
         clearActionError,
-
-        createDevice,
+        createFromMac,
         updateStatus,
-        replaceComponent,
     } = useAdminIotDevices();
 
-    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [createRecord, setCreateRecord] = useState(null);
+    const [detailDevice, setDetailDevice] = useState(null);
+    const [confirmState, setConfirmState] = useState({ open: false, device: null, nextStatus: "" });
+    const [uploadingImage, setUploadingImage] = useState(false);
+    const [detailLoading, setDetailLoading] = useState(false);
 
-    const [detailDrawerState, setDetailDrawerState] = useState({
-        open: false,
-        device: null,
-    });
-
-    const [confirmState, setConfirmState] = useState({
-        open: false,
-        device: null,
-        nextStatus: "",
-    });
-
-    const [replaceDrawerState, setReplaceDrawerState] = useState({
-        open: false,
-        device: null,
-    });
-
-    function resetOverlayState() {
-        setDrawerOpen(false);
-
-        setDetailDrawerState({
-            open: false,
-            device: null,
-        });
-
-        setConfirmState({
-            open: false,
-            device: null,
-            nextStatus: "",
-        });
-
-        setReplaceDrawerState({
-            open: false,
-            device: null,
-        });
-
-        clearActionError();
+    async function handleUploadImage(file) {
+        setUploadingImage(true);
+        try {
+            return await uploadIotDeviceImage(file);
+        } finally {
+            setUploadingImage(false);
+        }
     }
 
-    function handleChangeTableView(nextView) {
-        if (actionLoading) return;
-
-        resetOverlayState();
-        setActiveView(nextView);
-    }
-
-    function openCreateDrawer() {
-        clearActionError();
-        setDrawerOpen(true);
-    }
-
-    function closeDrawer() {
-        if (actionLoading) return;
-
-        setDrawerOpen(false);
-        clearActionError();
-    }
-
-    function openDetailDrawer(device) {
-        clearActionError();
-
-        setDetailDrawerState({
-            open: true,
-            device,
-        });
-    }
-
-    function closeDetailDrawer() {
-        if (actionLoading) return;
-
-        setDetailDrawerState({
-            open: false,
-            device: null,
-        });
-
-        clearActionError();
-    }
-
-    function openReplaceDrawer(device) {
-        clearActionError();
-
-        setDetailDrawerState({
-            open: false,
-            device: null,
-        });
-
-        setReplaceDrawerState({
-            open: true,
-            device,
-        });
-    }
-
-    function closeReplaceDrawer() {
-        if (actionLoading) return;
-
-        setReplaceDrawerState({
-            open: false,
-            device: null,
-        });
-
-        clearActionError();
-    }
-
-    async function handleReplaceComponent(device, payload) {
-        if (!device?.deviceId) {
-            toast.error("Không tìm thấy thiết bị.");
+    async function handleCreate(payload) {
+        const created = await createFromMac(createRecord.id, payload);
+        if (!created) {
+            toast.error(actionError || "Không thể tạo thiết bị cân.");
             return;
         }
 
-        const success = await replaceComponent(device.deviceId, payload);
-
-        if (!success) {
-            toast.error(`Không thể thay linh kiện thiết bị "${device.deviceId}".`);
-            return;
-        }
-
-        const componentText =
-            payload.componentType === "CAM" ? "camera" : "cân";
-
-        toast.success(
-            `Đã thay ${componentText} cho thiết bị "${device.deviceId}".`,
-        );
-
-        closeReplaceDrawer();
+        toast.success(created.activationCode ? `Đã tạo thiết bị. Activation code: ${created.activationCode}` : "Đã tạo thiết bị cân.");
+        setCreateRecord(null);
     }
 
-    async function handleSubmitDevice(payload) {
-        const createdDevice = await createDevice(payload);
-
-        if (!createdDevice) {
-            toast.error("Không thể tạo thiết bị IoT.");
-            return;
+    async function openDetail(device) {
+        if (!device?.deviceId) return;
+        setDetailDevice(device);
+        setDetailLoading(true);
+        try {
+            const detail = await getIotDeviceDetail(device.deviceId);
+            setDetailDevice(detail);
+        } catch (err) {
+            toast.error(err?.response?.data?.message || "Không thể tải nhật ký thiết bị.");
+        } finally {
+            setDetailLoading(false);
         }
-
-        toast.success(
-            createdDevice.activationCode
-                ? `Đã tạo thiết bị. Mã kích hoạt: ${createdDevice.activationCode}`
-                : "Đã tạo thiết bị IoT.",
-        );
-
-        closeDrawer();
     }
 
     function handleToggleStatus(device, nextStatus) {
         clearActionError();
-
-        setConfirmState({
-            open: true,
-            device,
-            nextStatus,
-        });
+        setConfirmState({ open: true, device, nextStatus });
     }
 
-    function closeConfirmDialog() {
-        if (actionLoading) return;
-
-        setConfirmState({
-            open: false,
-            device: null,
-            nextStatus: "",
-        });
-
-        clearActionError();
-    }
-
-    async function confirmUpdateStatus() {
+    async function confirmStatus() {
         const { device, nextStatus } = confirmState;
-
-        if (!device || !nextStatus) {
-            toast.error("Thiếu dữ liệu cập nhật trạng thái.");
+        const updated = await updateStatus(device.deviceId, nextStatus);
+        if (!updated) {
+            toast.error(actionError || "Không thể cập nhật trạng thái thiết bị.");
             return;
         }
-
-        const actionText =
-            STATUS_ACTION_LABELS[nextStatus] ?? "cập nhật";
-
-        const success = await updateStatus(
-            device.deviceId,
-            nextStatus,
-        );
-
-        if (!success) {
-            toast.error(
-                `Không thể ${actionText} thiết bị "${device.deviceId}".`,
-            );
-            return;
-        }
-
-        toast.success(
-            `Đã ${actionText} thiết bị "${device.deviceId}".`,
-        );
-
-        closeConfirmDialog();
-    }
-
-    async function handleCopyActivationCode(device) {
-        try {
-            if (!device?.activationCode) {
-                toast.error("Thiết bị chưa có mã kích hoạt.");
-                return;
-            }
-
-            await navigator.clipboard.writeText(device.activationCode);
-
-            toast.success(
-                `Đã copy mã kích hoạt ${device.activationCode}.`,
-            );
-        } catch (err) {
-            toast.error("Không thể copy mã kích hoạt.");
-        }
+        toast.success(nextStatus === "ACTIVE" ? "Đã bật lại thiết bị cân." : "Đã tắt thiết bị cân.");
+        setConfirmState({ open: false, device: null, nextStatus: "" });
     }
 
     if (initialLoading) {
-        return <AdminIotDevicesSkeleton />;
+        return <AdminPageSkeleton variant="devices" />;
     }
-
-    if (error) {
-        return (
-            <section className="space-y-5">
-                <AdminIotDevicesHeader
-                    onCreate={openCreateDrawer}
-                    onReload={reload}
-                />
-
-                <div className="rounded-xl border border-red-200 bg-red-50 p-5">
-                    <p className="text-sm font-medium text-red-700">
-                        {error || "Không thể tải dữ liệu thiết bị."}
-                    </p>
-
-                    <button
-                        type="button"
-                        onClick={reload}
-                        className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-                    >
-                        Thử lại
-                    </button>
-                </div>
-            </section>
-        );
-    }
-
-    if (!devices) {
-        return (
-            <section className="space-y-5">
-                <AdminIotDevicesHeader
-                    onCreate={openCreateDrawer}
-                    onReload={reload}
-                />
-
-                <EmptyState onReload={reload} />
-            </section>
-        );
-    }
-
-    const confirmDevice = confirmState.device;
-
-    const confirmActionText =
-        STATUS_ACTION_LABELS[confirmState.nextStatus] ?? "cập nhật";
-
-    const confirmDescription =
-        confirmState.nextStatus === "UNASSIGNED" && confirmDevice
-            ? `Bạn có chắc muốn thu hồi thiết bị "${confirmDevice.deviceId}" không? Thiết bị sẽ bị gỡ khỏi farm hiện tại, revoke API key và cấp mã kích hoạt mới.`
-            : confirmDevice
-                ? `Bạn có chắc muốn ${confirmActionText} thiết bị "${confirmDevice.deviceId}" không?`
-                : "";
 
     return (
         <>
             <section className="space-y-5">
-                <AdminIotDevicesHeader
-                    onCreate={openCreateDrawer}
-                    onReload={reload}
+                <Header onReload={reload} />
+                {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>}
+                <IotDeviceStats summary={summary} />
+                <Tabs activeView={activeView} onChange={setActiveView} summary={summary} />
+                <ScaleDeviceCardGrid
+                    view={activeView}
+                    devices={devices}
+                    pageInfo={pageInfo}
+                    loading={tableLoading}
+                    onPageChange={setPage}
+                    onCreate={setCreateRecord}
+                    onViewDetail={openDetail}
+                    onToggleStatus={handleToggleStatus}
                 />
-
-                {actionError &&
-                    !drawerOpen &&
-                    !confirmState.open &&
-                    !detailDrawerState.open &&
-                    !replaceDrawerState.open && (
-                        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                            {actionError}
-                        </div>
-                    )}
-
-                <IotDeviceStats summary={summary || {}} />
-
-                <DeviceTableTabs
-                    activeView={activeView}
-                    onChange={handleChangeTableView}
-                />
-
-                {activeView === DEVICE_TABLE_VIEW.ALL && (
-                    <IotDeviceTable
-                        devices={devices || []}
-                        pageInfo={pageInfo || {}}
-                        loading={tableLoading}
-                        onPageChange={setPage}
-                        onToggleStatus={handleToggleStatus}
-                        onCopyActivationCode={handleCopyActivationCode}
-                        onViewDetail={openDetailDrawer}
-                    />
-                )}
-
-                {activeView === DEVICE_TABLE_VIEW.UNASSIGNED && (
-                    <UnassignedIotDeviceTable
-                        devices={devices || []}
-                        pageInfo={pageInfo || {}}
-                        loading={tableLoading}
-                        onPageChange={setPage}
-                        onCopyActivationCode={handleCopyActivationCode}
-                        onViewDetail={openDetailDrawer}
-                    />
-                )}
             </section>
 
             <IotDeviceDrawer
-                open={drawerOpen}
+                open={Boolean(createRecord)}
+                macRecord={createRecord}
                 submitting={actionLoading}
+                uploadingImage={uploadingImage}
                 error={actionError}
-                onClose={closeDrawer}
-                onSubmit={handleSubmitDevice}
+                onClose={() => { if (!actionLoading) setCreateRecord(null); }}
+                onUploadImage={handleUploadImage}
+                onSubmit={handleCreate}
             />
 
-            <IotDeviceDetailDrawer
-                open={detailDrawerState.open}
-                device={detailDrawerState.device}
-                onClose={closeDetailDrawer}
-                onReplaceComponent={openReplaceDrawer}
-            />
-
-            <IotDeviceReplaceDrawer
-                open={replaceDrawerState.open}
-                device={replaceDrawerState.device}
-                submitting={actionLoading}
-                error={actionError}
-                onClose={closeReplaceDrawer}
-                onSubmit={handleReplaceComponent}
-            />
+            <IotDeviceDetailDrawer open={Boolean(detailDevice)} device={detailDevice} loading={detailLoading} onClose={() => setDetailDevice(null)} />
 
             <ConfirmDialog
                 open={confirmState.open}
                 title="Cập nhật trạng thái thiết bị"
-                description={confirmDescription}
+                description={`Bạn có chắc muốn ${confirmState.nextStatus === "ACTIVE" ? "bật lại" : "tắt"} thiết bị cân này không? Thay đổi sẽ được ghi vào nhật ký thiết bị.`}
                 confirmText="Xác nhận"
                 cancelText="Hủy"
-                variant={
-                    confirmState.nextStatus === "ACTIVE"
-                        ? "success"
-                        : "danger"
-                }
+                variant={confirmState.nextStatus === "ACTIVE" ? "success" : "danger"}
                 loading={actionLoading}
-                onCancel={closeConfirmDialog}
-                onConfirm={confirmUpdateStatus}
+                onCancel={() => setConfirmState({ open: false, device: null, nextStatus: "" })}
+                onConfirm={confirmStatus}
             />
         </>
     );

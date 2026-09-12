@@ -1,19 +1,24 @@
-export function useRealtimeTopic(topics, onMessage, options = {}) {
+export function useRealtimeTopic(...args) {
+    void args;
     return { connected: false };
 }
 
-export function useRealtimeRefresh(topics, reload, options = {}) {
+export function useRealtimeRefresh(...args) {
+    void args;
     return { connected: false };
 }
 
-export function useFarmTopic(farmId, topic, onMessage, options = {}) {
+export function useFarmTopic(...args) {
+    void args;
     return { connected: false };
 }
 
-export function useFarmRealtimeRefresh(farmId, topics, reload, options = {}) {
+export function useFarmRealtimeRefresh(...args) {
+    void args;
     return { connected: false };
 }
 
-export function useAdminRealtimeRefresh(topics, reload, options = {}) {
+export function useAdminRealtimeRefresh(...args) {
+    void args;
     return { connected: false };
 }

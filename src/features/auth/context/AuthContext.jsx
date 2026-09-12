@@ -1,126 +1,141 @@
-import { createContext, useContext, useCallback, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginApi } from "../services/authApi";
+import { loginApi, logoutAllApi, logoutApi, refreshTokenApi } from "../services/authApi";
+import { clearAccessToken, setAccessToken } from "../../../services/httpClient";
 
-const STORAGE_TOKEN_KEY = "orbit_access_token";
-const STORAGE_REFRESH_TOKEN_KEY = "orbit_refresh_token";
 const STORAGE_USER_KEY = "orbit_user";
 
 const AuthContext = createContext(null);
 
-/**
- * Trả về dashboard mặc định theo role đầu tiên của user.
- */
+function normalizeRoles(data) {
+    if (data?.role) return [data.role];
+    return Array.isArray(data?.roles) ? data.roles : [];
+}
+
 function getDefaultDashboard(roles = []) {
     if (roles.includes("ADMIN")) return "/admin/dashboard";
-    if (roles.includes("OWNER")) return "/owner/dashboard";
+    if (roles.includes("OWNER") || roles.includes("FARM_MANAGER")) return "/owner/dashboard";
     if (roles.includes("STAFF")) return "/staff/dashboard";
-
     return "/login";
 }
 
-/**
- * Đọc dữ liệu user đã lưu từ localStorage.
- */
-function loadStoredAuth() {
+function loadStoredUser() {
     try {
-        const token = localStorage.getItem(STORAGE_TOKEN_KEY);
         const userJson = localStorage.getItem(STORAGE_USER_KEY);
-
-        if (token && userJson) {
-            return { token, user: JSON.parse(userJson) };
-        }
+        return userJson ? JSON.parse(userJson) : null;
     } catch {
-        // Dữ liệu hỏng → xoá
-        localStorage.removeItem(STORAGE_TOKEN_KEY);
-        localStorage.removeItem(STORAGE_REFRESH_TOKEN_KEY);
         localStorage.removeItem(STORAGE_USER_KEY);
+        return null;
     }
+}
 
-    return { token: null, user: null };
+function mapAuthUser(data) {
+    const roles = normalizeRoles(data);
+    return {
+        userId: data.userId,
+        email: data.email,
+        fullName: data.fullName,
+        role: data.role || roles[0] || null,
+        roles,
+        capabilities: data.capabilities || [],
+        farmId: data.farmId,
+        sessionId: data.sessionId,
+        mustChangePassword: Boolean(data.mustChangePassword),
+    };
 }
 
 export function AuthProvider({ children }) {
     const navigate = useNavigate();
-
-    const [token, setToken] = useState(() => loadStoredAuth().token);
-    const [user, setUser] = useState(() => loadStoredAuth().user);
+    const [token, setToken] = useState(null);
+    const [user, setUser] = useState(() => loadStoredUser());
     const [loading, setLoading] = useState(false);
+    const [initializing, setInitializing] = useState(true);
 
-    // Đồng bộ nếu localStorage bị xoá từ tab khác (ví dụ: 401 interceptor)
     useEffect(() => {
-        function handleStorageChange(e) {
-            if (e.key === STORAGE_TOKEN_KEY && !e.newValue) {
-                setToken(null);
+        let mounted = true;
+
+        async function restoreSession() {
+            if (!user) {
+                setInitializing(false);
+                return;
+            }
+
+            try {
+                const data = await refreshTokenApi();
+                if (!mounted) return;
+                setAccessToken(data.token);
+                setToken(data.token);
+            } catch {
+                if (!mounted) return;
+                clearAccessToken();
+                localStorage.removeItem(STORAGE_USER_KEY);
                 setUser(null);
+            } finally {
+                if (mounted) setInitializing(false);
             }
         }
 
-        window.addEventListener("storage", handleStorageChange);
-        return () => window.removeEventListener("storage", handleStorageChange);
+        restoreSession();
+        return () => {
+            mounted = false;
+        };
+        // Restore exactly once when the provider is mounted.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const login = useCallback(async (identifier, password) => {
         try {
             setLoading(true);
-
             const data = await loginApi({ identifier, password });
+            const roles = normalizeRoles(data);
 
-            // Lưu access token + refresh token vào localStorage
-            localStorage.setItem(STORAGE_TOKEN_KEY, data.token);
-            localStorage.setItem(STORAGE_REFRESH_TOKEN_KEY, data.refreshToken);
-
-            const userData = {
-                userId: data.userId,
-                email: data.email,
-                fullName: data.fullName,
-                roles: data.roles,
-                farmId: data.farmId,
-            };
-
-            localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(userData));
-
+            const userData = mapAuthUser(data);
+            setAccessToken(data.token);
             setToken(data.token);
             setUser(userData);
-
-            // Redirect theo role
-            const dashboard = getDefaultDashboard(data.roles);
-            navigate(dashboard, { replace: true });
-
+            localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(userData));
+            navigate(getDefaultDashboard(roles), { replace: true });
             return { success: true };
         } catch (error) {
-            const message =
-                error?.response?.data?.message ||
-                error?.message ||
-                "Đăng nhập thất bại. Vui lòng thử lại.";
-
-            return { success: false, error: message };
+            return {
+                success: false,
+                error: error?.response?.data?.message || error?.message || "Đăng nhập thất bại. Vui lòng thử lại.",
+            };
         } finally {
             setLoading(false);
         }
     }, [navigate]);
 
-    const logout = useCallback(() => {
-        localStorage.removeItem(STORAGE_TOKEN_KEY);
-        localStorage.removeItem(STORAGE_REFRESH_TOKEN_KEY);
-        localStorage.removeItem(STORAGE_USER_KEY);
-        setToken(null);
-        setUser(null);
-        navigate("/login", { replace: true });
-    }, [navigate]);
+    const logout = useCallback(async () => {
+        try {
+            if (token) await logoutApi();
+        } catch {
+            // Local cleanup vẫn phải thực hiện khi server không phản hồi.
+        } finally {
+            clearAccessToken();
+            localStorage.removeItem(STORAGE_USER_KEY);
+            setToken(null);
+            setUser(null);
+            navigate("/login", { replace: true });
+        }
+    }, [navigate, token]);
+
+    const logoutAll = useCallback(async () => {
+        try {
+            if (token) await logoutAllApi();
+        } finally {
+            clearAccessToken();
+            localStorage.removeItem(STORAGE_USER_KEY);
+            setToken(null);
+            setUser(null);
+            navigate("/login", { replace: true });
+        }
+    }, [navigate, token]);
 
     const updateAuthUser = useCallback((newUserData) => {
-        try {
-            const currentUser = JSON.parse(localStorage.getItem(STORAGE_USER_KEY) || "{}");
-            const updatedUser = {
-                ...currentUser,
-                ...newUserData,
-            };
-            localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(updatedUser));
-            setUser(updatedUser);
-        } catch (err) {
-            console.error("Lỗi cập nhật localStorage user:", err);
-        }
+        const updatedUser = { ...(loadStoredUser() || {}), ...newUserData };
+        localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(updatedUser));
+        setUser(updatedUser);
     }, []);
 
     const value = useMemo(() => ({
@@ -128,25 +143,20 @@ export function AuthProvider({ children }) {
         token,
         isAuthenticated: !!token,
         loading,
+        initializing,
         login,
         logout,
+        logoutAll,
         updateAuthUser,
-        getDefaultDashboard: () => getDefaultDashboard(user?.roles),
-    }), [user, token, loading, login, logout, updateAuthUser]);
+        getDefaultDashboard: () => getDefaultDashboard(user?.roles || (user?.role ? [user.role] : [])),
+    }), [user, token, loading, initializing, login, logout, logoutAll, updateAuthUser]);
 
-    return (
-        <AuthContext.Provider value={value}>
-            {children}
-        </AuthContext.Provider>
-    );
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
     const context = useContext(AuthContext);
-
-    if (!context) {
-        throw new Error("useAuth must be used inside <AuthProvider>");
-    }
-
+    if (!context) throw new Error("useAuth must be used inside <AuthProvider>");
     return context;
 }

@@ -1,4 +1,6 @@
-import { createContext, useContext, useMemo, useState } from "react";
+/* eslint-disable react-refresh/only-export-components */
+
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { CheckCircle2, X, XCircle } from "lucide-react";
 
 const ToastContext = createContext(null);
@@ -6,11 +8,11 @@ const ToastContext = createContext(null);
 export function ToastProvider({ children }) {
     const [toasts, setToasts] = useState([]);
 
-    function removeToast(id) {
+    const removeToast = useCallback((id) => {
         setToasts((prev) => prev.filter((toast) => toast.id !== id));
-    }
+    }, []);
 
-    function showToast({ type = "success", title, message }) {
+    const showToast = useCallback(({ type = "success", title, message, duration = 3000 }) => {
         const id = crypto.randomUUID();
 
         setToasts((prev) => [
@@ -25,17 +27,17 @@ export function ToastProvider({ children }) {
 
         setTimeout(() => {
             removeToast(id);
-        }, 3500);
-    }
+        }, duration);
+    }, [removeToast]);
 
     const value = useMemo(
         () => ({
-            success: (message, title = "Thành công") =>
-                showToast({ type: "success", title, message }),
-            error: (message, title = "Có lỗi xảy ra") =>
-                showToast({ type: "error", title, message }),
+            success: (message, title = "Thành công", duration = 3000) =>
+                showToast({ type: "success", title, message, duration }),
+            error: (message, title = "Có lỗi xảy ra", duration = 3000) =>
+                showToast({ type: "error", title, message, duration }),
         }),
-        [],
+        [showToast],
     );
 
     return (
@@ -88,6 +90,11 @@ export function ToastProvider({ children }) {
                             >
                                 <X size={16} />
                             </button>
+
+                            {/* Progress bar */}
+                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-100 rounded-b-xl overflow-hidden">
+                                <div className={`h-full ${isSuccess ? "bg-emerald-400" : "bg-red-400"}`} style={{ animation: "toastProgress 3s linear forwards" }} />
+                            </div>
                         </div>
                     );
                 })}

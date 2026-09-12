@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,40 +24,27 @@ const loginSchema = z.object({
         .min(1, "Mật khẩu không được để trống"),
 });
 
+function getLoginReasonMessage(reason) {
+    switch (reason) {
+        case "user_locked":
+            return "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.";
+        case "concurrent_login":
+            return "Tài khoản đã đăng nhập ở thiết bị khác.";
+        case "session_expired":
+            return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+        default:
+            return "";
+    }
+}
+
 export function LoginPage() {
     const { login, loading } = useAuth();
 
     const [showPassword, setShowPassword] = useState(false);
-    const [apiError, setApiError] = useState("");
-
-    useEffect(() => {
+    const [apiError, setApiError] = useState(() => {
         const params = new URLSearchParams(window.location.search);
-
-        const reason = params.get("reason");
-
-        switch (reason) {
-            case "user_locked":
-                setApiError(
-                    "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.",
-                );
-                break;
-
-            case "concurrent_login":
-                setApiError(
-                    "Tài khoản đã đăng nhập ở thiết bị khác.",
-                );
-                break;
-
-            case "session_expired":
-                setApiError(
-                    "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
-                );
-                break;
-
-            default:
-                break;
-        }
-    }, []);
+        return getLoginReasonMessage(params.get("reason"));
+    });
 
     const {
         register,

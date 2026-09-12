@@ -1,3 +1,4 @@
+import { Image } from "lucide-react";
 import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
 
 const CATEGORY_LABELS = {
@@ -57,11 +58,9 @@ export function OwnerProductTable({
                         <table className="w-full min-w-[1000px] border-collapse text-left">
                             <thead className="bg-slate-50">
                             <tr className="text-[11px] font-medium uppercase text-slate-600">
-                                <th className="px-5 py-3">Mã SP</th>
+                                <th className="px-5 py-3 w-16">Ảnh</th>
                                 <th className="px-5 py-3">Tên sản phẩm</th>
-                                <th className="px-5 py-3">Keypad</th>
-                                <th className="px-5 py-3">AI Label</th>
-                                <th className="px-5 py-3">Loại</th>
+                                                                <th className="px-5 py-3">Loại</th>
                                 <th className="px-5 py-3">Tồn tối thiểu</th>
                                 <th className="px-5 py-3">Ngày tạo</th>
                                 <th className="w-[120px] px-5 py-3">Hành động</th>
@@ -74,33 +73,20 @@ export function OwnerProductTable({
                                     key={item.id}
                                     className="border-t border-slate-200 text-sm text-slate-700"
                                 >
-                                    <td className="px-5 py-4 font-semibold text-slate-900">
-                                        <div>{item.productCode}</div>
-
-                                        <div className="mt-1 text-xs font-normal text-slate-500">
-                                            {item.productQrCodeValue ? "Có QR" : "Chưa có QR"}
-                                        </div>
+                                    <td className="px-5 py-4">
+                                        {item.imageUrl ? (
+                                            <img src={item.imageUrl} alt={item.productName} className="h-10 w-10 rounded-lg object-cover border border-slate-200 bg-slate-50" />
+                                        ) : (
+                                            <div className="h-10 w-10 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-400">
+                                                <Image size={20} />
+                                            </div>
+                                        )}
                                     </td>
 
                                     <td className="max-w-[260px] px-5 py-4">
                                         <div className="line-clamp-2 font-medium text-slate-900">
                                             {item.productName}
                                         </div>
-                                        <div className="mt-1 text-xs text-slate-500">
-                                            #{item.id}
-                                        </div>
-                                    </td>
-
-                                    <td className="px-5 py-4">
-                                            <span className="rounded bg-emerald-50 px-2 py-1 text-xs font-semibold text-[#006948]">
-                                                {item.keypadCode || "Chưa có"}
-                                            </span>
-                                    </td>
-
-                                    <td className="max-w-[220px] px-5 py-4">
-                                            <span className="break-all text-xs text-slate-500">
-                                                {item.aiLabel || "Chưa có"}
-                                            </span>
                                     </td>
 
                                     <td className="px-5 py-4">
@@ -130,7 +116,7 @@ export function OwnerProductTable({
                             {products.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={8}
+                                        colSpan={6}
                                         className="px-5 py-10 text-center text-sm text-slate-500"
                                     >
                                         Chưa có sản phẩm nào.

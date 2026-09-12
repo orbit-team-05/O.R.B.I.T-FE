@@ -1,10 +1,6 @@
 import {
     LayoutDashboard,
-    Leaf,
-    Database,
-    SlidersHorizontal,
     Cpu,
-    ChartNoAxesCombined,
     Users,
     Warehouse,
     Settings,
@@ -17,29 +13,9 @@ export const ADMIN_NAV_ITEMS = [
         icon: LayoutDashboard,
     },
     {
-        label: "Quản lý Species",
-        path: "/admin/species",
-        icon: Leaf,
-    },
-    {
-        label: "Nguồn dữ liệu",
-        path: "/admin/market-sources",
-        icon: Database,
-    },
-    {
-        label: "Cấu hình Crawl",
-        path: "/admin/crawl-targets",
-        icon: SlidersHorizontal,
-    },
-    {
-        label: "Thiết bị IoT",
+        label: "Thiết bị cân",
         path: "/admin/devices",
         icon: Cpu,
-    },
-    {
-        label: "Dữ liệu giá Crawl",
-        path: "/admin/market-prices",
-        icon: ChartNoAxesCombined,
     },
     {
         label: "Người dùng",
@@ -52,7 +28,7 @@ export const ADMIN_NAV_ITEMS = [
         icon: Warehouse,
     },
     {
-        label: "Cài đặt hệ thống",
+        label: "Cài đặt",
         path: "/admin/settings",
         icon: Settings,
     },

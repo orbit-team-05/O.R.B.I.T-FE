@@ -1,3 +1,4 @@
+import { AdminPageSkeleton } from "../../../components/common/loading/AdminPageSkeleton";
 import { useState } from "react";
 
 import { ConfirmDialog } from "../../../components/common/dialog/ConfirmDialog";
@@ -32,36 +33,7 @@ function AdminSpeciesHeader({ onCreate }) {
 }
 
 function AdminSpeciesSkeleton() {
-    return (
-        <section className="space-y-5">
-            <AdminSpeciesHeader onCreate={() => {}} />
-
-            <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                {[1, 2, 3].map((item) => (
-                    <div
-                        key={item}
-                        className="h-[86px] animate-pulse rounded-xl border border-slate-200 bg-white"
-                    />
-                ))}
-            </section>
-
-            <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-                <div className="border-b border-slate-200 px-5 py-4">
-                    <div className="h-5 w-40 animate-pulse rounded bg-slate-200" />
-                    <div className="mt-2 h-3 w-80 animate-pulse rounded bg-slate-200" />
-                </div>
-
-                <div className="space-y-3 px-5 py-4">
-                    {[1, 2, 3, 4].map((item) => (
-                        <div
-                            key={item}
-                            className="h-10 animate-pulse rounded bg-slate-100"
-                        />
-                    ))}
-                </div>
-            </section>
-        </section>
-    );
+    return <AdminPageSkeleton variant="table" />;
 }
 
 function ErrorState({ error, onRetry, onCreate }) {

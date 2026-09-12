@@ -2,10 +2,12 @@ import { useCallback, useMemo, useState } from "react";
 
 import {
     activateOwnerIotDevice,
-    cancelOwnerIotDevicePendingCommand,
+    getOwnerLatestScaleWeight,
+    getOwnerScaleDeviceAuditLogs,
     getOwnerIotDeviceDetail,
     getOwnerIotDevices,
-    updateOwnerIotDeviceWorkMode,
+    updateOwnerScaleDeviceProfile,
+    uploadOwnerScaleDeviceImage,
 } from "../services/ownerIotDeviceApi";
 import { useFarmRealtimeRefresh } from "../../../../hooks/useFarmTopic";
 
@@ -29,7 +31,7 @@ export function useOwnerIotDevices(farmId, initialPage = 0, initialSize = 10) {
     const [actionLoading, setActionLoading] = useState(false);
     const [actionError, setActionError] = useState("");
 
-    const devices = devicePage?.content ?? [];
+    const devices = useMemo(() => devicePage?.content ?? [], [devicePage?.content]);
 
     const loadDevices = useCallback(async () => {
         if (!farmId) return;
@@ -89,6 +91,73 @@ export function useOwnerIotDevices(farmId, initialPage = 0, initialSize = 10) {
         }
     }
 
+    async function refreshLatestWeight(deviceId) {
+        if (!farmId || !deviceId) return null;
+        try {
+            const latest = await getOwnerLatestScaleWeight(farmId, deviceId);
+            setSelectedDevice((current) => current && current.deviceId === deviceId
+                ? { ...current, lastWeightGrams: latest.weightGrams, lastWeightAt: latest.capturedAt }
+                : current);
+            return latest;
+        } catch (err) {
+            setActionError(getErrorMessage(err, "Không thể lấy khối lượng mới nhất."));
+            return null;
+        }
+    }
+
+    async function loadAuditLogs(deviceId, auditPage = 0) {
+        if (!farmId || !deviceId) return null;
+        try {
+            const data = await getOwnerScaleDeviceAuditLogs(farmId, deviceId, auditPage, 10);
+            return data;
+        } catch (err) {
+            setActionError(getErrorMessage(err, "Không thể tải nhật ký thiết bị."));
+            return null;
+        }
+    }
+
+    async function updateDeviceProfile(deviceId, payload) {
+        if (!farmId || !deviceId) return null;
+        try {
+            setActionLoading(true);
+            setActionError("");
+            const data = await updateOwnerScaleDeviceProfile(farmId, deviceId, payload);
+            setSelectedDevice(data);
+            await loadDevices();
+            return data;
+        } catch (err) {
+            setActionError(getErrorMessage(err, "Không thể cập nhật thông tin thiết bị."));
+            return null;
+        } finally {
+            setActionLoading(false);
+        }
+    }
+
+    async function uploadDeviceImage(deviceId, file) {
+        if (!farmId || !deviceId || !file) return null;
+        if (file.size > 20 * 1024 * 1024) {
+            setActionError("Ảnh thiết bị không được vượt quá 20MB.");
+            return null;
+        }
+        if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+            setActionError("Chỉ chấp nhận ảnh JPG, PNG hoặc WebP.");
+            return null;
+        }
+        try {
+            setActionLoading(true);
+            setActionError("");
+            const data = await uploadOwnerScaleDeviceImage(farmId, deviceId, file);
+            setSelectedDevice(data);
+            await loadDevices();
+            return data;
+        } catch (err) {
+            setActionError(getErrorMessage(err, "Không thể cập nhật ảnh thiết bị."));
+            return null;
+        } finally {
+            setActionLoading(false);
+        }
+    }
+
     useFarmRealtimeRefresh(farmId, IOT_DEVICE_REALTIME_TOPICS, async () => {
         await loadDevices();
 
@@ -116,61 +185,7 @@ export function useOwnerIotDevices(farmId, initialPage = 0, initialSize = 10) {
         }
     }
 
-    async function handleUpdateWorkMode(deviceId, mode, seasonId = null) {
-        if (!farmId || !deviceId) return null;
 
-        try {
-            setActionLoading(true);
-            setActionError("");
-
-            const payload = {
-                mode,
-                seasonId,
-            };
-
-            const data = await updateOwnerIotDeviceWorkMode(
-                farmId,
-                deviceId,
-                payload,
-            );
-
-            await loadDevices();
-
-            return data;
-        } catch (err) {
-            setActionError(
-                getErrorMessage(err, "Không thể cập nhật chế độ thiết bị."),
-            );
-            return null;
-        } finally {
-            setActionLoading(false);
-        }
-    }
-
-    async function handleCancelPendingCommand(deviceId) {
-        if (!farmId || !deviceId) return null;
-
-        try {
-            setActionLoading(true);
-            setActionError("");
-
-            const data = await cancelOwnerIotDevicePendingCommand(
-                farmId,
-                deviceId,
-            );
-
-            await loadDevices();
-
-            return data;
-        } catch (err) {
-            setActionError(
-                getErrorMessage(err, "Không thể hủy lệnh chờ của thiết bị."),
-            );
-            return null;
-        } finally {
-            setActionLoading(false);
-        }
-    }
 
     function handleSetPage(nextPage) {
         setPage(Math.max(Number(nextPage) || 0, 0));
@@ -208,9 +223,11 @@ export function useOwnerIotDevices(farmId, initialPage = 0, initialSize = 10) {
         clearActionError: () => setActionError(""),
 
         activateDevice: handleActivateDevice,
-        updateWorkMode: handleUpdateWorkMode,
-        cancelPendingCommand: handleCancelPendingCommand,
 
         loadDeviceDetail,
+        refreshLatestWeight,
+        loadAuditLogs,
+        updateDeviceProfile,
+        uploadDeviceImage,
     };
 }

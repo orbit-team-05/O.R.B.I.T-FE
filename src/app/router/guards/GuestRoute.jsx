@@ -6,7 +6,11 @@ import { useAuth } from "../../../features/auth/context/AuthContext";
  * Nếu đã đăng nhập → redirect về dashboard.
  */
 export function GuestRoute({ children }) {
-    const { isAuthenticated, getDefaultDashboard } = useAuth();
+    const { isAuthenticated, initializing, getDefaultDashboard } = useAuth();
+
+    if (initializing) {
+        return null;
+    }
 
     if (isAuthenticated) {
         return <Navigate to={getDefaultDashboard()} replace />;

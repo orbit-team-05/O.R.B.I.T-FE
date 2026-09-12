@@ -2,6 +2,10 @@ import { useCallback, useMemo, useState } from "react";
 import {
     createOwnerProduct,
     getOwnerProducts,
+    uploadOwnerProductImage,
+    updateOwnerProduct,
+    updateOwnerProductStatus,
+    uploadOwnerProductImageForProduct,
 } from "../services/ownerProductApi";
 import { useFarmRealtimeRefresh } from "../../../../hooks/useFarmTopic";
 
@@ -11,12 +15,13 @@ function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
 }
 
-export function useOwnerProducts(farmId, initialPage = 0, initialSize = 10) {
+export function useOwnerProducts(farmId, initialPage = 0, initialSize = 20) {
     const [productPage, setProductPage] = useState(null);
     const [createdProduct, setCreatedProduct] = useState(null);
 
     const [page, setPage] = useState(initialPage);
     const [size] = useState(initialSize);
+    const [filters, setFilters] = useState({ keyword: "", category: "", status: "" });
 
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -25,7 +30,7 @@ export function useOwnerProducts(farmId, initialPage = 0, initialSize = 10) {
     const [actionError, setActionError] = useState("");
     const [actionSuccess, setActionSuccess] = useState("");
 
-    const products = productPage?.content ?? [];
+    const products = useMemo(() => productPage?.content ?? [], [productPage?.content]);
 
     const loadProducts = useCallback(async () => {
         if (!farmId) return;
@@ -34,14 +39,14 @@ export function useOwnerProducts(farmId, initialPage = 0, initialSize = 10) {
             setLoading(true);
             setError("");
 
-            const data = await getOwnerProducts(farmId, page, size);
+            const data = await getOwnerProducts(farmId, page, size, filters);
             setProductPage(data);
         } catch (err) {
             setError(getErrorMessage(err, "Không thể tải danh sách sản phẩm."));
         } finally {
             setLoading(false);
         }
-    }, [farmId, page, size]);
+    }, [farmId, page, size, filters]);
 
     async function createProduct(payload) {
         if (!farmId) return null;
@@ -61,6 +66,61 @@ export function useOwnerProducts(farmId, initialPage = 0, initialSize = 10) {
             return data;
         } catch (err) {
             setActionError(getErrorMessage(err, "Không thể tạo sản phẩm."));
+            return null;
+        } finally {
+            setSubmitting(false);
+        }
+    }
+
+    async function uploadProductImage(file) {
+        if (!farmId || !file) return null;
+        try {
+            return await uploadOwnerProductImage(farmId, file);
+        } catch (err) {
+            setActionError(getErrorMessage(err, "Không thể tải lên ảnh nền."));
+            return null;
+        }
+    }
+
+    async function saveProduct(productId, payload) {
+        try {
+            setSubmitting(true);
+            setActionError("");
+            const data = await updateOwnerProduct(farmId, productId, payload);
+            await loadProducts();
+            return data;
+        } catch (err) {
+            setActionError(getErrorMessage(err, "Không thể cập nhật sản phẩm."));
+            return null;
+        } finally {
+            setSubmitting(false);
+        }
+    }
+
+    async function changeProductStatus(productId, status) {
+        try {
+            setSubmitting(true);
+            setActionError("");
+            const data = await updateOwnerProductStatus(farmId, productId, status);
+            await loadProducts();
+            return data;
+        } catch (err) {
+            setActionError(getErrorMessage(err, "Không thể cập nhật trạng thái sản phẩm."));
+            return null;
+        } finally {
+            setSubmitting(false);
+        }
+    }
+
+    async function uploadImageForProduct(productId, file) {
+        try {
+            setSubmitting(true);
+            setActionError("");
+            const data = await uploadOwnerProductImageForProduct(farmId, productId, file);
+            await loadProducts();
+            return data;
+        } catch (err) {
+            setActionError(getErrorMessage(err, "Không thể tải ảnh sản phẩm."));
             return null;
         } finally {
             setSubmitting(false);
@@ -107,8 +167,14 @@ export function useOwnerProducts(farmId, initialPage = 0, initialSize = 10) {
         actionSuccess,
 
         setPage: handleSetPage,
+        filters,
+        setFilters,
         reload: loadProducts,
         createProduct,
+        uploadProductImage,
+        saveProduct,
+        changeProductStatus,
+        uploadImageForProduct,
         clearActionMessages: () => {
             setActionError("");
             setActionSuccess("");

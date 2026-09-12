@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
     getOwnerInventoryStocks,
     getOwnerInventoryStockDetail,
 } from "../services/ownerInventoryApi.js";
+import { getOwnerInventorySummary } from "../services/inventorySummaryApi.js";
 import { useFarmRealtimeRefresh } from "../../../../hooks/useFarmTopic";
 
 const INVENTORY_REALTIME_TOPICS = [
@@ -16,12 +17,21 @@ function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
 }
 
-export function useOwnerInventoryStocks(farmId, initialPage = 0, initialSize = 10) {
+export function useOwnerInventoryStocks(farmId, warehouseType = "MATERIAL", initialPage = 0, initialSize = 10) {
     const [stockPage, setStockPage] = useState(null);
     const [stocks, setStocks] = useState([]);
+    const [summary, setSummary] = useState(null);
 
+    const [category, setCategory] = useState("");
     const [page, setPage] = useState(initialPage);
     const [size] = useState(initialSize);
+
+    useEffect(() => {
+        // Reset the category/page when switching between material and product warehouses.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setCategory("");
+        setPage(initialPage);
+    }, [warehouseType, initialPage]);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -36,21 +46,29 @@ export function useOwnerInventoryStocks(farmId, initialPage = 0, initialSize = 1
             setLoading(false);
             return;
         }
+        
+        if (category === "pending") {
+            return;
+        }
 
         try {
             setLoading(true);
             setError("");
 
-            const data = await getOwnerInventoryStocks(farmId, page, size);
+            const [data, summaryData] = await Promise.all([
+                getOwnerInventoryStocks(farmId, warehouseType === "PRODUCT" ? "" : category, page, size, warehouseType),
+                getOwnerInventorySummary(farmId, warehouseType),
+            ]);
 
             setStockPage(data);
             setStocks(data?.content ?? []);
+            setSummary(summaryData);
         } catch (err) {
             setError(getErrorMessage(err, "Không thể tải danh sách tồn kho."));
         } finally {
             setLoading(false);
         }
-    }, [farmId, page, size]);
+    }, [farmId, category, page, size, warehouseType]);
 
     const loadStockDetail = useCallback(
         async (stockId) => {
@@ -75,23 +93,10 @@ export function useOwnerInventoryStocks(farmId, initialPage = 0, initialSize = 1
     );
 
     useEffect(() => {
+        // Start the async inventory loading lifecycle.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         void loadStocks();
     }, [loadStocks]);
-
-    const summary = useMemo(() => {
-        const totalProducts = stocks.length;
-        const lowStock = stocks.filter((item) => item.lowStock).length;
-        const inventoryValue = stocks.reduce(
-            (sum, item) => sum + Number(item.inventoryValue || 0),
-            0,
-        );
-
-        return {
-            totalProducts,
-            lowStock,
-            inventoryValue,
-        };
-    }, [stocks]);
 
     useFarmRealtimeRefresh(farmId, INVENTORY_REALTIME_TOPICS, async () => {
         await loadStocks();
@@ -122,6 +127,8 @@ export function useOwnerInventoryStocks(farmId, initialPage = 0, initialSize = 1
         detailLoading,
         loadStockDetail,
 
+        category,
+        setCategory,
         setPage,
         reload: loadStocks,
     };

@@ -1,22 +1,21 @@
 import {
+    Activity,
+    AlertTriangle,
     ChartNoAxesCombined,
+    FileText,
     Package,
     RefreshCw,
+    Scale,
     TrendingUp,
     Warehouse,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { useAuth } from "../../../features/auth/context/AuthContext";
 import { useOwnerDashboard } from "../../../features/owner/dashboard/hooks/useOwnerDashboard";
-import {
-    formatPriceChange,
-    formatPriceWithUnit,
-} from "../../../features/owner/market-prices/utils/marketPriceUtils";
+import { OwnerPageHeader } from "../common/OwnerPageHeader";
 import { formatCurrency } from "../../../utils/formatUtils";
-
-const FALLBACK_FARM_ID = 1;
 
 const STAT_ICON_MAP = {
     initialCapitalCost: {
@@ -81,71 +80,6 @@ function formatRelativeTime(value) {
     if (diffDays < 7) return `${diffDays} ngày trước`;
 
     return formatDateTime(value);
-}
-
-function getScanTypeMeta(status) {
-    const normalizedStatus =
-        String(status || "").toUpperCase();
-
-    switch (normalizedStatus) {
-        case "SUCCESS":
-            return {
-                label: "Nhận diện QR",
-                className:
-                    "bg-emerald-50 text-[#006948]",
-            };
-
-        case "CORRECTED":
-            return {
-                label:
-                    "Đã nhập mã thủ công",
-                className:
-                    "bg-blue-50 text-blue-700",
-            };
-
-        case "UNRECOGNIZED":
-            return {
-                label:
-                    "Không nhận diện",
-                className:
-                    "bg-amber-50 text-amber-700",
-            };
-
-        case "PENDING":
-            return {
-                label: "Đang xử lý",
-                className:
-                    "bg-slate-100 text-slate-700",
-            };
-
-        default:
-            return {
-                label:
-                    "Không hiển thị dữ liệu",
-                className:
-                    "bg-slate-100 text-slate-600",
-            };
-    }
-}
-function getReviewMeta(reviewed) {
-    if (reviewed === true) {
-        return {
-            label: "Đã duyệt",
-            className: "bg-emerald-100 text-[#006948]",
-        };
-    }
-
-    if (reviewed === false) {
-        return {
-            label: "Chưa duyệt",
-            className: "bg-amber-100 text-amber-700",
-        };
-    }
-
-    return {
-        label: "Không hiển thị dữ liệu",
-        className: "bg-slate-100 text-slate-500",
-    };
 }
 
 function getDeviceStatusMeta(status) {
@@ -230,118 +164,71 @@ function DashboardStatCard({ item }) {
     );
 }
 
-function DashboardMarketPriceTable({ prices, loading }) {
-    if (loading) {
-        return <LoadingState minHeight={160} />;
-    }
+function DashboardMetric({ label, value, helper, icon: Icon, tone = "text-[#006948]" }) {
+    return <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center justify-between"><span className="text-sm text-slate-500">{label}</span><Icon className={`h-5 w-5 ${tone}`} /></div><p className="mt-3 text-2xl font-bold text-slate-800">{value}</p><p className="mt-1 text-xs text-slate-500">{helper}</p></article>;
+}
 
-    if (prices.length === 0) {
-        return (
-            <SectionEmptyState
-                message="Không hiển thị dữ liệu giá thị trường."
-                minHeight={160}
-            />
-        );
-    }
-
-    return (
-        <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px]">
-                <thead>
-                    <tr className="text-left text-xs uppercase text-slate-500">
-                        <th className="pb-3">Mặt hàng</th>
-                        <th className="pb-3">Size</th>
-                        <th className="pb-3">Giá</th>
-                        <th className="pb-3">Thay đổi</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {prices.map((item) => {
-                        const positive = Number(item.priceChangeValue) > 0;
-                        const neutral = Number(item.priceChangeValue) === 0 || item.priceChangeValue === null || item.priceChangeValue === undefined;
-                        const changeColorClass = neutral
-                            ? "text-slate-500"
-                            : positive
-                              ? "text-[#006948]"
-                              : "text-red-600";
-
-                        return (
-                            <tr
-                                key={item.marketCode}
-                                className="border-t border-slate-100"
-                            >
-                                <td className="max-w-[220px] py-3 pr-3 text-sm font-medium text-slate-800">
-                                    <div className="line-clamp-2">
-                                        {item.speciesName || item.marketName || "-"}
-                                    </div>
-                                </td>
-
-                                <td className="py-3 pr-3 text-sm text-slate-600">
-                                    {item.sizeCategory || "DEFAULT"}
-                                </td>
-
-                                <td className="py-3 pr-3 text-sm font-semibold text-slate-900">
-                                    {formatPriceWithUnit(item.price, item.priceUnit)}
-                                </td>
-
-                                <td className={`py-3 text-sm font-semibold ${changeColorClass}`}>
-                                    {formatPriceChange(item.priceChangeValue)}
-                                </td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
-        </div>
-    );
+function TransactionTrendChart({ points = [], loading }) {
+    if (loading) return <LoadingState minHeight={220} />;
+    if (!points.length) return <SectionEmptyState message="Chưa có giao dịch trong khoảng thời gian gần đây." minHeight={220} />;
+    const max = Math.max(...points.map((point) => Number(point.transactionCount || 0)), 1);
+    return <div className="flex h-[220px] items-end gap-2 border-b border-l border-slate-200 px-3 pb-1 pt-5">{points.map((point) => <div key={point.day} className="flex h-full flex-1 flex-col items-center justify-end gap-2"><div className="w-full max-w-[32px] rounded-t-md bg-[#006948] transition-all" style={{ height: `${Math.max(8, Number(point.transactionCount || 0) / max * 100)}%` }} title={`${point.transactionCount} giao dịch`} /><span className="text-[10px] text-slate-400">{new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit" }).format(new Date(`${point.day}T00:00:00`))}</span></div>)}</div>;
 }
 
 export default function OwnerDashboardPage() {
     const { user } = useAuth();
-    const farmId = user?.farmId ?? FALLBACK_FARM_ID;
+    const farmId = user?.farmId;
+    const [rangeDays, setRangeDays] = useState(30);
     const {
         stats,
+        summary,
         stockAlerts,
-        recentScans,
-        devices,
-        marketPrices,
-        loading,
+        recentTransactions,
+        transactionTrend,
+                devices,
+                loading,
         refreshing,
+        sectionErrors,
         loadInitial,
         reload,
-    } = useOwnerDashboard(farmId);
+    } = useOwnerDashboard(farmId, rangeDays);
+
+    const overview = summary?.overview;
+    const inventoryOverview = summary?.inventoryOverview;
+    const transactionOverview = summary?.transactionOverview;
+    const iotOverview = summary?.iotOverview;
 
     useEffect(() => {
         loadInitial();
     }, [loadInitial]);
 
+    if (!farmId) {
+        return <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">Tài khoản chưa được gán Farm nên chưa thể hiển thị Dashboard vận hành.</div>;
+    }
+
     return (
         <div className="space-y-6">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-800">
-                        Tổng quan nông trại
-                    </h1>
+            <OwnerPageHeader
+                title="Tổng quan nông trại"
+                description="Theo dõi mùa vụ, tồn kho, thiết bị cân, giao dịch và các cảnh báo vận hành từ dữ liệu thực tế của Farm."
+                actions={<>
+                    <label className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-600">
+                        <span className="text-xs font-medium uppercase text-slate-500">Khoảng thời gian</span>
+                        <select value={rangeDays} onChange={(event) => setRangeDays(Number(event.target.value))} className="bg-transparent font-semibold text-slate-800 outline-none">
+                            <option value={7}>7 ngày</option>
+                            <option value={30}>30 ngày</option>
+                            <option value={90}>90 ngày</option>
+                            <option value={365}>365 ngày</option>
+                        </select>
+                    </label>
+                    <button type="button" onClick={reload} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                        <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
+                        Làm mới dữ liệu
+                    </button>
+                </>}
+            />
 
-                    <p className="mt-1 text-sm text-slate-500">
-                        Theo dõi vận hành, cảnh báo tồn kho, thiết bị IoT và giá
-                        thị trường từ dữ liệu thực tế của farm.
-                    </p>
-                </div>
-
-                <button
-                    type="button"
-                    onClick={reload}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                    <RefreshCw
-                        size={16}
-                        className={refreshing ? "animate-spin" : ""}
-                    />
-                    Làm mới dữ liệu
-                </button>
-            </div>
+            {sectionErrors.summary && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{sectionErrors.summary}</div>}
 
             {loading ? (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -360,87 +247,22 @@ export default function OwnerDashboardPage() {
                 </div>
             )}
 
+            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+                <DashboardMetric label="Mùa vụ đang vận hành" value={(overview?.activeSeasonCount ?? 0) + (overview?.harvestingSeasonCount ?? 0)} helper={`${overview?.harvestingSeasonCount ?? 0} mùa đang thu hoạch`} icon={Activity} />
+                <DashboardMetric label="Tồn kho vật tư thực tế" value={`${formatNumber(inventoryOverview?.actualMaterialStockKg)} kg`} helper={`Dự kiến: ${formatNumber(inventoryOverview?.projectedMaterialStockKg)} kg`} icon={Warehouse} tone="text-blue-600" />
+                <DashboardMetric label="Kho sản phẩm thực tế" value={`${formatNumber(inventoryOverview?.actualProductStockKg)} kg`} helper="Sản lượng đã lưu kho" icon={Package} tone="text-amber-600" />
+                <DashboardMetric label="Giao dịch chờ duyệt" value={overview?.pendingApprovalCount ?? 0} helper="Cần kiểm tra và xử lý" icon={AlertTriangle} tone="text-orange-500" />
+                <DashboardMetric label="Thiết bị cân hoạt động" value={`${iotOverview?.activeDevices ?? 0}/${iotOverview?.totalDevices ?? 0}`} helper={iotOverview?.latestWeightGrams != null ? `Lần cân gần nhất: ${formatNumber(iotOverview.latestWeightGrams)} g` : "Chưa có lần cân gần nhất"} icon={Scale} tone="text-purple-600" />
+                <DashboardMetric label="Doanh thu thực tế" value={formatCurrency(transactionOverview?.actualRevenue)} helper="Từ giao dịch đã ghi nhận" icon={TrendingUp} tone="text-emerald-600" />
+            </section>
+
+            <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="mb-4 flex items-center justify-between"><div><h2 className="text-lg font-semibold text-slate-900">Xu hướng giao dịch</h2><p className="mt-1 text-xs text-slate-500">Số giao dịch theo ngày trong {rangeDays} ngày gần nhất</p></div><Activity className="h-5 w-5 text-[#006948]" /></div><TransactionTrendChart points={transactionTrend} loading={loading} /></section>
+                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="mb-4 flex items-center justify-between"><div><h2 className="text-lg font-semibold text-slate-900">Tiến độ mùa vụ</h2><p className="mt-1 text-xs text-slate-500">Theo ngày dự kiến của từng mùa đang chạy</p></div><TrendingUp className="h-5 w-5 text-blue-600" /></div>{loading ? <LoadingState minHeight={220} /> : summary?.seasonProgress?.length ? <div className="space-y-4">{summary.seasonProgress.map((season) => <div key={season.seasonId}><div className="mb-1 flex items-center justify-between text-sm"><span className="font-medium text-slate-700">{season.seasonName}</span><span className="text-xs font-semibold text-[#006948]">{Number(season.progressPercentage || 0).toFixed(0)}%</span></div><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-[#006948]" style={{ width: `${Math.min(100, Number(season.progressPercentage || 0))}%` }} /></div><p className="mt-1 text-xs text-slate-400">{season.status}</p></div>)}</div> : <SectionEmptyState message="Chưa có mùa vụ đang vận hành." minHeight={220} />}</section>
+            </div>
+
             <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
-                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <div className="mb-4 flex items-center justify-between">
-                        <h2 className="text-lg font-semibold">Hoạt động gần đây</h2>
-
-                        <Link
-                            to="/owner/iot-scans"
-                            className="text-sm font-medium text-emerald-600 hover:underline"
-                        >
-                            Xem tất cả
-                        </Link>
-                    </div>
-
-                    {loading ? (
-                        <LoadingState minHeight={220} />
-                    ) : recentScans.length === 0 ? (
-                        <SectionEmptyState
-                            message="Không hiển thị dữ liệu hoạt động gần đây."
-                            minHeight={220}
-                        />
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="border-b border-slate-100 text-left text-xs uppercase text-slate-500">
-                                        <th className="pb-3">Thời gian</th>
-                                        <th className="pb-3">Loại</th>
-                                        <th className="pb-3">Nội dung</th>
-                                        <th className="pb-3">Thiết bị</th>
-                                        <th className="pb-3">Trạng thái</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {recentScans.map((activity) => {
-                                        const typeMeta = getScanTypeMeta(activity.aiStatus);
-                                        const reviewMeta = getReviewMeta(activity.reviewed);
-
-                                        return (
-                                            <tr
-                                                key={activity.transactionId}
-                                                className="border-b border-slate-50"
-                                            >
-                                                <td className="py-3 text-sm">
-                                                    {formatRelativeTime(activity.scannedAt)}
-                                                </td>
-
-                                                <td className="py-3">
-                                                    <span
-                                                        className={`rounded px-2 py-1 text-xs font-medium ${typeMeta.className}`}
-                                                    >
-                                                        {typeMeta.label}
-                                                    </span>
-                                                </td>
-
-                                                <td className="py-3 text-sm">
-                                                    {activity.itemName || "Chưa nhận diện AI"}
-                                                </td>
-
-                                                <td className="py-3 text-sm">
-                                                    {activity.deviceName ||
-                                                        "Không hiển thị dữ liệu"}
-                                                </td>
-
-                                                <td className="py-3">
-                                                    <span
-                                                        className={`rounded-full px-2 py-1 text-xs font-medium ${reviewMeta.className}`}
-                                                    >
-                                                        {reviewMeta.label}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </section>
-
-                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <section className="col-span-2 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                     <h2 className="mb-4 text-lg font-semibold">
                         Trạng thái thiết bị IoT
                     </h2>
@@ -534,27 +356,10 @@ export default function OwnerDashboardPage() {
                     )}
                 </section>
 
-                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <div className="mb-4 flex items-center justify-between gap-3">
-                        <h2 className="inline-flex items-center gap-2 text-lg font-semibold">
-                            <ChartNoAxesCombined size={19} className="text-[#006948]" />
-                            Giá thị trường theo Watchlist
-                        </h2>
-
-                        <Link
-                            to="/owner/market-prices"
-                            className="text-sm font-semibold text-[#006948] hover:underline"
-                        >
-                            Xem tất cả
-                        </Link>
-                    </div>
-
-                    <DashboardMarketPriceTable
-                        prices={marketPrices}
-                        loading={loading}
-                    />
-                </section>
+                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-semibold">Hoạt động gần đây</h2><Activity size={18} className="text-slate-400" /></div>{loading ? <LoadingState minHeight={220} /> : recentTransactions.length === 0 ? <SectionEmptyState message="Chưa có hoạt động giao dịch." minHeight={220} /> : <div className="space-y-3">{recentTransactions.map((item) => <div key={item.transactionId} className="flex items-center justify-between rounded-xl border border-slate-100 p-3"><div><p className="font-medium text-slate-800">{item.itemName}</p><p className="text-xs text-slate-500">{item.transactionType} · {item.deviceName || "MANUAL"}</p></div><div className="text-right"><p className="font-semibold text-slate-800">{formatNumber(item.quantityGrams)} g</p><p className="text-xs text-slate-400">{formatRelativeTime(item.scannedAt)}</p></div></div>)}</div>}</section>
             </div>
+
+            <section className="flex flex-col gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="font-semibold text-[#006948]">Cần xem báo cáo chi tiết?</h2><p className="mt-1 text-sm text-emerald-800/70">Lọc giao dịch theo thời gian và tải báo cáo PDF của Farm.</p></div><Link to="/owner/reports" className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white hover:bg-[#00583d]"><FileText size={16} />Mở báo cáo</Link></section>
         </div>
     );
 }

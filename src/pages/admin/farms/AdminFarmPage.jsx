@@ -1,4 +1,6 @@
+import { AdminPageSkeleton } from "../../../components/common/loading/AdminPageSkeleton";
 import { useState } from "react";
+import { Search } from "lucide-react";
 
 import { ConfirmDialog } from "../../../components/common/dialog/ConfirmDialog";
 import { useToast } from "../../../components/common/toast/ToastProvider";
@@ -6,13 +8,14 @@ import { FarmDrawer } from "../../../features/admin/farms/components/FarmDrawer"
 import { FarmStats } from "../../../features/admin/farms/components/FarmStats";
 import { FarmTable } from "../../../features/admin/farms/components/FarmTable";
 import { useAdminFarms } from "../../../features/admin/farms/hooks/useAdminFarms";
+import { getFarmById } from "../../../features/admin/farms/services/farmApi";
 
 function AdminFarmHeader({ onCreate = () => {} }) {
     return (
         <header className="flex items-start justify-between gap-4">
             <div>
                 <h1 className="text-2xl font-semibold text-slate-900">
-                    Quản lý Nông trại
+                    Nông trại
                 </h1>
 
                 <p className="mt-1 text-sm text-slate-600">
@@ -32,36 +35,7 @@ function AdminFarmHeader({ onCreate = () => {} }) {
 }
 
 function AdminFarmSkeleton() {
-    return (
-        <section className="space-y-5">
-            <AdminFarmHeader onCreate={() => {}} />
-
-            <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {[1, 2].map((item) => (
-                    <div
-                        key={item}
-                        className="h-[86px] animate-pulse rounded-xl border border-slate-200 bg-white"
-                    />
-                ))}
-            </section>
-
-            <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-                <div className="border-b border-slate-200 px-5 py-4">
-                    <div className="h-5 w-40 animate-pulse rounded bg-slate-200" />
-                    <div className="mt-2 h-3 w-80 animate-pulse rounded bg-slate-200" />
-                </div>
-
-                <div className="space-y-3 px-5 py-4">
-                    {[1, 2, 3, 4].map((item) => (
-                        <div
-                            key={item}
-                            className="h-10 animate-pulse rounded bg-slate-100"
-                        />
-                    ))}
-                </div>
-            </section>
-        </section>
-    );
+    return <AdminPageSkeleton variant="farm" />;
 }
 
 export function AdminFarmPage() {
@@ -73,6 +47,8 @@ export function AdminFarmPage() {
         pageInfo = {},
         error,
         setPage,
+        filters,
+        updateFilters,
         reload,
 
         initialLoading,
@@ -84,7 +60,8 @@ export function AdminFarmPage() {
         clearActionError,
         createFarm,
         updateFarm,
-        deleteFarm,
+        updateFarmStatus,
+        uploadFarmImage,
     } = useAdminFarms() || {};
 
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -94,6 +71,7 @@ export function AdminFarmPage() {
     const [confirmState, setConfirmState] = useState({
         open: false,
         farm: null,
+        nextActive: false,
     });
 
     function openCreateDrawer() {
@@ -103,11 +81,27 @@ export function AdminFarmPage() {
         setDrawerOpen(true);
     }
 
-    function openEditDrawer(item) {
+    async function openFarmDrawer(item, mode) {
         clearActionError?.();
         setSelectedFarm(item || null);
-        setDrawerMode("edit");
+        setDrawerMode(mode);
         setDrawerOpen(true);
+
+        try {
+            const detail = await getFarmById(item.id);
+            setSelectedFarm(detail);
+        } catch (err) {
+            console.error("Không thể tải thông tin chi tiết nông trại:", err);
+            toast.error("Không thể tải thông tin chi tiết nông trại.");
+        }
+    }
+
+    function openViewDrawer(item) {
+        return openFarmDrawer(item, "view");
+    }
+
+    function openEditDrawer(item) {
+        return openFarmDrawer(item, "edit");
     }
 
     function closeDrawer() {
@@ -151,12 +145,13 @@ export function AdminFarmPage() {
         }
     }
 
-    function handleDeleteFarm(item) {
+    function handleToggleFarmStatus(item) {
         clearActionError?.();
 
         setConfirmState({
             open: true,
             farm: item || null,
+            nextActive: !item?.isActive,
         });
     }
 
@@ -166,12 +161,13 @@ export function AdminFarmPage() {
         setConfirmState({
             open: false,
             farm: null,
+            nextActive: false,
         });
 
         clearActionError?.();
     }
 
-    async function confirmDelete() {
+    async function confirmStatusChange() {
         try {
             const item = confirmState?.farm;
 
@@ -180,17 +176,20 @@ export function AdminFarmPage() {
                 return;
             }
 
-            const success = await deleteFarm?.(item.id);
+            const success = await updateFarmStatus?.(
+                item.id,
+                confirmState.nextActive,
+            );
 
             if (!success) {
-                toast.error(
-                    `Không thể xóa nông trại "${item?.farmName || ""}".`,
-                );
+                toast.error(`Không thể cập nhật trạng thái nông trại "${item?.farmName || ""}".`);
                 return;
             }
 
             toast.success(
-                `Đã xóa nông trại "${item?.farmName || ""}".`,
+                confirmState.nextActive
+                    ? `Đã kích hoạt nông trại "${item?.farmName || ""}".`
+                    : `Đã tạm ngưng nông trại "${item?.farmName || ""}".`,
             );
 
             closeConfirmDialog();
@@ -236,6 +235,18 @@ export function AdminFarmPage() {
             <section className="space-y-5">
                 <AdminFarmHeader onCreate={openCreateDrawer} />
 
+                <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:items-center">
+                    <div className="relative min-w-0 flex-1 lg:max-w-md">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <input value={filters.keyword} onChange={(event) => updateFilters({ keyword: event.target.value })} placeholder="Tìm tên hoặc địa chỉ nông trại..." className="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-3 text-sm outline-none transition focus:border-[#006948] focus:ring-2 focus:ring-emerald-100" />
+                    </div>
+                    <select value={filters.active} onChange={(event) => updateFilters({ active: event.target.value })} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-[#006948]">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="ACTIVE">Đang hoạt động</option>
+                        <option value="INACTIVE">Đã tạm ngưng</option>
+                    </select>
+                </div>
+
                 {actionError &&
                     !drawerOpen &&
                     !confirmState.open && (
@@ -251,8 +262,9 @@ export function AdminFarmPage() {
                     pageInfo={pageInfo || {}}
                     loading={tableLoading}
                     onPageChange={setPage}
+                    onView={openViewDrawer}
                     onEdit={openEditDrawer}
-                    onDelete={handleDeleteFarm}
+                    onToggleStatus={handleToggleFarmStatus}
                 />
             </section>
 
@@ -265,22 +277,38 @@ export function AdminFarmPage() {
                 error={actionError}
                 onClose={closeDrawer}
                 onSubmit={handleSubmitFarm}
+                onUploadImage={async (file) => {
+                    if (!selectedFarm?.id) return;
+                    if (!file || !["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+                        toast.error("Ảnh Farm chỉ hỗ trợ JPEG, PNG hoặc WebP.");
+                        return;
+                    }
+                    if (file.size > 20 * 1024 * 1024) {
+                        toast.error("Ảnh Farm không được vượt quá 20MB.");
+                        return;
+                    }
+                    const updated = await uploadFarmImage?.(selectedFarm.id, file);
+                    if (updated) {
+                        setSelectedFarm(updated);
+                        toast.success("Đã cập nhật ảnh nông trại.");
+                    }
+                }}
             />
 
             <ConfirmDialog
                 open={confirmState.open}
-                title="Xóa Nông trại"
+                title={confirmState.nextActive ? "Kích hoạt Nông trại" : "Tạm ngưng Nông trại"}
                 description={
                     confirmFarm
-                        ? `Bạn có chắc muốn xóa nông trại "${confirmFarm.farmName}" không? Hành động này không thể hoàn tác.`
+                        ? `Bạn có chắc muốn ${confirmState.nextActive ? "kích hoạt" : "tạm ngưng"} nông trại "${confirmFarm.farmName}" không?`
                         : ""
                 }
-                confirmText="Xóa Nông trại"
+                confirmText={confirmState.nextActive ? "Kích hoạt" : "Tạm ngưng"}
                 cancelText="Hủy"
-                variant="danger"
+                variant={confirmState.nextActive ? "default" : "danger"}
                 loading={actionLoading}
                 onCancel={closeConfirmDialog}
-                onConfirm={confirmDelete}
+                onConfirm={confirmStatusChange}
             />
         </>
     );

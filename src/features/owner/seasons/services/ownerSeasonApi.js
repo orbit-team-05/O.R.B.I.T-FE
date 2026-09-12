@@ -17,6 +17,14 @@ export async function createSeason(payload) {
     return response.data.data;
 }
 
+export async function uploadSeasonImage(id, file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    const response = await httpClient.post(`/seasons/${id}/image`, formData);
+    return response.data.data;
+}
+
 export async function getSeasonDetail(id) {
     const response = await httpClient.get(`/seasons/${id}`);
     return response.data.data;
@@ -37,16 +45,6 @@ export async function cancelSeason(id) {
     return response.data.data;
 }
 
-export async function getActiveSpecies() {
-    const response = await httpClient.get("/species");
-    return response.data.data;
-}
-
-export async function getSpeciesSizes(speciesId) {
-    const response = await httpClient.get(`/species/${speciesId}/sizes`);
-    return response.data.data;
-}
-
 export async function getSeasonMaterialUsages(id, page = 0, size = 10) {
     const response = await httpClient.get(`/seasons/${id}/material-usages`, {
         params: { page, size },
@@ -60,5 +58,43 @@ export async function getSeasonHarvests(id, page = 0, size = 10) {
         params: { page, size },
     });
 
+    return response.data.data;
+}
+
+export async function getSeasonHarvestHistories(id, page = 0, size = 10) {
+    const response = await httpClient.get(`/seasons/${id}/harvests`, {
+        params: { page, size },
+    });
+    return response.data.data;
+}
+
+// Other Costs
+export async function getSeasonOtherCosts(id, page = 0, size = 10) {
+    const response = await httpClient.get(`/seasons/${id}/other-costs`, {
+        params: { page, size },
+    });
+    return response.data.data;
+}
+
+export async function createSeasonOtherCost(id, payload) {
+    const response = await httpClient.post(`/seasons/${id}/other-costs`, payload);
+    return response.data.data;
+}
+
+export async function updateSeasonOtherCost(id, costId, payload) {
+    const response = await httpClient.put(`/seasons/${id}/other-costs/${costId}`, payload);
+    return response.data.data;
+}
+
+export async function deleteSeasonOtherCost(id, costId) {
+    const response = await httpClient.delete(`/seasons/${id}/other-costs/${costId}`);
+    return response.data;
+}
+
+export async function uploadSeasonOtherCostReceipt(id, costId, file) {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await httpClient.put(`/seasons/${id}/other-costs/${costId}/receipt`, formData);
     return response.data.data;
 }

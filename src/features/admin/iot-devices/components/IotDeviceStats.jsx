@@ -26,24 +26,24 @@ export function IotDeviceStats({ summary }) {
             />
 
             <StatCard
-                label="Đang hoạt động"
-                value={summary.activeDevices}
-                description="Đang vận hành"
-                valueClassName="text-[#006948]"
-            />
-
-            <StatCard
-                label="Chưa gắn farm"
-                value={summary.unassignedDevices}
-                description="Chờ kích hoạt"
+                label="Chưa tạo"
+                value={summary.uncreatedDevices}
+                description="Chờ Admin tạo"
                 valueClassName="text-amber-600"
             />
 
             <StatCard
-                label="Đã tắt"
-                value={summary.inactiveDevices}
-                description="Tạm ngưng"
-                valueClassName="text-slate-600"
+                label="Chưa gắn Farm"
+                value={summary.unassignedDevices}
+                description="Chờ kích hoạt"
+                valueClassName="text-orange-600"
+            />
+
+            <StatCard
+                label="Đang hoạt động"
+                value={summary.activeDevices}
+                description="Đang vận hành"
+                valueClassName="text-[#006948]"
             />
         </section>
     );

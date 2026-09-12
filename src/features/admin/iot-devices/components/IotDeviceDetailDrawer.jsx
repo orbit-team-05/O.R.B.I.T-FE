@@ -1,197 +1,91 @@
-import { X } from "lucide-react";
+import { Clock3, FileText, Scale, X } from "lucide-react";
 
 const STATUS_LABELS = {
-    UNASSIGNED: "Chưa gắn farm",
+    UNASSIGNED: "Chưa gắn Farm",
     ACTIVE: "Đang hoạt động",
     INACTIVE: "Đã tắt",
     LOST: "Mất kết nối",
     BROKEN: "Hư hỏng",
 };
 
-const STATUS_CLASSES = {
-    UNASSIGNED: "bg-amber-50 text-amber-700",
-    ACTIVE: "bg-[#006948] text-white",
-    INACTIVE: "bg-slate-200 text-slate-600",
-    LOST: "bg-red-50 text-red-600",
-    BROKEN: "bg-red-100 text-red-700",
-};
-
 function formatDateTime(value) {
     if (!value) return "Chưa có";
-
     return new Intl.DateTimeFormat("vi-VN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
+        day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
     }).format(new Date(value));
 }
 
-function StatusBadge({ status }) {
-    return (
-        <span
-            className={[
-                "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium",
-                STATUS_CLASSES[status] ?? "bg-slate-100 text-slate-600",
-            ].join(" ")}
-        >
-            {STATUS_LABELS[status] ?? status}
-        </span>
-    );
-}
-
-function DeviceTypeBadge({ type }) {
-    return (
-        <span className="rounded bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
-            {type || "Chưa có"}
-        </span>
-    );
-}
-
-function DetailItem({ label, value, children }) {
-    return (
-        <div className="rounded-lg border border-slate-200 bg-white px-3 py-3">
-            <p className="text-xs font-medium uppercase text-slate-500">
-                {label}
-            </p>
-
-            <div className="mt-1 break-all text-sm font-medium text-slate-900">
-                {children || value || <span className="text-slate-400">Chưa có</span>}
-            </div>
-        </div>
-    );
-}
-
-export function IotDeviceDetailDrawer({
-                                          open,
-                                          device,
-                                          onClose,
-                                          onReplaceComponent,
-                                      }) {
+export function IotDeviceDetailDrawer({ open, device, onClose }) {
     if (!open || !device) return null;
 
     return (
         <div className="fixed inset-0 z-50">
-            <button
-                type="button"
-                aria-label="Đóng drawer"
-                onClick={onClose}
-                className="absolute inset-0 bg-slate-900/20"
-            />
-
-            <aside className="absolute right-0 top-0 flex h-full w-[460px] flex-col border-l border-slate-200 bg-white shadow-xl">
-                <header className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
+            <button type="button" aria-label="Đóng drawer" onClick={onClose} className="absolute inset-0 bg-slate-900/30" />
+            <aside className="absolute right-0 top-0 flex h-full w-full max-w-[560px] flex-col border-l border-slate-200 bg-white shadow-2xl">
+                <header className="flex h-20 items-center justify-between border-b border-slate-200 px-6">
                     <div>
-                        <h2 className="text-base font-semibold text-slate-900">
-                            Chi tiết thiết bị IoT
-                        </h2>
-
-                        <p className="mt-0.5 text-xs text-slate-500">
-                            Xem thông tin phần cứng và trạng thái thiết bị
-                        </p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#006948]">Scale device</p>
+                        <h2 className="mt-1 text-lg font-bold text-slate-900">Chi tiết & nhật ký thiết bị</h2>
                     </div>
-
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                    >
-                        <X size={18} />
-                    </button>
+                    <button type="button" onClick={onClose} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"><X size={19} /></button>
                 </header>
 
-                <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
-                    <section className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
-                        <p className="text-xs font-medium uppercase text-slate-500">
-                            Device ID
-                        </p>
-
-                        <p className="mt-1 break-all text-base font-semibold text-slate-900">
-                            {device.deviceId}
-                        </p>
-
-                        <div className="mt-3 flex flex-wrap items-center gap-2">
-                            <DeviceTypeBadge type={device.deviceType} />
-                            <StatusBadge status={device.status} />
+                <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
+                    <section className="flex gap-4 rounded-2xl border border-slate-200 bg-gradient-to-br from-emerald-50 to-white p-4">
+                        <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-emerald-100">
+                            {device.imageUrl ? <img src={device.imageUrl} alt={device.deviceName || "Thiết bị cân"} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center"><Scale className="text-[#006948]/60" size={38} strokeWidth={1.4} /></div>}
+                        </div>
+                        <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="truncate text-base font-bold text-slate-900">{device.deviceName || "Thiết bị cân"}</h3>
+                                <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-[#006948] ring-1 ring-emerald-200">{STATUS_LABELS[device.status] || device.status}</span>
+                            </div>
+                            <p className="mt-2 font-mono text-xs font-semibold tracking-wide text-[#006948]">{device.macAddress}</p>
+                            <p className="mt-1 text-xs text-slate-500">{device.deviceId || "Chưa có Device ID"}</p>
                         </div>
                     </section>
 
-                    <section className="grid grid-cols-1 gap-3">
-                        <DetailItem
-                            label="Tên thiết bị"
-                            value={device.deviceName}
-                        />
-
-                        <DetailItem
-                            label="Farm"
-                            value={device.farmName || "Chưa gắn farm"}
-                        />
-
-                        <DetailItem
-                            label="Activation code"
-                            value={device.activationCode}
-                        />
-
-                        <DetailItem
-                            label="MAC cân"
-                            value={device.macScale}
-                        />
-
-                        <DetailItem
-                            label="MAC camera"
-                            value={device.macCam}
-                        />
-
-                        <DetailItem
-                            label="Hardware key"
-                            value={device.hardwareKey}
-                        />
-
-                        <DetailItem
-                            label="Last seen"
-                            value={formatDateTime(device.lastSeenAt)}
-                        />
-
-                        <DetailItem
-                            label="Ngày kích hoạt"
-                            value={formatDateTime(device.activatedAt)}
-                        />
-
-                        <DetailItem
-                            label="Ngày tạo"
-                            value={formatDateTime(device.createdAt)}
-                        />
-
-                        <DetailItem
-                            label="Cập nhật lần cuối"
-                            value={formatDateTime(device.updatedAt)}
-                        />
+                    <section className="grid grid-cols-2 gap-3">
+                        {[
+                            ["Farm", device.farmName || "Chưa gắn Farm"],
+                            ["Khối lượng cuối", device.lastWeightGrams == null ? "Chưa có" : `${device.lastWeightGrams} g`],
+                            ["Lần thấy cuối", formatDateTime(device.lastSeenAt)],
+                            ["Kích hoạt", formatDateTime(device.activatedAt)],
+                            ["Ngày tạo", formatDateTime(device.createdAt)],
+                            ["Cập nhật", formatDateTime(device.updatedAt)],
+                        ].map(([label, value]) => (
+                            <div key={label} className="rounded-xl border border-slate-200 bg-white p-3">
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</p>
+                                <p className="mt-1 break-words text-sm font-semibold text-slate-800">{value}</p>
+                            </div>
+                        ))}
                     </section>
 
-                    {device.status === "UNASSIGNED" && (
-                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-xs text-amber-800">
-                            Thiết bị này chưa được owner kích hoạt vào farm. Admin có thể kiểm tra hoặc thay linh kiện trước khi giao thiết bị.
+                    <section className="rounded-2xl border border-slate-200 bg-white">
+                        <div className="flex items-center gap-2 border-b border-slate-200 px-4 py-3">
+                            <FileText size={16} className="text-[#006948]" />
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-900">Nhật ký thiết bị</h3>
+                                <p className="text-[11px] text-slate-500">Các thay đổi quan trọng của thiết bị</p>
+                            </div>
                         </div>
-                    )}
+                        <div className="divide-y divide-slate-100">
+                            {device.auditLogs?.length ? device.auditLogs.map((log) => (
+                                <div key={log.id} className="flex gap-3 px-4 py-3">
+                                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[#006948]"><Clock3 size={14} /></div>
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-bold text-slate-800">{log.action}</p>
+                                        <p className="mt-0.5 text-xs leading-5 text-slate-600">{log.details}</p>
+                                        <p className="mt-1 text-[11px] text-slate-400">{log.actorName} · {formatDateTime(log.createdAt)}</p>
+                                    </div>
+                                </div>
+                            )) : <p className="px-4 py-6 text-center text-xs text-slate-400">Chưa có nhật ký.</p>}
+                        </div>
+                    </section>
                 </div>
 
-                <footer className="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="h-9 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                    >
-                        Đóng
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() => onReplaceComponent?.(device)}
-                        className="h-9 rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white hover:bg-[#00583d]"
-                    >
-                        Thay linh kiện
-                    </button>
+                <footer className="flex justify-end border-t border-slate-200 bg-slate-50 px-6 py-4">
+                    <button type="button" onClick={onClose} className="h-10 rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 hover:bg-slate-50">Đóng</button>
                 </footer>
             </aside>
         </div>

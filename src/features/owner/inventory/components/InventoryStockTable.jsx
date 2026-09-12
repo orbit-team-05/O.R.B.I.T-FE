@@ -70,7 +70,7 @@ export function InventoryStockTable({
                                     <th className="w-[8%] px-2 py-3 pl-4">Ảnh</th>
                                     <th className="w-[22%] px-2 py-3">Sản phẩm</th>
                                     <th className="w-[10%] px-2 py-3">Loại</th>
-                                    <th className="w-[10%] px-2 py-3">Tồn kho</th>
+                                    <th className="w-[13%] px-2 py-3">Tồn kho</th>
                                     <th className="w-[10%] px-2 py-3">Ngưỡng thấp</th>
                                     <th className="w-[12%] px-2 py-3">Giá trị tồn</th>
                                     <th className="w-[10%] px-2 py-3">Trạng thái</th>
@@ -103,20 +103,20 @@ export function InventoryStockTable({
                                             <div className="truncate font-semibold text-slate-900" title={item.productName}>
                                                 {item.productName}
                                             </div>
-                                            <div className="mt-0.5 truncate text-xs text-slate-500" title={item.productCode}>
-                                                {item.productCode}
-                                            </div>
                                         </td>
 
                                         <td className="overflow-hidden px-2 py-3">
                                             <span className="truncate rounded bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600" title={item.category}>
-                                                {item.category}
+                                                {{ FEED: 'Thức ăn', MEDICINE: 'Thuốc thú y', CHEMICAL: 'Hóa chất', MATERIAL: 'Vật tư khác' }[item.category] || item.category}
                                             </span>
                                         </td>
 
                                         <td className="overflow-hidden px-2 py-3">
                                             <div className="truncate font-semibold text-slate-900" title={formatQuantity(item.quantityGrams, item.storageUnit)}>
                                                 {formatQuantity(item.quantityGrams, item.storageUnit)}
+                                            </div>
+                                            <div className="mt-1 text-[11px] text-slate-500">
+                                                Dự kiến: {formatQuantity(item.projectedQuantityGrams ?? item.quantityGrams, item.storageUnit)}
                                             </div>
                                         </td>
 

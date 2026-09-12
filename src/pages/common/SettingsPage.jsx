@@ -5,6 +5,8 @@ import {
     KeyRound,
     ShieldAlert,
     CheckCircle2,
+    UploadCloud,
+    LogOut,
 } from "lucide-react";
 
 import { useAuth } from "../../features/auth/context/AuthContext";
@@ -12,18 +14,26 @@ import {
     getProfile,
     updateProfile,
     changePassword,
+    uploadAvatar,
 } from "../../features/profile/services/profileApi";
 
+import { AdminPageSkeleton } from "../../components/common/loading/AdminPageSkeleton";
 import { useToast } from "../../components/common/toast/ToastProvider";
+import { ImagePreviewModal } from "../../components/ui/ImagePreviewModal";
 
-export function SettingsPage() {
-    const { updateAuthUser } = useAuth();
+export function SettingsPage({
+    pageTitle = "Cài đặt",
+    pageDescription = "Cập nhật thông tin cá nhân và thay đổi mật khẩu.",
+}) {
+    const { updateAuthUser, logout, logoutAll } = useAuth();
     const toast = useToast();
 
     const [activeTab, setActiveTab] = useState("profile");
 
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const [avatarPreviewOpen, setAvatarPreviewOpen] = useState(false);
 
     const [profile, setProfile] = useState({
         username: "",
@@ -32,6 +42,7 @@ export function SettingsPage() {
         phone: "",
         roles: [],
         farmName: "",
+        avatarUrl: "",
     });
 
     const [profileErrors, setProfileErrors] = useState({});
@@ -67,6 +78,7 @@ export function SettingsPage() {
                         ? data.roles
                         : [],
                     farmName: data?.farmName || "Không có",
+                    avatarUrl: data?.avatarUrl || "",
                 });
             } catch (err) {
                 console.error(err);
@@ -88,6 +100,39 @@ export function SettingsPage() {
             isMounted = false;
         };
     }, [toast]);
+
+    async function handleAvatarUpload(event) {
+        const file = event.target.files?.[0];
+        event.target.value = "";
+
+        if (!file) return;
+
+        if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+            toast.error("Chỉ chấp nhận ảnh JPG, PNG hoặc WebP.");
+            return;
+        }
+
+        if (file.size > 20 * 1024 * 1024) {
+            toast.error("Ảnh đại diện không được vượt quá 20MB.");
+            return;
+        }
+
+        try {
+            setUploadingAvatar(true);
+            const avatarUrl = await uploadAvatar(file);
+            setProfile((current) => ({ ...current, avatarUrl: avatarUrl || "" }));
+            updateAuthUser({ avatarUrl });
+            toast.success("Cập nhật ảnh đại diện thành công.");
+        } catch (err) {
+            toast.error(
+                err?.response?.data?.message ||
+                err?.message ||
+                "Không thể tải ảnh đại diện lên.",
+            );
+        } finally {
+            setUploadingAvatar(false);
+        }
+    }
 
     function validateProfile() {
         const errors = {};
@@ -210,7 +255,7 @@ export function SettingsPage() {
             });
 
             toast.success(
-                "Đổi mật khẩu thành công.",
+                "Đổi mật khẩu thành công. Các thiết bị khác đã được đăng xuất.",
             );
 
             setPasswordForm({
@@ -231,12 +276,13 @@ export function SettingsPage() {
         }
     }
 
+    async function handleLogoutAll() {
+        if (!window.confirm("Đăng xuất tất cả thiết bị? Thiết bị hiện tại cũng sẽ được đăng xuất.")) return;
+        await logoutAll();
+    }
+
     if (loading) {
-        return (
-            <div className="flex min-h-[400px] items-center justify-center">
-                <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-[#006948]" />
-            </div>
-        );
+        return <AdminPageSkeleton variant="settings" />;
     }
 
     const inputClass = (hasError) =>
@@ -252,22 +298,16 @@ export function SettingsPage() {
     `;
 
     return (
-        <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
-            <header className="mb-6 rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
-                <p className="text-sm font-semibold text-[#006948]">
-                    Cài đặt tài khoản
-                </p>
-
-                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
-                    Thiết lập tài khoản
-                </h1>
-
-                <p className="mt-1 text-sm text-slate-500">
-                    Cập nhật thông tin cá nhân và thay đổi mật khẩu.
-                </p>
+        <>
+            <section className="space-y-5">
+            <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                    <h1 className="text-2xl font-semibold text-slate-900">{pageTitle}</h1>
+                    <p className="mt-1 text-sm text-slate-600">{pageDescription}</p>
+                </div>
             </header>
 
-            <div className="grid gap-6 md:grid-cols-[220px_1fr]">
+            <div className="grid gap-5 md:grid-cols-[220px_1fr]">
                 <aside className="flex h-fit flex-col gap-1 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
                     <button
                         type="button"
@@ -300,6 +340,12 @@ export function SettingsPage() {
                         <Lock size={18} />
                         Đổi mật khẩu
                     </button>
+
+                    <div className="mt-3 border-t border-slate-100 pt-3">
+                        <p className="px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Phiên đăng nhập</p>
+                        <button type="button" onClick={logout} className="mt-2 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-600 transition-all hover:bg-slate-50"><LogOut size={18} />Đăng xuất thiết bị này</button>
+                        <button type="button" onClick={handleLogoutAll} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-red-600 transition-all hover:bg-red-50"><LogOut size={18} />Đăng xuất tất cả thiết bị</button>
+                    </div>
                 </aside>
 
                 <main className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -316,6 +362,53 @@ export function SettingsPage() {
                                 <p className="mt-1 text-xs text-slate-500">
                                     Quản lý thông tin tài khoản của bạn.
                                 </p>
+                            </div>
+
+                            <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center">
+                                <button
+                                    type="button"
+                                    disabled={!profile.avatarUrl}
+                                    onClick={() => setAvatarPreviewOpen(true)}
+                                    className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-200 shadow-sm disabled:cursor-default"
+                                    aria-label="Xem ảnh đại diện"
+                                >
+                                    {profile.avatarUrl ? (
+                                        <img
+                                            src={profile.avatarUrl}
+                                            alt="Ảnh đại diện"
+                                            className="h-full w-full object-cover"
+                                        />
+                                    ) : (
+                                        <User size={40} className="text-slate-400" />
+                                    )}
+                                </button>
+
+                                <div className="space-y-2">
+                                    <div>
+                                        <p className="text-sm font-semibold text-slate-900">
+                                            Ảnh đại diện
+                                        </p>
+                                        <p className="text-xs text-slate-500">
+                                            Nhấn vào ảnh để xem kích thước lớn. Nút tải ảnh nằm bên ngoài khung ảnh.
+                                        </p>
+                                    </div>
+
+                                    <label
+                                        htmlFor="admin-avatar-upload"
+                                        className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                                    >
+                                        <UploadCloud size={16} />
+                                        {uploadingAvatar ? "Đang tải..." : "Chọn ảnh"}
+                                    </label>
+                                    <input
+                                        id="admin-avatar-upload"
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={handleAvatarUpload}
+                                        disabled={uploadingAvatar}
+                                    />
+                                </div>
                             </div>
 
                             <div className="grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-3">
@@ -621,7 +714,13 @@ export function SettingsPage() {
                     )}
                 </main>
             </div>
-        </div>
+        </section>
+
+            <ImagePreviewModal
+                open={avatarPreviewOpen}
+                src={profile.avatarUrl}
+                onClose={() => setAvatarPreviewOpen(false)}
+            />
+        </>
     );
 }
-

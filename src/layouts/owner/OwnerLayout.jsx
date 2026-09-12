@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 
 import { OwnerSidebar } from "./OwnerSidebar";
 import { OwnerTopbar } from "./OwnerTopbar";
+import { OwnerRouteLoader } from "./OwnerRouteLoader";
 
 export function OwnerLayout() {
     return (
@@ -10,10 +11,11 @@ export function OwnerLayout() {
 
             <div className="ml-[248px] flex min-h-screen flex-col">
                 <OwnerTopbar />
-
-                <main className="flex-1 overflow-y-auto px-6 py-6">
-                    <Outlet />
-                </main>
+                <OwnerRouteLoader>
+                    <main className="flex-1 overflow-y-auto px-6 py-6">
+                        <Outlet />
+                    </main>
+                </OwnerRouteLoader>
             </div>
         </div>
     );

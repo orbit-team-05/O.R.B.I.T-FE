@@ -1,19 +1,30 @@
+import { AdminPageSkeleton } from "../../../components/common/loading/AdminPageSkeleton";
 import { AdminDashboardInfoPanel } from "../../../features/admin/dashboard/components/AdminDashboardInfoPanel";
+import {
+    AdminDashboardStatusChart,
+    AdminDashboardTransactionChart,
+} from "../../../features/admin/dashboard/components/AdminDashboardCharts";
 import { AdminDashboardStats } from "../../../features/admin/dashboard/components/AdminDashboardStats";
 import { AdminSystemAlerts } from "../../../features/admin/dashboard/components/AdminSystemAlerts";
-import { RecentCrawlTargetsTable } from "../../../features/admin/dashboard/components/RecentCrawlTargetsTable";
 import { useAdminDashboard } from "../../../features/admin/dashboard/hooks/useAdminDashboard";
+import { formatDateTime } from "../../../utils/formatUtils";
+import { RefreshCw } from "lucide-react";
 
-function AdminDashboardHeader({ onReload }) {
+function AdminDashboardHeader({ generatedAt, onReload, refreshing }) {
     return (
         <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <h1 className="text-2xl font-semibold text-slate-900">
-                    Tổng quan Admin
+                    Tổng quan vận hành
                 </h1>
 
                 <p className="mt-1 text-sm text-slate-600">
-                    Theo dõi dữ liệu nền, crawler, thiết bị IoT và trạng thái vận hành hệ thống.
+                    Theo dõi sức khỏe User, Farm, thiết bị cân và hoạt động giao dịch.
+                    {generatedAt && (
+                        <span className="ml-2 text-xs text-slate-500">
+                            Cập nhật: {formatDateTime(generatedAt)}
+                        </span>
+                    )}
                 </p>
             </div>
 
@@ -22,6 +33,7 @@ function AdminDashboardHeader({ onReload }) {
                 onClick={onReload}
                 className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             >
+                <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
                 Làm mới
             </button>
         </header>
@@ -29,27 +41,7 @@ function AdminDashboardHeader({ onReload }) {
 }
 
 function AdminDashboardSkeleton() {
-    return (
-        <section className="space-y-5">
-            <AdminDashboardHeader />
-
-            <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {[1, 2, 3, 4].map((item) => (
-                    <div
-                        key={item}
-                        className="h-[96px] animate-pulse rounded-xl border border-slate-200 bg-white"
-                    />
-                ))}
-            </section>
-
-            <section className="h-[320px] animate-pulse rounded-xl border border-slate-200 bg-white" />
-
-            <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <div className="h-[240px] animate-pulse rounded-xl border border-slate-200 bg-white" />
-                <div className="h-[240px] animate-pulse rounded-xl border border-slate-200 bg-white" />
-            </section>
-        </section>
-    );
+    return <AdminPageSkeleton variant="dashboard" />;
 }
 
 function EmptyState({ onReload }) {
@@ -76,6 +68,7 @@ export function AdminDashboardPage() {
         loading,
         error,
         reload,
+        refreshing,
     } = useAdminDashboard();
 
     if (loading) {
@@ -85,7 +78,7 @@ export function AdminDashboardPage() {
     if (error) {
         return (
             <section className="space-y-5">
-                <AdminDashboardHeader onReload={reload} />
+                <AdminDashboardHeader onReload={reload} refreshing={refreshing} />
 
                 <div className="rounded-xl border border-red-200 bg-red-50 p-5">
                     <p className="text-sm font-medium text-red-700">
@@ -107,7 +100,7 @@ export function AdminDashboardPage() {
     if (!dashboard) {
         return (
             <section className="space-y-5">
-                <AdminDashboardHeader onReload={reload} />
+                <AdminDashboardHeader onReload={reload} refreshing={refreshing} />
                 <EmptyState onReload={reload} />
             </section>
         );
@@ -115,20 +108,29 @@ export function AdminDashboardPage() {
 
     return (
         <section className="space-y-5">
-            <AdminDashboardHeader onReload={reload} />
-
-            <AdminDashboardStats
-                stats={dashboard?.stats || {}}
+            <AdminDashboardHeader
+                generatedAt={dashboard.generatedAt}
+                onReload={reload}
+                refreshing={refreshing}
             />
 
-            <RecentCrawlTargetsTable
-                targets={dashboard?.recentCrawlTargets || []}
+            <AdminDashboardStats
+                overview={dashboard?.overview || {}}
+                iotOverview={dashboard?.iotOverview || {}}
             />
 
             <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <AdminDashboardStatusChart
+                    statusBreakdown={dashboard?.statusBreakdown || []}
+                />
+                <AdminDashboardTransactionChart
+                    transactionTrend={dashboard?.transactionTrend || []}
+                />
+            </section>
+
+            <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                 <AdminDashboardInfoPanel
-                    priceSummary={dashboard?.priceSummary || {}}
-                    deviceSummary={dashboard?.deviceSummary || {}}
+                    pendingActions={dashboard?.pendingActions || {}}
                 />
 
                 <AdminSystemAlerts

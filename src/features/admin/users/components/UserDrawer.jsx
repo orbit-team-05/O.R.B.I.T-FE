@@ -1,17 +1,137 @@
-import { X } from "lucide-react";
+import { Camera, CalendarDays, Clock3, Mail, Phone, ShieldCheck, UploadCloud, UserRound, X } from "lucide-react";
 import { useEffect, useState } from "react";
+
+import { UserStatusBadge } from "./UserStatusBadge";
+import { ImagePreviewModal } from "../../../../components/ui/ImagePreviewModal";
 
 const INITIAL_FORM = {
     username: "",
     fullName: "",
+    initialPassword: "",
     email: "",
     phone: "",
     status: "",
     createdAt: "",
     updatedAt: "",
+    avatarUrl: "",
     roleIds: [],
     farmId: "",
+    createFarm: true,
+    farmName: "",
+    farmLocation: "",
+    farmAreaM2: "",
 };
+
+function formatDate(value) {
+    if (!value) return "Chưa cập nhật";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleString("vi-VN");
+}
+
+function roleLabel(role) {
+    return {
+        ADMIN: "Quản trị viên",
+        OWNER: "Chủ nông trại",
+        FARM_MANAGER: "Quản lý Farm",
+        STAFF: "Nhân viên",
+    }[role] || role || "Chưa phân quyền";
+}
+
+function UserDetailView({ user, onClose, onUploadAvatar }) {
+    const [previewOpen, setPreviewOpen] = useState(false);
+    const roles = (user?.roles || []).map((role) => typeof role === "string" ? role : role.roleName);
+    const primaryRole = roles[0];
+    const initials = (user?.fullName || user?.username || "?")
+        .split(" ")
+        .filter(Boolean)
+        .slice(-2)
+        .map((part) => part[0])
+        .join("")
+        .toUpperCase();
+
+    function handleAvatarChange(event) {
+        const file = event.target.files?.[0];
+        event.target.value = "";
+        if (file) onUploadAvatar?.(file);
+    }
+
+    return (
+        <div className="fixed inset-0 z-50 flex justify-end">
+            <button type="button" aria-label="Đóng chi tiết người dùng" className="fixed inset-0 bg-slate-950/25 backdrop-blur-[1px]" onClick={onClose} />
+            <aside className="relative z-10 flex h-full w-full max-w-3xl flex-col bg-white shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="admin-user-detail-title">
+                <header className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+                    <div>
+                        <p className="text-xs uppercase tracking-wide text-slate-400">Tài khoản người dùng</p>
+                        <h2 id="admin-user-detail-title" className="mt-1 text-xl font-semibold text-slate-900">Chi tiết tài khoản</h2>
+                    </div>
+                    <button type="button" onClick={onClose} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Đóng"><X size={21} /></button>
+                </header>
+
+                <div className="flex-1 overflow-y-auto px-6 py-6">
+                    <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                            <div className="flex shrink-0 flex-col items-center gap-2">
+                                <button type="button" disabled={!user?.avatarUrl} onClick={() => setPreviewOpen(true)} className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-emerald-50 text-xl font-semibold text-[#006948] shadow-sm disabled:cursor-default">
+                                    {user?.avatarUrl ? <img src={user.avatarUrl} alt={user.fullName || "Avatar"} className="h-full w-full object-cover" /> : initials}
+                                </button>
+                                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm hover:border-[#006948]/30 hover:text-[#006948]" title="Tải ảnh đại diện lên">
+                                    <UploadCloud size={14} />
+                                    Tải ảnh
+                                    <input type="file" accept=".jpg,.jpeg,.png,.webp" className="hidden" onChange={handleAvatarChange} />
+                                </label>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <h3 className="text-lg font-semibold text-slate-900">{user?.fullName || "Chưa cập nhật"}</h3>
+                                    <span className={[
+                                        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
+                                        user?.status === "ACTIVE" ? "bg-emerald-50 text-emerald-700" : "bg-slate-200 text-slate-600",
+                                    ].join(" ")}>
+                                        <span className={["h-1.5 w-1.5 rounded-full", user?.status === "ACTIVE" ? "bg-emerald-500" : "bg-slate-400"].join(" ")} />
+                                        {user?.status === "ACTIVE" ? "Đang hoạt động" : "Đã khóa"}
+                                    </span>
+                                </div>
+                                <p className="mt-1 text-sm text-slate-500">@{user?.username || "—"} · {roleLabel(primaryRole)}</p>
+                                <p className="mt-2 text-xs text-slate-400">JPEG/PNG/WebP, tối đa 20MB</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="mt-7">
+                        <h4 className="text-sm font-semibold text-slate-900">Thông tin tài khoản</h4>
+                        <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                            <div><p className="text-xs font-medium uppercase tracking-wide text-slate-400">Username</p><p className="mt-1 text-sm text-slate-800">@{user?.username || "Chưa cập nhật"}</p></div>
+                            <div><p className="text-xs font-medium uppercase tracking-wide text-slate-400">Vai trò</p><p className="mt-1 inline-flex items-center gap-2 text-sm text-slate-800"><ShieldCheck size={15} className="text-[#006948]" />{roleLabel(primaryRole)}</p></div>
+                            <div><p className="text-xs font-medium uppercase tracking-wide text-slate-400">Email</p><p className="mt-1 inline-flex items-center gap-2 text-sm text-slate-800"><Mail size={15} className="text-slate-400" />{user?.email || "Chưa cập nhật"}</p></div>
+                            <div><p className="text-xs font-medium uppercase tracking-wide text-slate-400">Số điện thoại</p><p className="mt-1 inline-flex items-center gap-2 text-sm text-slate-800"><Phone size={15} className="text-slate-400" />{user?.phone || user?.phoneNumber || "Chưa cập nhật"}</p></div>
+                        </div>
+                    </section>
+
+                    <section className="mt-7 border-t border-slate-100 pt-6">
+                        <h4 className="text-sm font-semibold text-slate-900">Phạm vi Farm</h4>
+                        <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                            <div className="flex items-center gap-3"><UserRound size={18} className="text-[#006948]" /><div><p className="text-xs uppercase tracking-wide text-slate-400">Nông trại trực thuộc</p><p className="mt-1 text-sm font-medium text-slate-800">{user?.farmName || "Chưa liên kết"}</p></div></div>
+                        </div>
+                    </section>
+
+                    <section className="mt-7 border-t border-slate-100 pt-6">
+                        <h4 className="text-sm font-semibold text-slate-900">Thông tin hệ thống</h4>
+                        <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                            <div><p className="text-xs font-medium uppercase tracking-wide text-slate-400">Ngày tạo</p><p className="mt-1 inline-flex items-center gap-2 text-sm text-slate-800"><CalendarDays size={15} className="text-slate-400" />{formatDate(user?.createdAt)}</p></div>
+                            <div><p className="text-xs font-medium uppercase tracking-wide text-slate-400">Cập nhật gần nhất</p><p className="mt-1 inline-flex items-center gap-2 text-sm text-slate-800"><Clock3 size={15} className="text-slate-400" />{formatDate(user?.updatedAt)}</p></div>
+                            <div><p className="text-xs font-medium uppercase tracking-wide text-slate-400">Lần đăng nhập cuối</p><p className="mt-1 text-sm text-slate-800">{formatDate(user?.lastLoginAt)}</p></div>
+                        </div>
+                    </section>
+                </div>
+
+                <footer className="flex justify-end border-t border-slate-100 bg-slate-50 px-6 py-4">
+                    <button type="button" onClick={onClose} className="rounded-xl bg-[#006948] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#00583d]">Đóng</button>
+                </footer>
+            </aside>
+            <ImagePreviewModal open={previewOpen} src={user?.avatarUrl} onClose={() => setPreviewOpen(false)} />
+        </div>
+    );
+}
 
 export function UserDrawer({
     open,
@@ -23,9 +143,11 @@ export function UserDrawer({
     error,
     onClose,
     onSubmit,
+    onUploadAvatar,
 }) {
     const [form, setForm] = useState(INITIAL_FORM);
     const [validationError, setValidationError] = useState("");
+    const [avatarPreviewOpen, setAvatarPreviewOpen] = useState(false);
 
     const isEditMode = mode === "edit";
     const isViewMode = mode === "view";
@@ -35,10 +157,11 @@ export function UserDrawer({
 
     const isOwnerSelected = selectedRoleNames.includes("OWNER");
     const isStaffSelected = selectedRoleNames.includes("STAFF");
+    const isFarmManagerSelected = selectedRoleNames.includes("FARM_MANAGER");
     const isAdminSelected = selectedRoleNames.includes("ADMIN");
 
-    const farmRequired = isEditMode || isStaffSelected;
-    const farmSelectDisabled = isViewMode || (!isEditMode && !isStaffSelected);
+    const farmRequired = isEditMode || isStaffSelected || isFarmManagerSelected;
+    const farmSelectDisabled = isViewMode || (!isEditMode && !isStaffSelected && !isFarmManagerSelected);
 
     useEffect(() => {
         if (!open) return;
@@ -49,26 +172,36 @@ export function UserDrawer({
                 ? user.roles.map((r) => (typeof r === "string" ? r : r.roleName))
                 : [];
 
+            // The drawer form is intentionally synchronized with the selected user when it opens.
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setForm({
                 username: user.username ?? "",
                 fullName: user.fullName ?? "",
+                initialPassword: "",
                 email: user.email ?? "",
                 phone: user.phone ?? "",
                 status: user.status ?? "",
                 createdAt: user.createdAt ?? "",
                 updatedAt: user.updatedAt ?? "",
+                avatarUrl: user.avatarUrl ?? "",
                 // Find matching role IDs from the roles array using role name
                 roleIds: roles
                       .filter((r) => roleNames.includes(r.roleName))
                       .map((r) => r.id),
                 farmId: user.farmId ?? "",
+                createFarm: false,
+                farmName: "",
+                farmLocation: "",
+                farmAreaM2: "",
             });
             setValidationError("");
+            setAvatarPreviewOpen(false);
             return;
         }
 
         setForm(INITIAL_FORM);
         setValidationError("");
+        setAvatarPreviewOpen(false);
     }, [open, isEditMode, isViewMode, user, roles]);
 
     function handleChange(event) {
@@ -103,7 +236,9 @@ export function UserDrawer({
             return {
                 ...prev,
                 roleIds: [roleId],
-                farmId: selectedRole?.roleName === "STAFF" ? prev.farmId : "",
+                farmId: ["STAFF", "FARM_MANAGER"].includes(selectedRole?.roleName)
+                    ? prev.farmId
+                    : "",
             };
         });
     }
@@ -132,14 +267,20 @@ export function UserDrawer({
             return;
         }
 
+        if (!isEditMode && (form.initialPassword.length < 8 || form.initialPassword.length > 72)) {
+            setValidationError("Mật khẩu ban đầu phải từ 8 đến 72 ký tự.");
+            return;
+        }
+
         const selectedRoles = roles.filter((role) => form.roleIds.includes(role.id));
         const roleNames = selectedRoles.map((role) => role.roleName);
 
         const isStaff = roleNames.includes("STAFF");
+        const isFarmManager = roleNames.includes("FARM_MANAGER");
         const isOwner = roleNames.includes("OWNER");
         const isAdmin = roleNames.includes("ADMIN");
 
-        if ([isStaff, isOwner, isAdmin].filter(Boolean).length > 1) {
+        if ([isStaff, isFarmManager, isOwner, isAdmin].filter(Boolean).length > 1) {
             setValidationError("Một tài khoản chỉ được chọn một vai trò chính.");
             return;
         }
@@ -149,14 +290,14 @@ export function UserDrawer({
          * phải gửi farmId.
          */
         if (isEditMode) {
-            if (!form.farmId) {
+            if ((isStaff || isFarmManager) && !form.farmId) {
                 setValidationError("Khi cập nhật tài khoản, vui lòng chọn nông trại trực thuộc.");
                 return;
             }
 
             onSubmit({
-                roleIds: form.roleIds,
-                farmId: Number(form.farmId),
+                role: roleNames[0],
+                farmId: isStaff || isFarmManager ? Number(form.farmId) : null,
             });
 
             return;
@@ -166,27 +307,49 @@ export function UserDrawer({
          * CREATE:
          * OWNER -> farmId null
          * ADMIN -> farmId null
-         * STAFF -> bắt buộc farmId
+         * STAFF/FARM_MANAGER -> bắt buộc farmId
          */
-        if (isStaff && !form.farmId) {
+        if ((isStaff || isFarmManager) && !form.farmId) {
             setValidationError("Nhân viên phải được gán vào một nông trại.");
             return;
+        }
+
+        if (isOwner && form.createFarm && !isEditMode) {
+            if (!form.farmName.trim() || !form.farmLocation.trim()) {
+                setValidationError("Vui lòng nhập tên và địa chỉ Farm cho Owner.");
+                return;
+            }
         }
 
         const payload = {
             username: form.username.trim(),
             fullName: form.fullName.trim(),
-            roleIds: form.roleIds,
-            farmId: isStaff ? Number(form.farmId) : null,
+            initialPassword: form.initialPassword,
+            email: form.email.trim() || null,
+            phone: form.phone.trim() || null,
+            role: roleNames[0],
+            farmId: isStaff || isFarmManager ? Number(form.farmId) : null,
         };
+
+        if (isOwner && form.createFarm) {
+            payload.farmDraft = {
+                farmName: form.farmName.trim(),
+                location: form.farmLocation.trim(),
+                areaM2: form.farmAreaM2 === "" ? null : Number(form.farmAreaM2),
+            };
+        }
 
         onSubmit(payload);
     }
 
     if (!open) return null;
 
+    if (isViewMode) {
+        return <UserDetailView user={user} onClose={onClose} onUploadAvatar={onUploadAvatar} />;
+    }
+
     return (
-        <div className="fixed inset-0 z-50">
+        <div className="fixed inset-0 z-50" role="presentation">
             <button
                 type="button"
                 aria-label="Đóng drawer"
@@ -194,9 +357,14 @@ export function UserDrawer({
                 className="absolute inset-0 bg-slate-900/20"
             />
 
-            <aside className="absolute right-0 top-0 flex h-full w-[380px] flex-col border-l border-slate-200 bg-white shadow-xl">
+            <aside
+                aria-labelledby="user-drawer-title"
+                aria-modal="true"
+                className="absolute right-0 top-0 flex h-full w-full flex-col border-l border-slate-200 bg-white shadow-xl md:w-2/3"
+                role="dialog"
+            >
                 <header className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
-                    <h2 className="text-base font-semibold text-slate-900">
+                    <h2 id="user-drawer-title" className="text-base font-semibold text-slate-900">
                         {isViewMode ? "Chi tiết tài khoản" : isEditMode ? "Cập nhật tài khoản" : "Thêm Người dùng mới"}
                     </h2>
 
@@ -213,14 +381,72 @@ export function UserDrawer({
                     <div className="flex-1 space-y-4 px-5 py-5">
                         {/* Info banner about default password in create mode */}
                         {!isEditMode && !isViewMode && (
-                            <div className="rounded-lg border border-blue-100 bg-blue-50 px-3.5 py-2.5 text-xs text-blue-800 leading-relaxed">
-                                <span className="font-semibold">Lưu ý:</span> Mật khẩu mặc định cho người dùng mới sẽ được đặt tự động.
+                            <div className="rounded-lg border border-blue-100 bg-blue-50 px-3.5 py-2.5 text-xs leading-relaxed text-blue-800">
+                                <span className="font-semibold">Mật khẩu ban đầu:</span> Người dùng sẽ bắt buộc đổi mật khẩu này sau lần đăng nhập đầu tiên.
+                            </div>
+                        )}
+
+                        {!isEditMode && !isViewMode && (
+                            <div>
+                                <label className="mb-1.5 block text-xs font-medium text-slate-700">
+                                    Mật khẩu ban đầu *
+                                </label>
+                                <input
+                                    name="initialPassword"
+                                    type="password"
+                                    value={form.initialPassword}
+                                    onChange={handleChange}
+                                    autoComplete="new-password"
+                                    minLength={8}
+                                    maxLength={72}
+                                    placeholder="Tối thiểu 8 ký tự"
+                                    className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15"
+                                />
+                                <p className="mt-1 text-xs text-slate-500">
+                                    Chỉ lưu dưới dạng mã hóa; không hiển thị lại sau khi tạo.
+                                </p>
                             </div>
                         )}
 
                         {(error || validationError) && !isViewMode && (
                             <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
                                 {error || validationError}
+                            </div>
+                        )}
+
+                        {(isViewMode || isEditMode) && (
+                            <div className="flex items-center gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                                <div className="relative">
+                                <button
+                                    type="button"
+                                    disabled={!form.avatarUrl}
+                                    onClick={() => setAvatarPreviewOpen(true)}
+                                    className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-200 shadow-sm disabled:cursor-default"
+                                    aria-label="Xem ảnh đại diện người dùng"
+                                >
+                                    {form.avatarUrl ? (
+                                        <img
+                                            src={form.avatarUrl}
+                                            alt={`Ảnh đại diện của ${form.fullName || "người dùng"}`}
+                                            className="h-full w-full object-cover"
+                                        />
+                                    ) : (
+                                        <span className="text-xs text-slate-500">Chưa có ảnh</span>
+                                    )}
+                                </button>
+                                {!isViewMode && (
+                                    <label className="absolute -bottom-1 -right-1 cursor-pointer rounded-full border-2 border-white bg-[#006948] p-2 text-white shadow-sm hover:bg-[#00583d]" title="Tải ảnh lên">
+                                        <Camera size={14} />
+                                        <input type="file" accept=".jpg,.jpeg,.png,.webp" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; onUploadAvatar?.(file); }} />
+                                    </label>
+                                )}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-slate-900">Ảnh đại diện</p>
+                                    <p className="mt-1 text-xs text-slate-500">
+                                        Nhấn vào ảnh để xem bản lớn. JPEG/PNG/WebP, tối đa 20MB.
+                                    </p>
+                                </div>
                             </div>
                         )}
 
@@ -254,8 +480,7 @@ export function UserDrawer({
                             />
                         </div>
 
-                        {(isEditMode || isViewMode) && (
-                            <div>
+                        <div>
                                 <label className="mb-1.5 block text-xs font-medium text-slate-700">
                                     Email
                                 </label>
@@ -263,15 +488,14 @@ export function UserDrawer({
                                 <input
                                     name="email"
                                     value={form.email}
-                                    disabled={true}
+                                    onChange={handleChange}
+                                    disabled={isViewMode || isEditMode}
                                     placeholder="Chưa cập nhật"
                                     className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
                                 />
-                            </div>
-                        )}
+                        </div>
 
-                        {(isEditMode || isViewMode) && (
-                            <div>
+                        <div>
                                 <label className="mb-1.5 block text-xs font-medium text-slate-700">
                                     Số điện thoại
                                 </label>
@@ -279,12 +503,12 @@ export function UserDrawer({
                                 <input
                                     name="phone"
                                     value={form.phone}
-                                    disabled={true}
+                                    onChange={handleChange}
+                                    disabled={isViewMode || isEditMode}
                                     placeholder="Chưa cập nhật"
                                     className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
                                 />
-                            </div>
-                        )}
+                        </div>
 
                         <div>
                             <label className="mb-1.5 block text-xs font-medium text-slate-700">
@@ -295,7 +519,8 @@ export function UserDrawer({
                                 {roles.map((role) => (
                                     <label key={role.id} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer select-none">
                                         <input
-                                            type="checkbox"
+                                            type="radio"
+                                            name="userRole"
                                             checked={form.roleIds.includes(role.id)}
                                             onChange={() => handleRoleCheckboxChange(role.id)}
                                             disabled={isViewMode}
@@ -323,9 +548,7 @@ export function UserDrawer({
                                 className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15 disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
                             >
                                 <option value="">
-                                    {isEditMode
-                                        ? "-- Chọn nông trại trực thuộc --"
-                                        : isStaffSelected
+                                        {isEditMode || isStaffSelected || isFarmManagerSelected
                                             ? "-- Chọn nông trại trực thuộc --"
                                             : "-- Không cần chọn nông trại --"}
                                 </option>
@@ -354,7 +577,60 @@ export function UserDrawer({
                                     Staff bắt buộc phải thuộc một nông trại.
                                 </p>
                             )}
+
+                            {!isViewMode && isFarmManagerSelected && (
+                                <p className="mt-1.5 text-xs text-slate-500">
+                                    Farm Manager bắt buộc phải thuộc một nông trại.
+                                </p>
+                            )}
                         </div>
+
+                        {!isEditMode && !isViewMode && isOwnerSelected && (
+                            <div className="space-y-3 rounded-lg border border-emerald-100 bg-emerald-50/50 p-3">
+                                <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                                    <input
+                                        type="checkbox"
+                                        name="createFarm"
+                                        checked={form.createFarm}
+                                        onChange={(event) => setForm((prev) => ({
+                                            ...prev,
+                                            createFarm: event.target.checked,
+                                        }))}
+                                        className="rounded border-slate-300 text-[#006948] focus:ring-[#006948]"
+                                    />
+                                    Tạo Farm ngay cho Owner
+                                </label>
+
+                                {form.createFarm && (
+                                    <>
+                                        <input
+                                            name="farmName"
+                                            value={form.farmName}
+                                            onChange={handleChange}
+                                            placeholder="Tên Farm *"
+                                            className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15"
+                                        />
+                                        <input
+                                            name="farmLocation"
+                                            value={form.farmLocation}
+                                            onChange={handleChange}
+                                            placeholder="Địa chỉ Farm *"
+                                            className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15"
+                                        />
+                                        <input
+                                            name="farmAreaM2"
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            value={form.farmAreaM2}
+                                            onChange={handleChange}
+                                            placeholder="Diện tích (m², tùy chọn)"
+                                            className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15"
+                                        />
+                                    </>
+                                )}
+                            </div>
+                        )}
 
                         {isViewMode && (
                             <>
@@ -363,21 +639,7 @@ export function UserDrawer({
                                         Trạng thái
                                     </label>
                                     <div className="flex items-center">
-                                        <span
-                                            className={[
-                                                "inline-flex items-center gap-1.5 rounded-full px-3 py-1",
-                                                "text-[11px] font-medium",
-                                                form.status === "ACTIVE" ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-600",
-                                            ].join(" ")}
-                                        >
-                                            <span
-                                                className={[
-                                                    "h-1.5 w-1.5 rounded-full",
-                                                    form.status === "ACTIVE" ? "bg-emerald-500" : "bg-slate-500",
-                                                ].join(" ")}
-                                            />
-                                            {form.status === "ACTIVE" ? "Đang hoạt động" : "Đã khóa"}
-                                        </span>
+                                        <UserStatusBadge status={form.status} />
                                     </div>
                                 </div>
 
@@ -438,6 +700,12 @@ export function UserDrawer({
                     </footer>
                 </form>
             </aside>
+
+            <ImagePreviewModal
+                open={avatarPreviewOpen}
+                src={form.avatarUrl}
+                onClose={() => setAvatarPreviewOpen(false)}
+            />
         </div>
     );
 }

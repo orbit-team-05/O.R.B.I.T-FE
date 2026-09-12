@@ -1,4 +1,5 @@
 import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
+import { FarmStatusBadge } from "./FarmStatusBadge";
 
 function ActionButton({ children, variant = "default", ...props }) {
     const variantClass =
@@ -39,23 +40,42 @@ function formatDate(dateString) {
     }
 }
 
+function FarmAvatar({ farm }) {
+    const initials = (farm.farmName || "F")
+        .split(" ")
+        .filter(Boolean)
+        .slice(-2)
+        .map((part) => part[0])
+        .join("")
+        .toUpperCase();
+
+    return farm.imageUrl ? (
+        <img src={farm.imageUrl} alt={farm.farmName || "Farm"} className="h-11 w-11 rounded-xl object-cover" />
+    ) : (
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-sm font-semibold text-[#006948]">
+            {initials}
+        </div>
+    );
+}
+
 export function FarmTable({
                               farms,
                               pageInfo,
                               onPageChange,
                               loading = false,
+                              onView,
                               onEdit,
-                              onDelete,
+                              onToggleStatus,
                           }) {
     return (
-        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-            <header className="border-b border-slate-200 px-5 py-4">
+        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <header className="border-b border-slate-100 bg-slate-50/60 px-5 py-4">
                 <h2 className="text-base font-semibold text-slate-900">
                     Danh sách Nông trại
                 </h2>
 
-                <p className="mt-1 text-xs text-slate-600">
-                    Quản lý thông tin nông trại, chủ sở hữu và nhân viên
+                    <p className="mt-1 text-xs text-slate-500">
+                    Quản lý hồ sơ, chủ sở hữu, nhân sự và trạng thái hoạt động.
                 </p>
             </header>
 
@@ -72,8 +92,9 @@ export function FarmTable({
                         <th className="px-5 py-3">Địa chỉ</th>
                         <th className="px-5 py-3">Chủ sở hữu</th>
                         <th className="px-5 py-3">Nhân viên</th>
+                        <th className="px-5 py-3">Trạng thái</th>
                         <th className="px-5 py-3">Ngày tạo</th>
-                        <th className="w-[150px] px-5 py-3 text-center">Hành động</th>
+                        <th className="w-[200px] px-5 py-3 text-center">Hành động</th>
                     </tr>
                     </thead>
 
@@ -81,14 +102,21 @@ export function FarmTable({
                     {farms.map((item) => (
                         <tr
                             key={item.id}
-                            className="border-t border-slate-200 text-sm text-slate-700"
+                            onClick={() => onView?.(item)}
+                            className="cursor-pointer border-t border-slate-100 text-sm text-slate-700 transition hover:bg-slate-50"
                         >
                             <td className="px-5 py-4">
                                 #{String(item.id).padStart(2, "0")}
                             </td>
 
-                            <td className="px-5 py-4 font-medium text-slate-900">
-                                {item.farmName}
+                            <td className="px-5 py-4">
+                                <div className="flex items-center gap-3">
+                                    <FarmAvatar farm={item} />
+                                    <div>
+                                        <p className="font-medium text-slate-900">{item.farmName}</p>
+                                        <p className="mt-0.5 text-xs text-slate-500">#{String(item.id).padStart(2, "0")}</p>
+                                    </div>
+                                </div>
                             </td>
 
                             <td className="max-w-[200px] truncate px-5 py-4" title={item.location}>
@@ -114,21 +142,29 @@ export function FarmTable({
                                 </span>
                             </td>
 
+                            <td className="px-5 py-4">
+                                <FarmStatusBadge active={item.isActive} />
+                            </td>
+
                             <td className="px-5 py-4 text-slate-500">
                                 {formatDate(item.createdAt)}
                             </td>
 
-                            <td className="w-[150px] px-5 py-4">
+                            <td className="w-[200px] px-5 py-4" onClick={(event) => event.stopPropagation()}>
                                 <div className="flex items-center justify-center gap-2">
+                                    <ActionButton onClick={() => onView?.(item)}>
+                                        Xem
+                                    </ActionButton>
+
                                     <ActionButton onClick={() => onEdit?.(item)}>
                                         Sửa
                                     </ActionButton>
 
                                     <ActionButton
-                                        variant="danger"
-                                        onClick={() => onDelete?.(item)}
+                                        variant={item.isActive ? "danger" : "success"}
+                                        onClick={() => onToggleStatus?.(item)}
                                     >
-                                        Xóa
+                                        {item.isActive ? "Tạm ngưng" : "Kích hoạt"}
                                     </ActionButton>
                                 </div>
                             </td>
@@ -138,7 +174,7 @@ export function FarmTable({
                     {farms.length === 0 && (
                         <tr>
                             <td
-                                colSpan={7}
+                                colSpan={8}
                                 className="px-5 py-10 text-center text-sm text-slate-500"
                             >
                                 Chưa có Nông trại nào.
@@ -149,11 +185,7 @@ export function FarmTable({
                 </table>
             </div>
 
-            <footer className="flex items-center justify-between border-t border-slate-200 px-5 py-3">
-                <p className="text-xs text-slate-500">
-                    Tổng {pageInfo.totalElements} nông trại
-                </p>
-
+            <footer className="flex items-center justify-end border-t border-slate-200 px-5 py-3">
                 <div className="flex items-center gap-2">
                     <button
                         type="button"

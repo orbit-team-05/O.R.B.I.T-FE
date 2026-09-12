@@ -2,9 +2,9 @@ import { httpClient } from "../../../../services/httpClient";
 
 const FARM_ENDPOINT = "/admin/farms";
 
-export async function getFarms(page = 0, size = 10) {
+export async function getFarms(page = 0, size = 10, filters = {}) {
     const response = await httpClient.get(FARM_ENDPOINT, {
-        params: { page, size },
+        params: { page, size, ...filters },
     });
 
     return response.data.data;
@@ -29,7 +29,7 @@ export async function createFarm(payload) {
 }
 
 export async function updateFarm(farmId, payload) {
-    const response = await httpClient.put(
+    const response = await httpClient.patch(
         `${FARM_ENDPOINT}/${farmId}`,
         payload,
     );
@@ -37,10 +37,19 @@ export async function updateFarm(farmId, payload) {
     return response.data.data;
 }
 
-export async function deleteFarm(farmId) {
-    const response = await httpClient.delete(`${FARM_ENDPOINT}/${farmId}`);
+export async function updateFarmStatus(farmId, active) {
+    const response = await httpClient.patch(`${FARM_ENDPOINT}/${farmId}/status`, null, {
+        params: { active },
+    });
 
-    return response.data;
+    return response.data.data;
+}
+
+export async function uploadFarmImage(farmId, file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await httpClient.post(`${FARM_ENDPOINT}/${farmId}/image`, formData);
+    return response.data.data;
 }
 
 export async function getOwnersList() {

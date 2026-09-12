@@ -1,53 +1,51 @@
-function formatLatestTime(value) {
-    if (!value) return "-";
+export function AdminDashboardInfoPanel({ pendingActions }) {
+    const actions = pendingActions || {};
 
-    return new Intl.DateTimeFormat("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        day: "2-digit",
-        month: "2-digit",
-    }).format(new Date(value));
-}
-
-export function AdminDashboardInfoPanel({ priceSummary, deviceSummary }) {
     return (
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
             <header className="border-b border-slate-200 px-5 py-4">
                 <h2 className="text-base font-semibold text-slate-900">
-                    Tổng hợp vận hành
+                    Việc cần xử lý
                 </h2>
 
                 <p className="mt-1 text-xs text-slate-600">
-                    Dữ liệu nhanh từ crawler và thiết bị IoT
+                    Các giao dịch cần Admin kiểm tra
                 </p>
             </header>
 
             <div className="divide-y divide-slate-200 px-5">
                 <div className="flex items-center justify-between py-3 text-sm">
-                    <span className="text-slate-600">Dòng giá crawl</span>
-                    <strong className="text-slate-900">
-                        {priceSummary?.totalPrices ?? 0}
+                    <span className="text-slate-600">Phiếu nhập chờ duyệt</span>
+                    <strong className={actions.pendingImports > 0 ? "text-amber-600" : "text-[#006948]"}>
+                        {actions.pendingImports ?? 0}
                     </strong>
                 </div>
 
                 <div className="flex items-center justify-between py-3 text-sm">
-                    <span className="text-slate-600">Cập nhật giá mới nhất</span>
-                    <strong className="text-slate-900">
-                        {formatLatestTime(priceSummary?.latestUpdatedAt)}
+                    <span className="text-slate-600">Phiếu xuất chờ duyệt</span>
+                    <strong className={actions.pendingExports > 0 ? "text-amber-600" : "text-[#006948]"}>
+                        {actions.pendingExports ?? 0}
                     </strong>
                 </div>
 
                 <div className="flex items-center justify-between py-3 text-sm">
-                    <span className="text-slate-600">Thiết bị đang hoạt động</span>
-                    <strong className="text-[#006948]">
-                        {deviceSummary?.activeDevices ?? 0}
+                    <span className="text-slate-600">Giao dịch bị từ chối</span>
+                    <strong className={actions.failedTransactions > 0 ? "text-red-600" : "text-[#006948]"}>
+                        {actions.failedTransactions ?? 0}
                     </strong>
                 </div>
 
                 <div className="flex items-center justify-between py-3 text-sm">
-                    <span className="text-slate-600">Thiết bị chờ kích hoạt</span>
-                    <strong className="text-amber-600">
-                        {deviceSummary?.unassignedDevices ?? 0}
+                    <span className="text-slate-600">Thiết bị cân chưa tạo</span>
+                    <strong className={actions.uncreatedDevices > 0 ? "text-amber-600" : "text-[#006948]"}>
+                        {actions.uncreatedDevices ?? 0}
+                    </strong>
+                </div>
+
+                <div className="flex items-center justify-between py-3 text-sm">
+                    <span className="text-slate-600">Thiết bị cân chưa gắn Farm</span>
+                    <strong className={actions.unassignedDevices > 0 ? "text-amber-600" : "text-[#006948]"}>
+                        {actions.unassignedDevices ?? 0}
                     </strong>
                 </div>
             </div>

@@ -20,6 +20,40 @@ export async function getOwnerIotDeviceDetail(farmId, deviceId) {
     return response.data.data;
 }
 
+export async function getOwnerLatestScaleWeight(farmId, deviceId) {
+    const response = await httpClient.get(
+        `${getOwnerIotDeviceEndpoint(farmId)}/${deviceId}/latest-weight`,
+    );
+
+    return response.data.data;
+}
+
+export async function getOwnerScaleDeviceAuditLogs(farmId, deviceId, page = 0, size = 10) {
+    const response = await httpClient.get(
+        `${getOwnerIotDeviceEndpoint(farmId)}/${deviceId}/audit-logs`,
+        { params: { page, size } },
+    );
+    return response.data.data;
+}
+
+export async function updateOwnerScaleDeviceProfile(farmId, deviceId, payload) {
+    const response = await httpClient.patch(
+        `${getOwnerIotDeviceEndpoint(farmId)}/${deviceId}/profile`,
+        payload,
+    );
+    return response.data.data;
+}
+
+export async function uploadOwnerScaleDeviceImage(farmId, deviceId, file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await httpClient.post(
+        `${getOwnerIotDeviceEndpoint(farmId)}/${deviceId}/image`,
+        formData,
+    );
+    return response.data.data;
+}
+
 export async function activateOwnerIotDevice(farmId, payload) {
     const response = await httpClient.post(
         `${getOwnerIotDeviceEndpoint(farmId)}/activate`,
@@ -29,23 +63,3 @@ export async function activateOwnerIotDevice(farmId, payload) {
     return response.data.data;
 }
 
-export async function updateOwnerIotDeviceWorkMode(
-    farmId,
-    deviceId,
-    payload,
-) {
-    const response = await httpClient.patch(
-        `${getOwnerIotDeviceEndpoint(farmId)}/${deviceId}/work-mode`,
-        payload,
-    );
-
-    return response.data.data;
-}
-
-export async function cancelOwnerIotDevicePendingCommand(farmId, deviceId) {
-    const response = await httpClient.patch(
-        `${getOwnerIotDeviceEndpoint(farmId)}/${deviceId}/work-mode/cancel`,
-    );
-
-    return response.data.data;
-}

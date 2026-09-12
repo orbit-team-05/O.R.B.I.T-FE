@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../../features/auth/context/AuthContext";
 
 /**
@@ -7,10 +7,19 @@ import { useAuth } from "../../../features/auth/context/AuthContext";
  * @param {{ allowedRoles: string[], children: React.ReactNode }} props
  */
 export function ProtectedRoute({ allowedRoles, children }) {
-    const { isAuthenticated, user, getDefaultDashboard } = useAuth();
+    const { isAuthenticated, initializing, user, getDefaultDashboard } = useAuth();
+    const location = useLocation();
+
+    if (initializing) {
+        return null;
+    }
 
     if (!isAuthenticated) {
         return <Navigate to="/login" replace />;
+    }
+
+    if (user?.mustChangePassword && location.pathname !== "/change-password") {
+        return <Navigate to="/change-password" replace state={{ from: location.pathname }} />;
     }
 
     // Kiểm tra role

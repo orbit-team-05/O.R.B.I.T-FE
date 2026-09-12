@@ -8,9 +8,13 @@ import {
     updateSeason as apiUpdateSeason,
     updateSeasonStatus,
     cancelSeason as apiCancelSeason,
-    getActiveSpecies,
-    getSpeciesSizes,
     getSeasonHarvests,
+    getSeasonOtherCosts,
+    createSeasonOtherCost as apiCreateSeasonOtherCost,
+    updateSeasonOtherCost as apiUpdateSeasonOtherCost,
+    deleteSeasonOtherCost as apiDeleteSeasonOtherCost,
+    uploadSeasonOtherCostReceipt as apiUploadSeasonOtherCostReceipt,
+    uploadSeasonImage as apiUploadSeasonImage,
 } from "../services/ownerSeasonApi";
 import { useFarmRealtimeRefresh } from "../../../../hooks/useFarmTopic";
 
@@ -33,9 +37,6 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
     const [materialUsagePageNumber, setMaterialUsagePageNumber] = useState(0);
     const [materialUsageSize] = useState(10);
     const [materialUsageLoading, setMaterialUsageLoading] = useState(false);
-    const [speciesList, setSpeciesList] = useState([]);
-    const [speciesSizes, setSpeciesSizes] = useState([]);
-    const [sizesLoading, setSizesLoading] = useState(false);
 
     const [page, setPage] = useState(initialPage);
     const [size] = useState(initialSize);
@@ -55,6 +56,11 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
     const [harvestPageNumber, setHarvestPageNumber] = useState(0);
     const [harvestSize] = useState(10);
     const [harvestLoading, setHarvestLoading] = useState(false);
+
+    const [otherCostPage, setOtherCostPage] = useState(null);
+    const [otherCostPageNumber, setOtherCostPageNumber] = useState(0);
+    const [otherCostSize] = useState(10);
+    const [otherCostLoading, setOtherCostLoading] = useState(false);
 
     const loadDashboard = useCallback(async () => {
         try {
@@ -78,45 +84,23 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
         }
     }, [page, size]);
 
-    const loadSpecies = useCallback(async () => {
-        try {
-            const data = await getActiveSpecies();
-            setSpeciesList(data);
-        } catch (err) {
-            console.error("Không thể tải danh sách species:", err);
-        }
-    }, []);
-
-    const loadSpeciesSizes = useCallback(async (speciesId) => {
-        if (!speciesId) {
-            setSpeciesSizes([]);
-            return;
-        }
-        try {
-            setSizesLoading(true);
-            const data = await getSpeciesSizes(speciesId);
-            setSpeciesSizes(data);
-        } catch (err) {
-            console.error("Không thể tải danh sách size cho species:", err);
-        } finally {
-            setSizesLoading(false);
-        }
-    }, []);
-
     const reload = useCallback(async () => {
-        await Promise.all([loadDashboard(), loadSeasons(), loadSpecies()]);
-    }, [loadDashboard, loadSeasons, loadSpecies]);
+        await Promise.all([loadDashboard(), loadSeasons()]);
+    }, [loadDashboard, loadSeasons]);
 
     // Initial load on mount or page change
     useEffect(() => {
+        // This effect starts the async data-loading lifecycle for the page.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadSeasons();
     }, [loadSeasons]);
 
-    // Load dashboard and species list on mount
+    // Load dashboard on mount
     useEffect(() => {
+        // This effect starts the async summary-loading lifecycle for the page.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadDashboard();
-        loadSpecies();
-    }, [loadDashboard, loadSpecies]);
+    }, [loadDashboard]);
 
     const loadMaterialUsages = useCallback(
         async (seasonId, nextPage = 0) => {
@@ -172,6 +156,25 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
         [harvestSize],
     );
 
+    const loadOtherCosts = useCallback(
+        async (seasonId, nextPage = 0) => {
+            if (!seasonId) return null;
+            
+            try {
+                setOtherCostLoading(true);
+                const data = await getSeasonOtherCosts(seasonId, nextPage, otherCostSize);
+                setOtherCostPage(data);
+                return data;
+            } catch (err) {
+                setActionError(getErrorMessage(err, "Không thể tải danh sách chi phí phát sinh."));
+                return null;
+            } finally {
+                setOtherCostLoading(false);
+            }
+        },
+        [otherCostSize]
+    );
+
     const loadDetail = useCallback(
         async (id) => {
             if (!id) return;
@@ -184,6 +187,8 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
                 setMaterialUsagePageNumber(0);
                 setHarvestPage(null);
                 setHarvestPageNumber(0);
+                setOtherCostPage(null);
+                setOtherCostPageNumber(0);
 
                 const data = await getSeasonDetail(id);
                 setSelectedDetail(data);
@@ -191,6 +196,7 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
                 await Promise.all([
                     loadMaterialUsages(id, 0),
                     loadHarvests(id, 0),
+                    loadOtherCosts(id, 0),
                 ]);
 
                 return data;
@@ -201,7 +207,7 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
                 setLoadingDetailId(null);
             }
         },
-        [loadMaterialUsages, loadHarvests],
+        [loadMaterialUsages, loadHarvests, loadOtherCosts],
     );
 
     useFarmRealtimeRefresh(farmId, SEASON_REALTIME_TOPICS, async () => {
@@ -212,12 +218,17 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
         }
     });
 
-    const createSeason = async (payload) => {
+    const createSeason = async (payload, file = null) => {
         try {
             setSubmitting(true);
             setActionError("");
             setActionSuccess("");
             const id = await apiCreateSeason(payload);
+            
+            if (file) {
+                await apiUploadSeasonImage(id, file);
+            }
+            
             setActionSuccess("Tạo mùa vụ mới thành công.");
             await reload();
             return id;
@@ -229,15 +240,22 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
         }
     };
 
-    const updateSeason = async (id, payload) => {
+    const updateSeason = async (id, payload, imageFile = null) => {
         try {
             setSubmitting(true);
             setActionError("");
             setActionSuccess("");
             const data = await apiUpdateSeason(id, payload);
+            
+            if (imageFile) {
+                await apiUploadSeasonImage(id, imageFile);
+            }
+
             setActionSuccess("Cập nhật thông tin mùa vụ thành công.");
-            setSelectedDetail(null);
             await reload();
+            if (id) {
+                await loadDetail(id);
+            }
             return data;
         } catch (err) {
             const msg = getErrorMessage(err, "Không thể cập nhật mùa vụ.");
@@ -308,6 +326,87 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
         }
     }
 
+    async function handleSetOtherCostPage(nextPage) {
+        const normalizedPage = Math.max(Number(nextPage) || 0, 0);
+        setOtherCostPageNumber(normalizedPage);
+
+        if (selectedDetail?.id) {
+            await loadOtherCosts(selectedDetail.id, normalizedPage);
+        }
+    }
+
+    const createOtherCost = async (seasonId, payload, file) => {
+        try {
+            setSubmitting(true);
+            setActionError("");
+            setActionSuccess("");
+
+            const newCost = await apiCreateSeasonOtherCost(seasonId, payload);
+            if (file) {
+                await apiUploadSeasonOtherCostReceipt(seasonId, newCost.id, file);
+            }
+
+            setActionSuccess("Thêm chi phí phát sinh thành công.");
+            await loadOtherCosts(seasonId, otherCostPageNumber);
+            if (selectedDetail?.id === seasonId) {
+                await loadDetail(seasonId); // To update total otherCost
+            }
+            return true;
+        } catch (err) {
+            setActionError(getErrorMessage(err, "Không thể thêm chi phí phát sinh."));
+            return false;
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const updateOtherCost = async (seasonId, costId, payload, file) => {
+        try {
+            setSubmitting(true);
+            setActionError("");
+            setActionSuccess("");
+
+            await apiUpdateSeasonOtherCost(seasonId, costId, payload);
+            if (file) {
+                await apiUploadSeasonOtherCostReceipt(seasonId, costId, file);
+            }
+
+            setActionSuccess("Cập nhật chi phí phát sinh thành công.");
+            await loadOtherCosts(seasonId, otherCostPageNumber);
+            if (selectedDetail?.id === seasonId) {
+                await loadDetail(seasonId); // To update total otherCost
+            }
+            return true;
+        } catch (err) {
+            setActionError(getErrorMessage(err, "Không thể cập nhật chi phí phát sinh."));
+            return false;
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const deleteOtherCost = async (seasonId, costId) => {
+        try {
+            setSubmitting(true);
+            setActionError("");
+            setActionSuccess("");
+
+            await apiDeleteSeasonOtherCost(seasonId, costId);
+
+            setActionSuccess("Xóa chi phí phát sinh thành công.");
+            await loadOtherCosts(seasonId, otherCostPageNumber);
+            if (selectedDetail?.id === seasonId) {
+                await loadDetail(seasonId); // To update total otherCost
+            }
+            return true;
+        } catch (err) {
+            setActionError(getErrorMessage(err, "Không thể xóa chi phí phát sinh."));
+            return false;
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     function handleSetPage(nextPage) {
         setPage(Math.max(Number(nextPage) || 0, 0));
     }
@@ -317,7 +416,6 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
         dashboard,
         selectedDetail,
         setSelectedDetail,
-        speciesList,
 
         pageInfo: {
             number: seasonPage?.number ?? page,
@@ -366,6 +464,18 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
         harvestLoading,
         setHarvestPage: handleSetHarvestPage,
 
+        otherCosts: otherCostPage?.content ?? [],
+        otherCostPageInfo: {
+            number: otherCostPage?.number ?? otherCostPageNumber,
+            size: otherCostPage?.size ?? otherCostSize,
+            totalPages: otherCostPage?.totalPages ?? 0,
+            totalElements: otherCostPage?.totalElements ?? 0,
+            first: otherCostPage?.first ?? true,
+            last: otherCostPage?.last ?? true,
+        },
+        otherCostLoading,
+        setOtherCostPage: handleSetOtherCostPage,
+
         setPage: handleSetPage,
         reload,
         loadDetail,
@@ -373,12 +483,12 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
         updateSeason,
         updateStatus,
         cancelSeason,
-        speciesSizes,
-        sizesLoading,
-        loadSpeciesSizes,
         clearActionMessages: () => {
             setActionError("");
             setActionSuccess("");
         },
+        createOtherCost,
+        updateOtherCost,
+        deleteOtherCost,
     };
 }

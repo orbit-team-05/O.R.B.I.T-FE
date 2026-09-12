@@ -5,49 +5,24 @@ import { useToast } from "../../../components/common/toast/ToastProvider";
 
 import { useAuth } from "../../../features/auth/context/AuthContext";
 
-import { InventoryStockTable } from "../../../features/owner/inventory/components/InventoryStockTable";
+import { InventoryStockCardList } from "../../../features/owner/inventory/components/InventoryStockCardList";
+import { CreateTransactionDrawer } from "../../../features/owner/inventory/components/CreateTransactionDrawer";
+import { Plus } from "lucide-react";
+import { useState } from "react";
 import { InventoryStockDetailDrawer } from "../../../features/owner/inventory/components/InventoryStockDetailDrawer";
+import { OwnerPendingTransactionsTab } from "../../../features/owner/inventory/components/OwnerPendingTransactionsTab";
 
 import { useOwnerInventoryStocks } from "../../../features/owner/inventory/hooks/useOwnerInventoryStocks";
 import { formatCurrency } from "../../../utils/formatUtils";
-
-function PageHeader({ onRefresh }) {
-    return (
-        <header className="flex flex-col gap-3 border-b border-slate-200 bg-white px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-                <p className="text-sm font-medium text-[#006948]">
-                    Owner / Kho vật tư
-                </p>
-
-                <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
-                    Kho vật tư
-                </h1>
-
-                <p className="mt-1 text-sm text-slate-600">
-                    Theo dõi tồn kho hiện tại, giá trị tồn kho
-                    và chi tiết lô hàng.
-                </p>
-            </div>
-
-            <button
-                type="button"
-                onClick={onRefresh}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            >
-                <RefreshCcw size={16} />
-
-                Làm mới
-            </button>
-        </header>
-    );
-}
+import { OwnerPageHeader } from "../common/OwnerPageHeader";
 
 export function OwnerInventoryPage() {
     const toast = useToast();
-
     const { user } = useAuth();
-
     const farmId = user?.farmId;
+    const [transactionDrawerOpen, setTransactionDrawerOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState('stock');
+    const [warehouseType, setWarehouseType] = useState("MATERIAL");
 
     const {
         stocks,
@@ -62,9 +37,22 @@ export function OwnerInventoryPage() {
         detailLoading,
         loadStockDetail,
 
+        category,
+        setCategory,
+
         setPage,
         reload,
-    } = useOwnerInventoryStocks(farmId);
+    } = useOwnerInventoryStocks(farmId, warehouseType);
+
+    const categories = warehouseType === "PRODUCT"
+        ? [{ id: "", label: "Tất cả sản phẩm" }]
+        : [
+            { id: "", label: "Tất cả vật tư" },
+            { id: "FEED", label: "Thức ăn (Cám)" },
+            { id: "MEDICINE", label: "Thuốc thú y" },
+            { id: "CHEMICAL", label: "Hóa chất" },
+            { id: "MATERIAL", label: "Vật tư khác" },
+        ];
 
     /**
      * Toast only for API errors.
@@ -84,7 +72,7 @@ export function OwnerInventoryPage() {
     useEffect(() => {
         if (!farmId) {
             toast.error(
-                "Tài khoản OWNER chưa có farm"
+                "Tài khoản chưa được gán Farm"
             );
         }
     }, [farmId, toast]);
@@ -104,13 +92,45 @@ export function OwnerInventoryPage() {
 
     return (
         <div className="min-h-screen bg-slate-50">
-            <PageHeader onRefresh={reload} />
+            <OwnerPageHeader
+                title="Kho vận hành"
+                description="Theo dõi kho vật tư, kho sản phẩm và các giao dịch chờ duyệt của Farm."
+                actions={<>
+                    <button type="button" onClick={reload} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"><RefreshCcw size={16} />Làm mới</button>
+                    <button type="button" onClick={() => setTransactionDrawerOpen(true)} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#006948] px-4 text-sm font-medium text-white hover:bg-[#00583d]"><Plus size={16} />Tạo giao dịch</button>
+                </>}
+            />
 
-            <main className="space-y-5 px-6 py-6">
-                <section className="grid gap-4 md:grid-cols-3">
+            <main className="px-6 py-6 space-y-6">
+                <div className="flex flex-wrap border-b border-slate-200">
+                    <button
+                        className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'stock' && warehouseType === 'MATERIAL' ? 'border-[#006948] text-[#006948]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                        onClick={() => { setWarehouseType('MATERIAL'); setActiveTab('stock'); }}
+                    >
+                        Kho vật tư
+                    </button>
+                    <button
+                        className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'stock' && warehouseType === 'PRODUCT' ? 'border-[#006948] text-[#006948]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                        onClick={() => { setWarehouseType('PRODUCT'); setActiveTab('stock'); }}
+                    >
+                        Kho sản phẩm
+                    </button>
+                    <button
+                        className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'pending' ? 'border-[#006948] text-[#006948]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                        onClick={() => setActiveTab('pending')}
+                    >
+                        Giao dịch chờ duyệt
+                    </button>
+                </div>
+
+                {activeTab === 'pending' ? (
+                    <OwnerPendingTransactionsTab farmId={farmId} warehouseType={warehouseType} />
+                ) : (
+                    <div className="space-y-5">
+                        <section className="grid gap-4 md:grid-cols-4">
                     <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
                         <p className="text-xs font-medium uppercase text-slate-500">
-                            Sản phẩm trong kho
+                            {warehouseType === "PRODUCT" ? "Sản phẩm đang lưu kho" : "Nhóm vật tư trong kho"}
                         </p>
 
                         <p className="mt-2 text-2xl font-semibold text-slate-900">
@@ -124,7 +144,7 @@ export function OwnerInventoryPage() {
                         </p>
 
                         <p className="mt-2 text-2xl font-semibold text-red-600">
-                            {summary?.lowStock ?? 0}
+                            {summary?.lowStockProducts ?? 0}
                         </p>
                     </div>
 
@@ -134,18 +154,49 @@ export function OwnerInventoryPage() {
                         </p>
 
                         <p className="mt-2 text-2xl font-semibold text-[#006948]">
-                            {formatCurrency(summary?.inventoryValue)}
+                        {formatCurrency(summary?.inventoryValue)}
+                    </p>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-200 bg-white px-5 py-4">
+                        <p className="text-xs font-medium uppercase text-slate-500">
+                            Chờ duyệt
+                        </p>
+
+                        <p className="mt-2 text-2xl font-semibold text-amber-600">
+                            {summary?.pendingTransactions ?? 0}
                         </p>
                     </div>
                 </section>
 
-                <InventoryStockTable
-                    stocks={stocks}
-                    pageInfo={pageInfo}
-                    loading={loading}
-                    onPageChange={setPage}
-                    onViewDetail={openStockDetail}
-                />
+                <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                    {categories.map((cat) => (
+                        <button
+                            key={cat.id}
+                            onClick={() => {
+                                setCategory(cat.id);
+                                setPage(0);
+                            }}
+                            className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                                category === cat.id
+                                    ? "bg-[#006948] text-white"
+                                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                            }`}
+                        >
+                            {cat.label}
+                        </button>
+                    ))}
+                </div>
+
+                    <InventoryStockCardList
+                        stocks={stocks}
+                        pageInfo={pageInfo}
+                        loading={loading}
+                        onPageChange={setPage}
+                        onViewDetail={openStockDetail}
+                    />
+                    </div>
+                )}
             </main>
 
             <InventoryStockDetailDrawer
@@ -153,6 +204,13 @@ export function OwnerInventoryPage() {
                 detail={selectedStockDetail}
                 loading={detailLoading}
                 onClose={closeStockDetail}
+            />
+
+            <CreateTransactionDrawer 
+                open={transactionDrawerOpen}
+                onClose={() => setTransactionDrawerOpen(false)}
+                onSuccess={reload}
+                warehouseType={warehouseType}
             />
         </div>
     );

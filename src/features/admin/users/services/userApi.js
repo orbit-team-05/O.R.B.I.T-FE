@@ -1,14 +1,14 @@
 import { httpClient } from "../../../../services/httpClient";
 
-export async function getUsers(page = 0, size = 10) {
+export async function getUsers(page = 0, size = 10, filters = {}) {
     const response = await httpClient.get("/admin/users", {
-        params: { page, size },
+        params: { page, size, ...filters },
     });
     return response.data.data;
 }
 
 export async function getUserDashboard() {
-    const response = await httpClient.get("/admin/users/dashboard");
+    const response = await httpClient.get("/admin/dashboard");
     return response.data.data;
 }
 
@@ -18,7 +18,9 @@ export async function getRoles() {
 }
 
 export async function getFarms() {
-    const response = await httpClient.get("/admin/farms/all");
+    const response = await httpClient.get("/admin/farms/options", {
+        params: { limit: 100 },
+    });
     return response.data.data;
 }
 
@@ -41,6 +43,13 @@ export async function updateUserStatus(userId, isActive) {
 
 export async function getUserDetail(userId) {
     const response = await httpClient.get(`/admin/users/${userId}`);
+    return response.data.data;
+}
+
+export async function uploadUserAvatar(userId, file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await httpClient.post(`/admin/users/${userId}/avatar`, formData);
     return response.data.data;
 }
 

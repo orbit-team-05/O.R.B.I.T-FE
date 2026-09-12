@@ -26,6 +26,7 @@ export function useAdminUsers(initialPage = 0, initialSize = 10) {
     const [farms, setFarms] = useState([]);
     const [page, setPage] = useState(initialPage);
     const [size] = useState(initialSize);
+    const [filters, setFilters] = useState({ keyword: "", role: "", status: "", farmId: "" });
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -39,7 +40,12 @@ export function useAdminUsers(initialPage = 0, initialSize = 10) {
             setError("");
 
             const [usersData, summaryData] = await Promise.all([
-                getUsers(page, size),
+                getUsers(page, size, {
+                    ...filters,
+                    farmId: filters.farmId || undefined,
+                    role: filters.role || undefined,
+                    status: filters.status || undefined,
+                }),
                 getUserDashboard(),
             ]);
 
@@ -50,7 +56,7 @@ export function useAdminUsers(initialPage = 0, initialSize = 10) {
         } finally {
             setLoading(false);
         }
-    }, [page, size]);
+    }, [filters, page, size]);
 
     // Load additional resources for form once
     useEffect(() => {
@@ -70,6 +76,8 @@ export function useAdminUsers(initialPage = 0, initialSize = 10) {
     }, []);
 
     useEffect(() => {
+        // This effect synchronizes the list with page and filter state.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadUsers();
     }, [loadUsers]);
 
@@ -80,10 +88,10 @@ export function useAdminUsers(initialPage = 0, initialSize = 10) {
             setActionLoading(true);
             setActionError("");
 
-            await createUser(payload);
+            const createdUser = await createUser(payload);
             await loadUsers();
 
-            return true;
+            return createdUser;
         } catch (err) {
             setActionError(getErrorMessage(err, "Không thể tạo người dùng mới."));
             return false;
@@ -139,6 +147,11 @@ export function useAdminUsers(initialPage = 0, initialSize = 10) {
         setPage(Math.max(Number(nextPage) || 0, 0));
     }
 
+    function updateFilters(nextFilters) {
+        setFilters((previous) => ({ ...previous, ...nextFilters }));
+        setPage(0);
+    }
+
     return {
         users: usersPage?.content ?? [],
         summary,
@@ -154,6 +167,8 @@ export function useAdminUsers(initialPage = 0, initialSize = 10) {
         },
         page,
         setPage: handleSetPage,
+        filters,
+        updateFilters,
         loading,
         initialLoading: loading && usersPage === null,
         tableLoading: loading && usersPage !== null,

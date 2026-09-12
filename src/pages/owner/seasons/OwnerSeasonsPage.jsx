@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { Plus, RefreshCw } from "lucide-react";
 
 import { SeasonDashboardStats } from "../../../features/owner/seasons/components/SeasonDashboardStats";
-import { SeasonTable } from "../../../features/owner/seasons/components/SeasonTable";
+import { SeasonCardList } from "../../../features/owner/seasons/components/SeasonCardList";
 import { SeasonCreateDrawer } from "../../../features/owner/seasons/components/SeasonCreateDrawer";
 import { SeasonDetailDrawer } from "../../../features/owner/seasons/components/SeasonDetailDrawer";
 import { useOwnerSeasons } from "../../../features/owner/seasons/hooks/useOwnerSeasons";
 import { useToast } from "../../../components/common/toast/ToastProvider";
 import { useAuth } from "../../../features/auth/context/AuthContext";
+import { OwnerPageHeader } from "../common/OwnerPageHeader";
 
 function PageHeader({
     onCreate,
@@ -15,23 +16,7 @@ function PageHeader({
     loading,
 }) {
     return (
-        <header className="flex flex-col gap-4 overflow-hidden border-b border-slate-200 bg-white px-4 py-5 lg:flex-row lg:items-center lg:justify-between lg:px-6">
-            <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#006948]">
-                    Bảng điều khiển
-                </p>
-
-                <h1 className="mt-1 text-2xl font-bold tracking-tight break-words text-slate-900">
-                    Quản lý Mùa vụ
-                </h1>
-
-                <p className="mt-1 text-sm leading-6 text-slate-500">
-                    Theo dõi tiến độ, chi phí giống, trạng thái sinh trưởng
-                    và sản lượng dự kiến của từng ao nuôi trồng.
-                </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
+        <OwnerPageHeader title="Mùa vụ" description="Theo dõi tiến độ, chi phí, trạng thái sinh trưởng và sản lượng dự kiến của từng mùa vụ." actions={<>
                 <button
                     type="button"
                     onClick={onRefresh}
@@ -59,8 +44,7 @@ function PageHeader({
                         Lên kế hoạch
                     </span>
                 </button>
-            </div>
-        </header>
+        </>} />
     );
 }
 
@@ -86,6 +70,7 @@ export function OwnerSeasonsPage() {
     const { user } = useAuth();
 
     const farmId = user?.farmId;
+    const isOwner = user?.role === "OWNER" || user?.roles?.includes("OWNER");
 
     const {
         seasons,
@@ -100,7 +85,13 @@ export function OwnerSeasonsPage() {
         harvestPageInfo,
         harvestLoading,
         setHarvestPage,
-        speciesList,
+        otherCosts,
+        otherCostPageInfo,
+        otherCostLoading,
+        setOtherCostPage,
+        createOtherCost,
+        updateOtherCost,
+        deleteOtherCost,
         pageInfo,
         initialLoading,
         tableLoading,
@@ -117,8 +108,6 @@ export function OwnerSeasonsPage() {
         updateStatus,
         cancelSeason,
         clearActionMessages,
-        speciesSizes,
-        loadSpeciesSizes,
     } = useOwnerSeasons(farmId);
 
     const [createOpen, setCreateOpen] = useState(false);
@@ -165,8 +154,8 @@ export function OwnerSeasonsPage() {
         setCreateOpen(false);
     }
 
-    async function handleCreateSeason(payload) {
-        const id = await createSeason(payload);
+    async function handleCreateSeason(payload, file) {
+        const id = await createSeason(payload, file);
 
         if (id) {
             setCreateOpen(false);
@@ -189,7 +178,7 @@ export function OwnerSeasonsPage() {
                         dashboard={dashboard}
                     />
 
-                    <SeasonTable
+                    <SeasonCardList
                         seasons={seasons}
                         pageInfo={pageInfo}
                         loading={tableLoading}
@@ -202,7 +191,6 @@ export function OwnerSeasonsPage() {
 
             <SeasonCreateDrawer
                 open={createOpen}
-                speciesList={speciesList}
                 submitting={submitting}
                 actionError={actionError}
                 onClose={handleCloseCreate}
@@ -226,14 +214,20 @@ export function OwnerSeasonsPage() {
                 harvestPageInfo={harvestPageInfo}
                 harvestLoading={harvestLoading}
                 onHarvestPageChange={setHarvestPage}
+                otherCosts={otherCosts}
+                otherCostPageInfo={otherCostPageInfo}
+                otherCostLoading={otherCostLoading}
+                onOtherCostPageChange={setOtherCostPage}
+                createOtherCost={createOtherCost}
+                updateOtherCost={updateOtherCost}
+                deleteOtherCost={deleteOtherCost}
                 submitting={submitting}
                 actionError={actionError}
                 onClose={handleCloseDetail}
                 onUpdateSeason={updateSeason}
                 onUpdateStatus={updateStatus}
                 onCancelSeason={cancelSeason}
-                speciesSizes={speciesSizes}
-                loadSpeciesSizes={loadSpeciesSizes}
+                canFinalizeSeason={isOwner}
             />
         </div>
     );

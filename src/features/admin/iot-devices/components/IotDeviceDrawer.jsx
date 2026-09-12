@@ -1,242 +1,155 @@
-import { X } from "lucide-react";
+import { ImagePlus, Upload, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
-const DEVICE_TYPE_OPTIONS = [
-    { label: "Camera ESP32", value: "ESP32_CAM" },
-    { label: "Cân ESP32", value: "ESP32_SCALE" },
-    { label: "Camera + Cân ESP32", value: "ESP32_CAM_SCALE" },
-];
+import { ImagePreviewModal } from "../../../../components/ui/ImagePreviewModal";
 
 const INITIAL_FORM = {
     deviceName: "",
-    deviceType: "ESP32_CAM_SCALE",
-    macScale: "",
-    macCam: "",
+    imageUrl: "",
 };
 
 export function IotDeviceDrawer({
-                                    open,
-                                    submitting,
-                                    error,
-                                    onClose,
-                                    onSubmit,
-                                }) {
+    open,
+    macRecord,
+    submitting,
+    uploadingImage,
+    error,
+    onClose,
+    onUploadImage,
+    onSubmit,
+}) {
     const [form, setForm] = useState(INITIAL_FORM);
     const [localError, setLocalError] = useState("");
+    const [previewUrl, setPreviewUrl] = useState("");
+    const [previewOpen, setPreviewOpen] = useState(false);
 
+    // Reset the draft whenever a different MAC record is opened.
+    /* eslint-disable react-hooks/set-state-in-effect */
     useEffect(() => {
         if (!open) return;
 
         setLocalError("");
-        setForm(INITIAL_FORM);
-    }, [open]);
+        setPreviewOpen(false);
+        setForm({
+            ...INITIAL_FORM,
+            deviceName: macRecord?.macAddress ? `Cân ${macRecord.macAddress}` : "",
+        });
+        setPreviewUrl("");
+    }, [open, macRecord]);
+    /* eslint-enable react-hooks/set-state-in-effect */
 
-    function handleChange(event) {
-        const { name, value } = event.target;
+    async function handleImageChange(event) {
+        const file = event.target.files?.[0];
+        event.target.value = "";
+
+        if (!file) return;
+        if (!file.type.startsWith("image/")) {
+            setLocalError("Chỉ chấp nhận file ảnh.");
+            return;
+        }
+        if (file.size > 20 * 1024 * 1024) {
+            setLocalError("Ảnh không được vượt quá 20MB.");
+            return;
+        }
 
         setLocalError("");
+        setPreviewUrl(URL.createObjectURL(file));
 
-        setForm((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+        try {
+            const imageUrl = await onUploadImage?.(file);
+            setForm((current) => ({ ...current, imageUrl: imageUrl || "" }));
+        } catch (uploadError) {
+            setPreviewUrl("");
+            setLocalError(uploadError?.message || "Không thể tải ảnh thiết bị.");
+        }
     }
 
     function handleSubmit(event) {
         event.preventDefault();
 
-        const payload = {
-            deviceName: form.deviceName.trim(),
-            deviceType: form.deviceType,
-            macScale:
-                form.deviceType === "ESP32_SCALE" ||
-                form.deviceType === "ESP32_CAM_SCALE"
-                    ? form.macScale.trim()
-                    : "",
-            macCam:
-                form.deviceType === "ESP32_CAM" ||
-                form.deviceType === "ESP32_CAM_SCALE"
-                    ? form.macCam.trim()
-                    : "",
-        };
-
-        if (!payload.deviceName) {
-            setLocalError("Tên thiết bị không được để trống.");
+        const deviceName = form.deviceName.trim();
+        if (!deviceName) {
+            setLocalError("Tên thiết bị cân không được để trống.");
             return;
         }
 
-        if (!payload.deviceType) {
-            setLocalError("Loại thiết bị không hợp lệ.");
-            return;
-        }
-
-        if (
-            payload.deviceType === "ESP32_SCALE" ||
-            payload.deviceType === "ESP32_CAM_SCALE"
-        ) {
-            if (!payload.macScale) {
-                setLocalError("MAC cân không được để trống với thiết bị có cân.");
-                return;
-            }
-        }
-
-        if (
-            payload.deviceType === "ESP32_CAM" ||
-            payload.deviceType === "ESP32_CAM_SCALE"
-        ) {
-            if (!payload.macCam) {
-                setLocalError("MAC camera không được để trống với thiết bị có camera.");
-                return;
-            }
-        }
-
-        onSubmit(payload);
+        onSubmit?.({
+            deviceName,
+            imageUrl: form.imageUrl || null,
+        });
     }
 
-    if (!open) return null;
-
-    const scaleRequired =
-        form.deviceType === "ESP32_SCALE" ||
-        form.deviceType === "ESP32_CAM_SCALE";
-
-    const camRequired =
-        form.deviceType === "ESP32_CAM" ||
-        form.deviceType === "ESP32_CAM_SCALE";
+    if (!open || !macRecord) return null;
 
     return (
         <div className="fixed inset-0 z-50">
-            <button
-                type="button"
-                aria-label="Đóng drawer"
-                onClick={onClose}
-                className="absolute inset-0 bg-slate-900/20"
-            />
+            <button type="button" aria-label="Đóng drawer" onClick={onClose} className="absolute inset-0 bg-slate-900/30" />
 
-            <aside className="absolute right-0 top-0 flex h-full w-[420px] flex-col border-l border-slate-200 bg-white shadow-xl">
-                <header className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
-                    <h2 className="text-base font-semibold text-slate-900">
-                        Tạo thiết bị IoT
-                    </h2>
-
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                    >
-                        <X size={18} />
+            <aside className="absolute right-0 top-0 flex h-full w-full max-w-[520px] flex-col border-l border-slate-200 bg-white shadow-2xl">
+                <header className="flex h-20 items-center justify-between border-b border-slate-200 px-6">
+                    <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#006948]">Thiết bị chưa tạo</p>
+                        <h2 className="mt-1 text-lg font-bold text-slate-900">Tạo thiết bị cân</h2>
+                    </div>
+                    <button type="button" onClick={onClose} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900">
+                        <X size={19} />
                     </button>
                 </header>
 
-                <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
-                    <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+                <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+                    <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
                         {(localError || error) && (
-                            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                                {localError || error}
-                            </div>
+                            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{localError || error}</div>
                         )}
 
-                        <div>
-                            <label className="mb-1.5 block text-xs font-medium text-slate-700">
-                                Tên thiết bị
-                            </label>
+                        <section className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-4">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Địa chỉ MAC đã phát hiện</p>
+                            <p className="mt-2 font-mono text-xl font-bold tracking-wider text-[#006948]">{macRecord.macAddress}</p>
+                            <p className="mt-2 text-xs leading-5 text-slate-500">Sau khi tạo, thiết bị sẽ chuyển sang nhóm “Chưa gắn Farm” để Owner kích hoạt vào Farm bằng activation code.</p>
+                        </section>
 
-                            <input
-                                name="deviceName"
-                                value={form.deviceName}
-                                onChange={handleChange}
-                                placeholder="VD: Bộ cân QR khu A"
-                                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15"
-                            />
-                        </div>
+                        <label className="block">
+                            <span className="text-xs font-bold uppercase tracking-wide text-slate-500">Tên thiết bị cân</span>
+                            <input value={form.deviceName} onChange={(event) => setForm({ ...form, deviceName: event.target.value })} className="mt-2 h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-[#006948] focus:ring-2 focus:ring-emerald-100" placeholder="Ví dụ: Cân kho nguyên liệu A" />
+                        </label>
 
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-slate-700">
-                                Loại thiết bị
-                            </label>
-
-                            <select
-                                name="deviceType"
-                                value={form.deviceType}
-                                onChange={handleChange}
-                                className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15"
-                            >
-                                {DEVICE_TYPE_OPTIONS.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="mb-1.5 block text-xs font-medium text-slate-700">
-                                MAC cân
-                            </label>
-
-                            <input
-                                name="macScale"
-                                value={form.macScale}
-                                onChange={handleChange}
-                                disabled={!scaleRequired}
-                                placeholder={
-                                    scaleRequired
-                                        ? "VD: AA:BB:CC:DD:EE:01"
-                                        : "Không dùng cho thiết bị chỉ camera"
-                                }
-                                className={[
-                                    "h-10 w-full rounded-lg border px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15",
-                                    scaleRequired
-                                        ? "border-slate-300 bg-white"
-                                        : "border-slate-200 bg-slate-100 text-slate-400",
-                                ].join(" ")}
-                            />
-                        </div>
-
-                        <div>
-                            <label className="mb-1.5 block text-xs font-medium text-slate-700">
-                                MAC camera
-                            </label>
-
-                            <input
-                                name="macCam"
-                                value={form.macCam}
-                                onChange={handleChange}
-                                disabled={!camRequired}
-                                placeholder={
-                                    camRequired
-                                        ? "VD: AA:BB:CC:DD:EE:02"
-                                        : "Không dùng cho thiết bị chỉ cân"
-                                }
-                                className={[
-                                    "h-10 w-full rounded-lg border px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15",
-                                    camRequired
-                                        ? "border-slate-300 bg-white"
-                                        : "border-slate-200 bg-slate-100 text-slate-400",
-                                ].join(" ")}
-                            />
+                            <span className="text-xs font-bold uppercase tracking-wide text-slate-500">Ảnh thiết bị cân</span>
+                            <div className="mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                                <div className="relative flex h-44 items-center justify-center">
+                                    {previewUrl ? (
+                                        <button type="button" onClick={() => setPreviewOpen(true)} className="h-full w-full cursor-zoom-in">
+                                            <img src={previewUrl} alt="Xem trước thiết bị cân" className="h-full w-full object-contain" />
+                                        </button>
+                                    ) : (
+                                        <div className="flex flex-col items-center text-slate-400">
+                                            <ImagePlus size={34} strokeWidth={1.4} />
+                                            <p className="mt-2 text-xs">Chưa có ảnh thiết bị</p>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex items-center justify-between border-t border-slate-200 bg-white px-3 py-3">
+                                    <p className="text-xs text-slate-500">PNG/JPG/WebP, tối đa 20MB</p>
+                                    <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+                                        <Upload size={14} />
+                                        {uploadingImage ? "Đang tải..." : "Chọn ảnh"}
+                                        <input type="file" accept="image/*" disabled={uploadingImage} onChange={handleImageChange} className="hidden" />
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <footer className="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            disabled={submitting}
-                            className="h-9 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                            Hủy
-                        </button>
-
-                        <button
-                            type="submit"
-                            disabled={submitting}
-                            className="h-9 rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white hover:bg-[#00583d] disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                            {submitting ? "Đang tạo..." : "Tạo thiết bị"}
+                    <footer className="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
+                        <button type="button" onClick={onClose} disabled={submitting || uploadingImage} className="h-10 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">Hủy</button>
+                        <button type="submit" disabled={submitting || uploadingImage} className="h-10 rounded-xl bg-[#006948] px-5 text-sm font-bold text-white hover:bg-[#00583d] disabled:cursor-not-allowed disabled:opacity-60">
+                            {submitting ? "Đang tạo..." : "Tạo thiết bị cân"}
                         </button>
                     </footer>
                 </form>
             </aside>
+
+            <ImagePreviewModal open={previewOpen} src={previewUrl} onClose={() => setPreviewOpen(false)} />
         </div>
     );
 }

@@ -1,4 +1,6 @@
+import { AdminPageSkeleton } from "../../../components/common/loading/AdminPageSkeleton";
 import { useState } from "react";
+import { Search } from "lucide-react";
 
 import { ConfirmDialog } from "../../../components/common/dialog/ConfirmDialog";
 import { useToast } from "../../../components/common/toast/ToastProvider";
@@ -6,7 +8,8 @@ import { UserStats } from "../../../features/admin/users/components/UserStats";
 import { UserTable } from "../../../features/admin/users/components/UserTable";
 import { UserDrawer } from "../../../features/admin/users/components/UserDrawer";
 import { useAdminUsers } from "../../../features/admin/users/hooks/useAdminUsers";
-import { getUserDetail } from "../../../features/admin/users/services/userApi";
+import { getUserDetail, uploadUserAvatar } from "../../../features/admin/users/services/userApi";
+import { createFarm } from "../../../features/admin/farms/services/farmApi";
 import { useAuth } from "../../../features/auth/context/AuthContext";
 
 function AdminUsersHeader({ onCreate }) {
@@ -14,7 +17,7 @@ function AdminUsersHeader({ onCreate }) {
         <header className="flex items-start justify-between gap-4">
             <div>
                 <h1 className="text-2xl font-semibold text-slate-900">
-                    Quản lý Người dùng
+                    Người dùng
                 </h1>
 
                 <p className="mt-1 text-sm text-slate-600">
@@ -35,26 +38,7 @@ function AdminUsersHeader({ onCreate }) {
 }
 
 function AdminUsersSkeleton() {
-    return (
-        <section className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div className="h-8 w-52 animate-pulse rounded bg-slate-200" />
-
-                <div className="h-9 w-36 animate-pulse rounded bg-slate-200" />
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {[1, 2, 3, 4].map((item) => (
-                    <div
-                        key={item}
-                        className="h-24 animate-pulse rounded-xl bg-slate-200"
-                    />
-                ))}
-            </div>
-
-            <div className="h-[420px] animate-pulse rounded-xl bg-slate-200" />
-        </section>
-    );
+    return <AdminPageSkeleton variant="table" />;
 }
 
 function ErrorAlert({ message }) {
@@ -81,6 +65,8 @@ export function AdminUsersPage() {
         farms,
         pageInfo,
         setPage,
+        filters,
+        updateFilters,
 
         initialLoading,
         tableLoading,
@@ -94,6 +80,7 @@ export function AdminUsersPage() {
         createUser,
         updateUser,
         toggleUserStatus,
+        reload,
     } = useAdminUsers();
 
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -174,11 +161,20 @@ export function AdminUsersPage() {
     async function handleDrawerSubmit(payload) {
         const isCreateMode = drawerMode === "create";
 
-        const success = isCreateMode
-            ? await createUser(payload)
+        const farmDraft = isCreateMode ? payload.farmDraft : null;
+        const userPayload = isCreateMode
+            ? (() => {
+                  const accountPayload = { ...payload };
+                  delete accountPayload.farmDraft;
+                  return accountPayload;
+              })()
+            : payload;
+
+        const result = isCreateMode
+            ? await createUser(userPayload)
             : await updateUser(selectedUser.id, payload);
 
-        if (!success) {
+        if (!result) {
             toast.error(
                 isCreateMode
                     ? "Không thể tạo người dùng mới."
@@ -188,13 +184,51 @@ export function AdminUsersPage() {
             return;
         }
 
+        if (isCreateMode && farmDraft) {
+            try {
+                await createFarm({
+                    ...farmDraft,
+                    ownerId: result.id,
+                });
+                await reload();
+            } catch {
+                toast.error(
+                    "Tài khoản đã tạo nhưng Farm chưa tạo được. Bạn có thể tạo lại Farm từ màn hình Farm.",
+                );
+                resetDrawerState();
+                return;
+            }
+        }
+
         toast.success(
             isCreateMode
-                ? "Tạo người dùng thành công."
+                ? farmDraft
+                    ? "Đã tạo tài khoản Owner và Farm thành công."
+                    : "Tạo người dùng thành công."
                 : "Cập nhật người dùng thành công.",
         );
 
         resetDrawerState();
+    }
+
+    async function handleUploadAvatar(file) {
+        if (!selectedUser || !file) return;
+        if (!file.type || !["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+            toast.error("Ảnh đại diện chỉ hỗ trợ JPEG, PNG hoặc WebP.");
+            return;
+        }
+        if (file.size > 20 * 1024 * 1024) {
+            toast.error("Ảnh đại diện không được vượt quá 20MB.");
+            return;
+        }
+        try {
+            const detail = await uploadUserAvatar(selectedUser.id, file);
+            setSelectedUser(detail);
+            await reload();
+            toast.success("Đã cập nhật ảnh đại diện.");
+        } catch (error) {
+            toast.error(error?.response?.data?.message || "Không thể tải ảnh đại diện lên.");
+        }
     }
 
     function handleOpenConfirm(user) {
@@ -264,6 +298,31 @@ export function AdminUsersPage() {
             <section className="space-y-6">
                 <AdminUsersHeader onCreate={openCreateDrawer} />
 
+                <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:items-center">
+                    <div className="relative min-w-0 flex-1 lg:max-w-md">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <input
+                            value={filters.keyword}
+                            onChange={(event) => updateFilters({ keyword: event.target.value })}
+                            placeholder="Tìm tên, username hoặc email..."
+                            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm outline-none transition focus:border-[#006948] focus:ring-2 focus:ring-emerald-100"
+                        />
+                    </div>
+                    <select value={filters.role} onChange={(event) => updateFilters({ role: event.target.value })} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-[#006948]">
+                        <option value="">Tất cả vai trò</option>
+                        {roles.map((role) => <option key={role.id} value={role.roleName}>{role.roleName}</option>)}
+                    </select>
+                    <select value={filters.status} onChange={(event) => updateFilters({ status: event.target.value })} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-[#006948]">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="ACTIVE">Đang hoạt động</option>
+                        <option value="INACTIVE">Đã khóa</option>
+                    </select>
+                    <select value={filters.farmId} onChange={(event) => updateFilters({ farmId: event.target.value })} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-[#006948]">
+                        <option value="">Tất cả nông trại</option>
+                        {farms.map((farm) => <option key={farm.id} value={farm.id}>{farm.farmName}</option>)}
+                    </select>
+                </div>
+
                 <ErrorAlert message={error} />
 
                 {actionError && !drawerOpen && !confirmState.open && (
@@ -294,6 +353,7 @@ export function AdminUsersPage() {
                 error={actionError}
                 onClose={closeDrawer}
                 onSubmit={handleDrawerSubmit}
+                onUploadAvatar={handleUploadAvatar}
             />
 
             <ConfirmDialog

@@ -45,7 +45,7 @@ export function OwnerIotDeviceApiKeyDrawer({
                         </p>
 
                         <p className="mt-1 text-xs text-emerald-700">
-                            API key chỉ nên hiển thị sau khi kích hoạt. Hãy copy và cấu hình vào ESP32-CAM.
+                            API key chỉ nên hiển thị sau khi kích hoạt. Hãy copy và cấu hình vào thiết bị cân.
                         </p>
                     </div>
 

@@ -1,11 +1,13 @@
 import { httpClient } from "../../../../services/httpClient.js";
 
-export async function getOwnerInventoryStocks(farmId, page = 0, size = 10) {
+export async function getOwnerInventoryStocks(farmId, category = "", page = 0, size = 10, warehouse = "MATERIAL") {
+    const params = { page, size, warehouse };
+    if (category) {
+        params.category = category;
+    }
     const response = await httpClient.get(
         `/farms/${farmId}/inventory/stocks`,
-        {
-            params: { page, size },
-        },
+        { params },
     );
 
     return response.data.data;
@@ -17,4 +19,26 @@ export async function getOwnerInventoryStockDetail(farmId, stockId) {
     );
 
     return response.data.data;
+}
+export async function getOwnerPendingTransactions(farmId, page = 0, size = 10, warehouse = "MATERIAL") {
+    const response = await httpClient.get(
+        `/farms/${farmId}/inventory/pending-transactions`,
+        { params: { page, size, warehouse } }
+    );
+    return response.data;
+}
+
+export async function approveOwnerTransaction(farmId, transactionId, isApproved, updates = {}) {
+    const response = await httpClient.post(
+        `/farms/${farmId}/inventory/transactions/${transactionId}/approve`,
+        { isApproved, ...updates }
+    );
+    return response.data;
+}
+
+export async function getOwnerTransactionDetail(farmId, transactionId) {
+    const response = await httpClient.get(
+        `/farms/${farmId}/inventory/transactions/${transactionId}`,
+    );
+    return response.data;
 }

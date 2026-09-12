@@ -1,23 +1,21 @@
 import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
+import { UserStatusBadge } from "./UserStatusBadge";
 
-function UserStatusBadge({ status }) {
-    const isActive = status === "ACTIVE";
-    return (
-        <span
-            className={[
-                "inline-flex items-center gap-1.5 rounded-full px-3 py-1",
-                "text-[11px] font-medium",
-                isActive ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-600",
-            ].join(" ")}
-        >
-            <span
-                className={[
-                    "h-1.5 w-1.5 rounded-full",
-                    isActive ? "bg-emerald-500" : "bg-slate-500",
-                ].join(" ")}
-            />
-            {isActive ? "Đang hoạt động" : "Đã khóa"}
-        </span>
+function UserAvatar({ user }) {
+    const initials = (user.fullName || user.username || "?")
+        .split(" ")
+        .filter(Boolean)
+        .slice(-2)
+        .map((part) => part[0])
+        .join("")
+        .toUpperCase();
+
+    return user.avatarUrl ? (
+        <img src={user.avatarUrl} alt={user.fullName || "Avatar"} className="h-10 w-10 rounded-full object-cover" />
+    ) : (
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-sm font-semibold text-[#006948]">
+            {initials}
+        </div>
     );
 }
 
@@ -57,15 +55,10 @@ export function UserTable({
     currentUserId,
 }) {
     return (
-        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-            <header className="border-b border-slate-200 px-5 py-4">
-                <h2 className="text-base font-semibold text-slate-900">
-                    Danh sách Người dùng
-                </h2>
-
-                <p className="mt-1 text-xs text-slate-600">
-                    Danh sách tất cả tài khoản người dùng trực thuộc các nông trại hoặc quản trị hệ thống
-                </p>
+        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <header className="border-b border-slate-100 bg-slate-50/60 px-5 py-4">
+                <h2 className="text-base font-semibold text-slate-900">Danh sách Người dùng</h2>
+                <p className="mt-1 text-xs text-slate-500">Tài khoản hệ thống, quyền truy cập và Farm scope.</p>
             </header>
 
             {loading ? (
@@ -89,16 +82,19 @@ export function UserTable({
 
                             <tbody>
                                 {users.map((item) => (
-                                    <tr
-                                        key={item.id}
-                                        className="border-t border-slate-200 text-sm text-slate-700 hover:bg-slate-50"
-                                    >
+                                    <tr key={item.id} onClick={() => onView?.(item)} className="cursor-pointer border-t border-slate-100 text-sm text-slate-700 transition hover:bg-slate-50">
                                         <td className="px-5 py-4">
                                             #{String(item.id).padStart(2, "0")}
                                         </td>
 
-                                        <td className="px-5 py-4 font-medium text-slate-900">
-                                            {item.fullName}
+                                        <td className="px-5 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <UserAvatar user={item} />
+                                                <div>
+                                                    <p className="font-medium text-slate-900">{item.fullName}</p>
+                                                    <p className="mt-0.5 text-xs text-slate-500">@{item.username}</p>
+                                                </div>
+                                            </div>
                                         </td>
 
                                         <td className="px-5 py-4">
@@ -145,7 +141,7 @@ export function UserTable({
                                                 : "—"}
                                         </td>
 
-                                        <td className="w-[200px] px-5 py-4">
+                                    <td className="w-[200px] px-5 py-4" onClick={(event) => event.stopPropagation()}>
                                             <div className="flex items-center justify-center gap-2">
                                                 <ActionButton onClick={() => onView?.(item)}>
                                                     Xem
@@ -186,11 +182,7 @@ export function UserTable({
                         </table>
                     </div>
 
-                    <footer className="flex items-center justify-between border-t border-slate-200 px-5 py-3">
-                        <p className="text-xs text-slate-500">
-                            Tổng {pageInfo.totalElements} người dùng
-                        </p>
-
+                    <footer className="flex items-center justify-end border-t border-slate-200 px-5 py-3">
                         <div className="flex items-center gap-2">
                             <button
                                 type="button"
