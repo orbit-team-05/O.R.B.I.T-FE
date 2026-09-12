@@ -152,6 +152,26 @@ export function useAdminUsers(initialPage = 0, initialSize = 10) {
         setPage(0);
     }
 
+    const hasActiveFilters = Boolean(
+        filters.keyword?.trim()
+        || filters.role
+        || filters.status
+        || filters.farmId,
+    );
+    const responseTotalElements = usersPage?.totalElements ?? 0;
+    // The dashboard count is a safe fallback only for the unfiltered list.
+    // This keeps pagination usable when an older API instance returns the
+    // current page length instead of the full count.
+    const totalElements = !hasActiveFilters && Number(summary.totalUsers) > Number(responseTotalElements)
+        ? Number(summary.totalUsers)
+        : Number(responseTotalElements);
+    const usingDashboardFallback = totalElements !== Number(responseTotalElements);
+    const totalPages = usingDashboardFallback || !(usersPage?.totalPages > 0)
+        ? totalElements > 0
+            ? Math.ceil(totalElements / (usersPage?.size ?? size))
+            : 0
+        : usersPage.totalPages;
+
     return {
         users: usersPage?.content ?? [],
         summary,
@@ -160,8 +180,8 @@ export function useAdminUsers(initialPage = 0, initialSize = 10) {
         pageInfo: {
             number: usersPage?.number ?? page,
             size: usersPage?.size ?? size,
-            totalPages: usersPage?.totalPages ?? 0,
-            totalElements: usersPage?.totalElements ?? 0,
+            totalPages,
+            totalElements,
             first: usersPage?.first ?? true,
             last: usersPage?.last ?? true,
         },
