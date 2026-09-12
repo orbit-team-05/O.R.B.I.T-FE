@@ -9,13 +9,22 @@ export default function Pagination({
     totalPages = 0,
     totalElements = 0,
     pageSize = 10,
+    itemCount = 0,
     loading = false,
     onPageChange,
 }) {
-    // A paged API must provide the full count. Falling back to the current
-    // page length is what made 22 records look like 10 records / 1 page.
+    // Prefer the server-provided total. itemCount is only a UI safety net for
+    // legacy/custom responses that omit pagination metadata; it must never
+    // override a valid totalElements value (e.g. 22 records over 3 pages).
     const parsedTotalElements = Number(totalElements);
-    const safeTotalElements = Math.max(Number.isFinite(parsedTotalElements) ? parsedTotalElements : 0, 0);
+    const parsedItemCount = Number(itemCount);
+    const safeItemCount = Math.max(Number.isFinite(parsedItemCount) ? parsedItemCount : 0, 0);
+    const safeTotalElements = Math.max(
+        Number.isFinite(parsedTotalElements) && parsedTotalElements > 0
+            ? parsedTotalElements
+            : safeItemCount,
+        0,
+    );
     const safePageSize = Math.max(Number(pageSize) || 10, 1);
     const calculatedTotalPages = safeTotalElements > 0
         ? Math.ceil(safeTotalElements / safePageSize)
