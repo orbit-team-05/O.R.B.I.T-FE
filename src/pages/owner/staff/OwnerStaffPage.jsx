@@ -18,6 +18,7 @@ import {
 
 import { AdminPageSkeleton } from "../../../components/common/loading/AdminPageSkeleton";
 import Pagination from "../../../components/common/pagination/Pagination";
+import { PasswordInput } from "../../../components/common/form/PasswordInput";
 import { ImagePreviewModal } from "../../../components/ui/ImagePreviewModal";
 import { useToast } from "../../../components/common/toast/ToastProvider";
 import { useAuth } from "../../../features/auth/context/AuthContext";
@@ -609,7 +610,7 @@ export function OwnerStaffPage() {
                                     {(panel === "create" || panel === "reset-password") && (
                                         <label className="block">
                                             <span className="text-sm font-medium text-slate-700">{panel === "create" ? "Mật khẩu ban đầu *" : "Mật khẩu mới *"}</span>
-                                            <input type="password" name="password" value={formData.password} onChange={handleChange} required minLength={8} maxLength={72} className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-emerald-100" />
+                                            <PasswordInput name="password" value={formData.password} onChange={handleChange} required minLength={8} maxLength={72} inputClassName="mt-2 rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-emerald-100" />
                                             <span className="mt-1 block text-xs text-slate-400">Từ 8 đến 72 ký tự.</span>
                                         </label>
                                     )}

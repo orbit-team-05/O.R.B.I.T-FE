@@ -20,6 +20,7 @@ import {
 import { AdminPageSkeleton } from "../../components/common/loading/AdminPageSkeleton";
 import { useToast } from "../../components/common/toast/ToastProvider";
 import { ImagePreviewModal } from "../../components/ui/ImagePreviewModal";
+import { PasswordInput } from "../../components/common/form/PasswordInput";
 
 export function SettingsPage({
     pageTitle = "Cài đặt",
@@ -642,8 +643,7 @@ export function SettingsPage({
                                             }
                                         </label>
 
-                                        <input
-                                            type="password"
+                                        <PasswordInput
                                             value={
                                                 passwordForm[
                                                     field
@@ -666,7 +666,7 @@ export function SettingsPage({
                                                     },
                                                 )
                                             }
-                                            className={inputClass(
+                                            inputClassName={inputClass(
                                                 !!passwordErrors[
                                                     field
                                                         .key

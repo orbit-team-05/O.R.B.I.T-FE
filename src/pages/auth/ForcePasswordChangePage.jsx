@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../features/auth/context/AuthContext";
 import { changePassword } from "../../features/profile/services/profileApi";
+import { PasswordInput } from "../../components/common/form/PasswordInput";
 
 export function ForcePasswordChangePage() {
     const { updateAuthUser, logout, getDefaultDashboard } = useAuth();
@@ -59,15 +60,15 @@ export function ForcePasswordChangePage() {
                 <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                     <label className="block text-sm font-medium text-slate-700">
                         Mật khẩu ban đầu
-                        <input type="password" name="oldPassword" value={form.oldPassword} onChange={handleChange} autoComplete="current-password" required className="mt-1.5 h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15" />
+                        <PasswordInput name="oldPassword" value={form.oldPassword} onChange={handleChange} autoComplete="current-password" required inputClassName="mt-1.5 h-11 rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15" />
                     </label>
                     <label className="block text-sm font-medium text-slate-700">
                         Mật khẩu mới
-                        <input type="password" name="newPassword" value={form.newPassword} onChange={handleChange} autoComplete="new-password" minLength={8} required className="mt-1.5 h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15" />
+                        <PasswordInput name="newPassword" value={form.newPassword} onChange={handleChange} autoComplete="new-password" minLength={8} required inputClassName="mt-1.5 h-11 rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15" />
                     </label>
                     <label className="block text-sm font-medium text-slate-700">
                         Xác nhận mật khẩu mới
-                        <input type="password" name="confirmNewPassword" value={form.confirmNewPassword} onChange={handleChange} autoComplete="new-password" minLength={8} required className="mt-1.5 h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15" />
+                        <PasswordInput name="confirmNewPassword" value={form.confirmNewPassword} onChange={handleChange} autoComplete="new-password" minLength={8} required inputClassName="mt-1.5 h-11 rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15" />
                     </label>
                     <button type="submit" disabled={submitting} className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white transition hover:bg-[#00583d] disabled:cursor-not-allowed disabled:opacity-60">
                         {submitting ? "Đang cập nhật..." : "Đổi mật khẩu và tiếp tục"}

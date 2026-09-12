@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { UserStatusBadge } from "./UserStatusBadge";
 import { ImagePreviewModal } from "../../../../components/ui/ImagePreviewModal";
+import { PasswordInput } from "../../../../components/common/form/PasswordInput";
 
 const INITIAL_FORM = {
     username: "",
@@ -391,16 +392,15 @@ export function UserDrawer({
                                 <label className="mb-1.5 block text-xs font-medium text-slate-700">
                                     Mật khẩu ban đầu *
                                 </label>
-                                <input
+                                <PasswordInput
                                     name="initialPassword"
-                                    type="password"
                                     value={form.initialPassword}
                                     onChange={handleChange}
                                     autoComplete="new-password"
                                     minLength={8}
                                     maxLength={72}
                                     placeholder="Tối thiểu 8 ký tự"
-                                    className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15"
+                                    inputClassName="h-10 rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15"
                                 />
                                 <p className="mt-1 text-xs text-slate-500">
                                     Chỉ lưu dưới dạng mã hóa; không hiển thị lại sau khi tạo.
