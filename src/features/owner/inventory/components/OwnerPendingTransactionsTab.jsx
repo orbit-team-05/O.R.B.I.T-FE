@@ -2,6 +2,7 @@ import { useState } from "react";
 import { PendingTransactionList } from "./PendingTransactionList";
 import { ApproveTransactionDrawer } from "./ApproveTransactionDrawer";
 import { useOwnerPendingTransactions } from "../hooks/useOwnerPendingTransactions";
+import Pagination from "../../../../components/common/pagination/Pagination";
 
 export function OwnerPendingTransactionsTab({ farmId, warehouseType = "MATERIAL" }) {
     const {
@@ -47,28 +48,14 @@ export function OwnerPendingTransactionsTab({ farmId, warehouseType = "MATERIAL"
             />
 
             {/* Phân trang */}
-            {!loading && transactions.length > 0 && pageInfo.totalPages > 1 && (
-                <div className="flex justify-center mt-6">
-                    <div className="flex space-x-2">
-                        <button
-                            onClick={() => setPage((p) => Math.max(0, p - 1))}
-                            disabled={page === 0}
-                            className="px-4 py-2 border rounded-md disabled:opacity-50 hover:bg-slate-50 transition-colors"
-                        >
-                            Trước
-                        </button>
-                        <span className="px-4 py-2 text-sm text-slate-600 flex items-center">
-                            Trang {page + 1} / {pageInfo.totalPages}
-                        </span>
-                        <button
-                            onClick={() => setPage((p) => Math.min(pageInfo.totalPages - 1, p + 1))}
-                            disabled={page === pageInfo.totalPages - 1}
-                            className="px-4 py-2 border rounded-md disabled:opacity-50 hover:bg-slate-50 transition-colors"
-                        >
-                            Sau
-                        </button>
-                    </div>
-                </div>
+            {!loading && transactions.length > 0 && (
+                <Pagination
+                    page={page}
+                    totalPages={pageInfo.totalPages}
+                    totalElements={pageInfo.totalElements}
+                    loading={loading}
+                    onPageChange={setPage}
+                />
             )}
 
             <ApproveTransactionDrawer

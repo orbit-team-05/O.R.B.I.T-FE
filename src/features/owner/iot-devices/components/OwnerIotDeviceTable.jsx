@@ -1,4 +1,5 @@
 import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
+import Pagination from "../../../../components/common/pagination/Pagination";
 
 const STATUS_LABELS = {
     ACTIVE: "Đang hoạt động",
@@ -55,11 +56,6 @@ export function OwnerIotDeviceTable({
                                         onPageChange,
                                         onViewDetail,
                                     }) {
-    const currentPage = Math.max(Number(pageInfo?.number ?? 0), 0);
-    const totalPages = Math.max(Number(pageInfo?.totalPages ?? 1), 1);
-    const isFirstPage = currentPage <= 0 || pageInfo?.first;
-    const isLastPage = currentPage >= totalPages - 1 || pageInfo?.last;
-
     return (
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
             <header className="border-b border-slate-200 px-5 py-4">
@@ -150,41 +146,13 @@ export function OwnerIotDeviceTable({
                         </table>
                     </div>
 
-                    <footer className="flex items-center justify-between border-t border-slate-200 px-5 py-3">
-                        <p className="text-xs text-slate-500">
-                            Tổng {pageInfo.totalElements} thiết bị
-                        </p>
-
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                disabled={isFirstPage}
-                                onClick={() => {
-                                    if (isFirstPage) return;
-                                    onPageChange(currentPage - 1);
-                                }}
-                                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                                Trước
-                            </button>
-
-                            <span className="text-xs text-slate-600">
-                                Trang {currentPage + 1} / {totalPages}
-                            </span>
-
-                            <button
-                                type="button"
-                                disabled={isLastPage}
-                                onClick={() => {
-                                    if (isLastPage) return;
-                                    onPageChange(currentPage + 1);
-                                }}
-                                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                                Sau
-                            </button>
-                        </div>
-                    </footer>
+                    <Pagination
+                        page={pageInfo?.number}
+                        totalPages={pageInfo?.totalPages}
+                        totalElements={pageInfo?.totalElements}
+                        loading={loading}
+                        onPageChange={onPageChange}
+                    />
                 </>
             )}
         </section>

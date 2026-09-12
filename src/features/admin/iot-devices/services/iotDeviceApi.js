@@ -1,4 +1,5 @@
 import { httpClient } from "../../../../services/httpClient";
+import { normalizePageResponse } from "../../../../utils/pagination";
 
 const IOT_DEVICE_ENDPOINT = "/admin/iot-devices";
 
@@ -7,7 +8,7 @@ export async function getIotDevices(page = 0, size = 12) {
         params: { page, size },
     });
 
-    return response.data.data;
+    return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
 export async function getUncreatedIotDevices(page = 0, size = 12) {
@@ -15,7 +16,7 @@ export async function getUncreatedIotDevices(page = 0, size = 12) {
         params: { page, size },
     });
 
-    return response.data.data;
+    return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
 export async function getUnassignedIotDevices(page = 0, size = 12) {
@@ -23,7 +24,7 @@ export async function getUnassignedIotDevices(page = 0, size = 12) {
         params: { page, size },
     });
 
-    return response.data.data;
+    return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
 export async function getIotDeviceSummary() {

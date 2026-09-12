@@ -1,4 +1,5 @@
 import { httpClient } from "../../../../services/httpClient";
+import { normalizePageResponse } from "../../../../utils/pagination";
 
 const SPECIES_ENDPOINT = "/admin/species";
 
@@ -7,7 +8,7 @@ export async function getSpecies(page = 0, size = 10) {
         params: { page, size },
     });
 
-    return response.data.data;
+    return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
 export async function getSpeciesSummary() {

@@ -1,4 +1,5 @@
 import { httpClient } from "../../../../services/httpClient";
+import { normalizePageResponse } from "../../../../utils/pagination";
 
 function getOwnerProductEndpoint(farmId) {
     return `/farms/${farmId}/products`;
@@ -8,33 +9,22 @@ export async function getOwnerProducts(farmId, page = 0, size = 20, filters = {}
     const response = await httpClient.get(getOwnerProductEndpoint(farmId), {
         params: { page, size, ...filters },
     });
-
-    return response.data.data;
+    return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
 export async function createOwnerProduct(farmId, payload) {
-    const response = await httpClient.post(
-        getOwnerProductEndpoint(farmId),
-        payload,
-    );
-
+    const response = await httpClient.post(getOwnerProductEndpoint(farmId), payload);
     return response.data.data;
 }
 
 export async function uploadOwnerProductImage(farmId, file) {
     const formData = new FormData();
     formData.append("file", file);
-
     const response = await httpClient.post(
         `${getOwnerProductEndpoint(farmId)}/upload-image`,
         formData,
-        {
-            headers: {
-                "Content-Type": "multipart/form-data",
-            },
-        }
+        { headers: { "Content-Type": "multipart/form-data" } },
     );
-
     return response.data.data;
 }
 

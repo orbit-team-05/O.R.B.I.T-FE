@@ -1,32 +1,5 @@
 import { httpClient } from "../../../../services/httpClient";
-
-function normalizePageResponse(pageData) {
-    const content = Array.isArray(pageData?.content) ? pageData.content : [];
-    const number = Number(
-        pageData?.number ?? pageData?.page ?? pageData?.pageable?.pageNumber ?? 0,
-    );
-    const size = Number(
-        pageData?.size ?? pageData?.pageSize ?? pageData?.pageable?.pageSize ?? content.length,
-    );
-    const totalElements = Number(pageData?.totalElements ?? content.length);
-    const totalPages = Number(
-        pageData?.totalPages ??
-            (size > 0 ? Math.ceil(totalElements / size) : content.length ? 1 : 0),
-    );
-
-    return {
-        ...pageData,
-        content,
-        number,
-        page: number,
-        size,
-        totalElements,
-        totalPages,
-        first: pageData?.first ?? number <= 0,
-        last: pageData?.last ?? number >= Math.max(totalPages - 1, 0),
-        empty: pageData?.empty ?? content.length === 0,
-    };
-}
+import { normalizePageResponse } from "../../../../utils/pagination";
 
 export async function getOwnerDashboardSummary(farmId, filters = {}) {
     const response = await httpClient.get(`/dashboard/${farmId}/summary`, {
@@ -45,7 +18,7 @@ export async function getOwnerDashboardStockAlerts(
         params: { page, size },
     });
 
-    return normalizePageResponse(response.data);
+    return normalizePageResponse(response.data, size);
 }
 
 export async function getOwnerDashboardRecentScans(
@@ -60,7 +33,7 @@ export async function getOwnerDashboardRecentScans(
         },
     );
 
-    return normalizePageResponse(response.data);
+    return normalizePageResponse(response.data, size);
 }
 
 export async function getOwnerDashboardRecentTransactions(farmId, page = 0, size = 6) {

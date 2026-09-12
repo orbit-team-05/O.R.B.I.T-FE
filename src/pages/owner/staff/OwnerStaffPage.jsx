@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     CalendarDays,
-    ChevronLeft,
     ChevronRight,
     Clock3,
     Edit3,
@@ -18,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { AdminPageSkeleton } from "../../../components/common/loading/AdminPageSkeleton";
+import Pagination from "../../../components/common/pagination/Pagination";
 import { ImagePreviewModal } from "../../../components/ui/ImagePreviewModal";
 import { useToast } from "../../../components/common/toast/ToastProvider";
 import { useAuth } from "../../../features/auth/context/AuthContext";
@@ -459,15 +459,13 @@ export function OwnerStaffPage() {
                     </table>
                 </div>
 
-                {totalPages > 1 && (
-                    <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3">
-                        <p className="text-sm text-slate-500">Trang {page + 1} / {totalPages}</p>
-                        <div className="flex gap-2">
-                            <button type="button" disabled={page === 0} onClick={() => setPage((value) => Math.max(value - 1, 0))} className="rounded-lg border border-slate-200 p-2 text-slate-600 disabled:cursor-not-allowed disabled:opacity-40"><ChevronLeft size={17} /></button>
-                            <button type="button" disabled={page >= totalPages - 1} onClick={() => setPage((value) => Math.min(value + 1, totalPages - 1))} className="rounded-lg border border-slate-200 p-2 text-slate-600 disabled:cursor-not-allowed disabled:opacity-40"><ChevronRight size={17} /></button>
-                        </div>
-                    </div>
-                )}
+                <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    totalElements={totalElements}
+                    loading={loading}
+                    onPageChange={setPage}
+                />
             </div>
 
             {panel && (

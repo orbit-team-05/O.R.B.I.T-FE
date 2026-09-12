@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarDays, ChevronLeft, ChevronRight, Eye, RefreshCw, Search, X } from "lucide-react";
+import { CalendarDays, Eye, RefreshCw, Search, X } from "lucide-react";
 
 import { useAuth } from "../../../features/auth/context/AuthContext";
 import { getOwnerFarmTransactionReport } from "../../../features/owner/dashboard/services/ownerDashboardApi";
 import { formatCurrency, formatDateTime } from "../../../utils/formatUtils";
 import { OwnerPageHeader } from "../common/OwnerPageHeader";
+import Pagination from "../../../components/common/pagination/Pagination";
 
 function getDefaultDates() {
     const to = new Date();
@@ -165,7 +166,7 @@ export function OwnerTransactionsPage() {
                 <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                     <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4"><div><h2 className="font-semibold text-slate-900">Lịch sử giao dịch</h2><p className="mt-1 text-xs text-slate-500">Chọn một dòng để xem chi tiết nghiệp vụ.</p></div><span className="text-xs text-slate-500">{report?.totalElements ?? 0} bản ghi</span></div>
                     {loading ? <div className="h-80 animate-pulse bg-slate-50" /> : rows.length === 0 ? <div className="flex h-64 items-center justify-center text-sm text-slate-500">Không có giao dịch trong khoảng thời gian đã chọn.</div> : <div className="overflow-x-auto"><table className="min-w-full text-left text-sm"><thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="px-5 py-3">Thời gian</th><th className="px-5 py-3">Loại</th><th className="px-5 py-3">Sản phẩm</th><th className="px-5 py-3">Khối lượng</th><th className="px-5 py-3">Người tạo</th><th className="px-5 py-3">Trạng thái</th><th className="px-5 py-3 text-right"> </th></tr></thead><tbody className="divide-y divide-slate-100">{rows.map((row) => <tr key={row.transactionId} className="cursor-pointer transition hover:bg-emerald-50/40" onClick={() => setSelectedRow(row)}><td className="whitespace-nowrap px-5 py-4 text-slate-500">{formatDateTime(row.createdAt)}</td><td className="px-5 py-4 font-medium text-slate-800">{actionLabel(row.requestedAction || row.transactionType)}</td><td className="px-5 py-4 text-slate-600">{row.productName || "-"}</td><td className="px-5 py-4 text-slate-600">{formatKg(row.quantityGrams)}</td><td className="px-5 py-4 text-slate-600">{row.createdByName || "-"}</td><td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass(row.approvalStatus)}`}>{STATUS_LABELS[row.approvalStatus] || row.approvalStatus || "-"}</span></td><td className="px-5 py-4 text-right"><button type="button" onClick={(event) => { event.stopPropagation(); setSelectedRow(row); }} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-[#006948] hover:bg-emerald-50"><Eye size={15} />Xem</button></td></tr>)}</tbody></table></div>}
-                    {totalPages > 1 ? <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-5 py-3"><button type="button" disabled={currentPage <= 0 || loading} onClick={() => void loadTransactions(filters, currentPage - 1)} className="rounded-lg border border-slate-300 p-2 text-slate-600 disabled:opacity-40"><ChevronLeft size={16} /></button><span className="text-xs text-slate-500">Trang {currentPage + 1} / {totalPages}</span><button type="button" disabled={currentPage >= totalPages - 1 || loading} onClick={() => void loadTransactions(filters, currentPage + 1)} className="rounded-lg border border-slate-300 p-2 text-slate-600 disabled:opacity-40"><ChevronRight size={16} /></button></div> : null}
+                    <Pagination page={currentPage} totalPages={totalPages} totalElements={report?.totalElements ?? rows.length} loading={loading} onPageChange={(nextPage) => void loadTransactions(filters, nextPage)} />
                 </section>
             </main>
             <TransactionDetailDrawer row={selectedRow} onClose={() => setSelectedRow(null)} />

@@ -17,17 +17,9 @@ export function useOwnerPendingTransactions(farmId, warehouseType = "MATERIAL") 
             setLoading(true);
             setError(null);
 
-            const res = await getOwnerPendingTransactions(farmId, page, 10, warehouseType);
-
-            if (res.success) {
-                setTransactions(res.data.content || []);
-                setPageInfo({
-                    number: res.data.number,
-                    totalPages: res.data.totalPages,
-                });
-            } else {
-                throw new Error(res.message);
-            }
+            const pageData = await getOwnerPendingTransactions(farmId, page, 10, warehouseType);
+            setTransactions(pageData.content);
+            setPageInfo(pageData);
         } catch (err) {
             console.error("Failed to fetch pending transactions:", err);
             setError(err.message || "Đã có lỗi xảy ra");

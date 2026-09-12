@@ -6,6 +6,7 @@ import { ConfirmDialog } from "../../../../components/common/dialog/ConfirmDialo
 import { ImagePreviewModal } from "../../../../components/ui/ImagePreviewModal";
 import { useToast } from "../../../../components/common/toast/ToastProvider";
 import { formatCurrency, formatNumber } from "../../../../utils/formatUtils";
+import Pagination from "../../../../components/common/pagination/Pagination";
 
 function formatDate(value) {
     if (!value) return "Chưa có";
@@ -119,11 +120,6 @@ function SeasonHarvestHistory({
                                   loading = false,
                                   onPageChange,
                               }) {
-    const currentPage = Math.max(Number(pageInfo?.number ?? 0), 0);
-    const totalPages = Math.max(Number(pageInfo?.totalPages ?? 1), 1);
-    const isFirstPage = currentPage <= 0 || pageInfo?.first;
-    const isLastPage = currentPage >= totalPages - 1 || pageInfo?.last;
-
     const totalHarvestKg = harvests.reduce(
         (sum, item) => sum + Number(item.quantityKg || 0),
         0,
@@ -245,33 +241,13 @@ function SeasonHarvestHistory({
                             Tổng {pageInfo?.totalElements ?? harvests.length} giao dịch
                         </p>
 
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                disabled={isFirstPage}
-                                onClick={() => {
-                                    if (!isFirstPage) onPageChange?.(currentPage - 1);
-                                }}
-                                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                                Trước
-                            </button>
-
-                            <span className="text-xs text-slate-600">
-                                Trang {currentPage + 1} / {totalPages}
-                            </span>
-
-                            <button
-                                type="button"
-                                disabled={isLastPage}
-                                onClick={() => {
-                                    if (!isLastPage) onPageChange?.(currentPage + 1);
-                                }}
-                                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                                Sau
-                            </button>
-                        </div>
+                        <Pagination
+                            page={pageInfo?.number}
+                            totalPages={pageInfo?.totalPages}
+                            totalElements={pageInfo?.totalElements ?? harvests.length}
+                            loading={loading}
+                            onPageChange={onPageChange}
+                        />
                     </div>
                 </>
             )}
@@ -286,11 +262,6 @@ function SeasonMaterialUsageHistory({
     onPageChange,
     consumedMaterialCost,
 }) {
-    const currentPage = Math.max(Number(pageInfo?.number ?? 0), 0);
-    const totalPages = Math.max(Number(pageInfo?.totalPages ?? 1), 1);
-    const isFirstPage = currentPage <= 0 || pageInfo?.first;
-    const isLastPage = currentPage >= totalPages - 1 || pageInfo?.last;
-
     return (
         <div className="space-y-4 rounded-xl border border-slate-200 p-4">
             <div className="flex items-start justify-between gap-3">
@@ -394,33 +365,13 @@ function SeasonMaterialUsageHistory({
                             Tổng {pageInfo?.totalElements ?? usages.length} giao dịch
                         </p>
 
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                disabled={isFirstPage}
-                                onClick={() => {
-                                    if (!isFirstPage) onPageChange?.(currentPage - 1);
-                                }}
-                                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                                Trước
-                            </button>
-
-                            <span className="text-xs text-slate-600">
-                                Trang {currentPage + 1} / {totalPages}
-                            </span>
-
-                            <button
-                                type="button"
-                                disabled={isLastPage}
-                                onClick={() => {
-                                    if (!isLastPage) onPageChange?.(currentPage + 1);
-                                }}
-                                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                                Sau
-                            </button>
-                        </div>
+                        <Pagination
+                            page={pageInfo?.number}
+                            totalPages={pageInfo?.totalPages}
+                            totalElements={pageInfo?.totalElements ?? usages.length}
+                            loading={loading}
+                            onPageChange={onPageChange}
+                        />
                     </div>
                 </>
             )}

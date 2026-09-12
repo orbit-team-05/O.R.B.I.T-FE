@@ -1,6 +1,7 @@
 import { Calendar, Sprout, TrendingUp, DollarSign, Image as ImageIcon } from "lucide-react";
 import { formatCurrency, formatNumber } from "../../../../utils/formatUtils";
 import { SeasonStatusBadge } from "./SeasonStatusBadge";
+import Pagination from "../../../../components/common/pagination/Pagination";
 
 function formatDate(value) {
     if (!value) return "Chưa có";
@@ -51,11 +52,6 @@ export function SeasonCardList({
             </div>
         );
     }
-
-    const currentPage = Math.max(Number(pageInfo?.number ?? 0), 0);
-    const totalPages = Math.max(Number(pageInfo?.totalPages ?? 1), 1);
-    const isFirstPage = currentPage <= 0 || pageInfo?.first;
-    const isLastPage = currentPage >= totalPages - 1 || pageInfo?.last;
 
     return (
         <div className="space-y-6">
@@ -177,31 +173,13 @@ export function SeasonCardList({
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
-                <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-6 py-4 shadow-sm">
-                    <p className="text-sm text-slate-600">
-                        Hiển thị trang <span className="font-bold text-slate-900">{currentPage + 1}</span> trên tổng số <span className="font-bold text-slate-900">{totalPages}</span>
-                    </p>
-                    <div className="flex gap-2">
-                        <button
-                            type="button"
-                            disabled={isFirstPage || loading}
-                            onClick={() => onPageChange?.(currentPage - 1)}
-                            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
-                        >
-                            Trang trước
-                        </button>
-                        <button
-                            type="button"
-                            disabled={isLastPage || loading}
-                            onClick={() => onPageChange?.(currentPage + 1)}
-                            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
-                        >
-                            Trang sau
-                        </button>
-                    </div>
-                </div>
-            )}
+            <Pagination
+                page={pageInfo?.number}
+                totalPages={pageInfo?.totalPages}
+                totalElements={pageInfo?.totalElements}
+                loading={loading}
+                onPageChange={onPageChange}
+            />
         </div>
     );
 }

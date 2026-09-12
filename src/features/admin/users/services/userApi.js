@@ -1,10 +1,11 @@
 import { httpClient } from "../../../../services/httpClient";
+import { normalizePageResponse } from "../../../../utils/pagination";
 
 export async function getUsers(page = 0, size = 10, filters = {}) {
     const response = await httpClient.get("/admin/users", {
         params: { page, size, ...filters },
     });
-    return response.data.data;
+    return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
 export async function getUserDashboard() {
@@ -52,4 +53,3 @@ export async function uploadUserAvatar(userId, file) {
     const response = await httpClient.post(`/admin/users/${userId}/avatar`, formData);
     return response.data.data;
 }
-

@@ -1,7 +1,5 @@
 import {
     Activity,
-    ChevronLeft,
-    ChevronRight,
     Clock3,
     Eye,
     MapPin,
@@ -10,6 +8,7 @@ import {
     Wifi,
     WifiOff,
 } from "lucide-react";
+import Pagination from "../../../../components/common/pagination/Pagination";
 
 const STATUS_META = {
     UNCREATED: {
@@ -223,19 +222,13 @@ export function ScaleDeviceCardGrid({
                 </div>
             )}
 
-            <div className="mt-5 flex items-center justify-between border-t border-slate-200 pt-4">
-                <span className="text-xs text-slate-500">
-                    Trang {(pageInfo.number ?? 0) + 1} / {Math.max(pageInfo.totalPages ?? 0, 1)}
-                </span>
-                <div className="flex gap-2">
-                    <button type="button" disabled={pageInfo.first} onClick={() => onPageChange?.((pageInfo.number ?? 0) - 1)} className="inline-flex h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 disabled:cursor-not-allowed disabled:opacity-40">
-                        <ChevronLeft size={14} /> Trước
-                    </button>
-                    <button type="button" disabled={pageInfo.last} onClick={() => onPageChange?.((pageInfo.number ?? 0) + 1)} className="inline-flex h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 disabled:cursor-not-allowed disabled:opacity-40">
-                        Sau <ChevronRight size={14} />
-                    </button>
-                </div>
-            </div>
+            <Pagination
+                page={pageInfo.number}
+                totalPages={pageInfo.totalPages}
+                totalElements={pageInfo.totalElements}
+                loading={loading}
+                onPageChange={onPageChange}
+            />
         </section>
     );
 }

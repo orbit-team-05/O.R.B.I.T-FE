@@ -1,10 +1,11 @@
 import { httpClient } from "../../../services/httpClient";
+import { normalizePageResponse } from "../../../utils/pagination";
 
 export const getStaffs = async ({ page = 0, size = 10, keyword = "", role = "", status = "" }) => {
     const response = await httpClient.get("/owner/staff", {
         params: { page, size, keyword, role: role || undefined, status: status || undefined }
     });
-    return response.data.data || response.data;
+    return normalizePageResponse(response.data?.data ?? response.data, size);
 };
 
 export const getStaff = async (id) => {
@@ -41,5 +42,5 @@ export const getStaffAuditLogs = async (id, { page = 0, size = 20 } = {}) => {
     const response = await httpClient.get(`/owner/staff/${id}/audit-logs`, {
         params: { page, size },
     });
-    return response.data.data || response.data;
+    return normalizePageResponse(response.data?.data ?? response.data, size);
 };

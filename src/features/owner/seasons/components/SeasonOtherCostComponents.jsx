@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Upload, Image as ImageIcon, Trash2, Edit2, Plus, X } from "lucide-react";
 import { formatCurrency } from "../../../../utils/formatUtils";
+import Pagination from "../../../../components/common/pagination/Pagination";
 
 function formatDate(value) {
     if (!value) return "Chưa có";
@@ -30,11 +31,6 @@ export function SeasonOtherCostHistory({
     onDelete,
     isCompleted = false
 }) {
-    const currentPage = Math.max(Number(pageInfo?.number ?? 0), 0);
-    const totalPages = Math.max(Number(pageInfo?.totalPages ?? 1), 1);
-    const isFirstPage = currentPage <= 0 || pageInfo?.first;
-    const isLastPage = currentPage >= totalPages - 1 || pageInfo?.last;
-    
     const [fullImage, setFullImage] = useState(null);
 
     return (
@@ -160,39 +156,13 @@ export function SeasonOtherCostHistory({
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                        <p className="text-xs text-slate-500">
-                            Tổng {pageInfo?.totalElements ?? otherCosts.length} giao dịch
-                        </p>
-
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                disabled={isFirstPage}
-                                onClick={() => {
-                                    if (!isFirstPage) onPageChange?.(currentPage - 1);
-                                }}
-                                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                                Trước
-                            </button>
-
-                            <span className="text-xs text-slate-600">
-                                Trang {currentPage + 1} / {totalPages}
-                            </span>
-
-                            <button
-                                type="button"
-                                disabled={isLastPage}
-                                onClick={() => {
-                                    if (!isLastPage) onPageChange?.(currentPage + 1);
-                                }}
-                                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                                Sau
-                            </button>
-                        </div>
-                    </div>
+                    <Pagination
+                        page={pageInfo?.number}
+                        totalPages={pageInfo?.totalPages}
+                        totalElements={pageInfo?.totalElements ?? otherCosts.length}
+                        loading={loading}
+                        onPageChange={onPageChange}
+                    />
                 </>
             )}
 

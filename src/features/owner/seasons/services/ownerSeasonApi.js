@@ -1,4 +1,5 @@
 import { httpClient } from "../../../../services/httpClient";
+import { normalizePageResponse } from "../../../../utils/pagination";
 
 export async function getSeasonDashboard() {
     const response = await httpClient.get("/seasons/dashboard");
@@ -9,7 +10,7 @@ export async function getSeasonCards(page = 0, size = 10) {
     const response = await httpClient.get("/seasons/cards", {
         params: { page, size },
     });
-    return response.data.data;
+    return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
 export async function createSeason(payload) {
@@ -50,7 +51,7 @@ export async function getSeasonMaterialUsages(id, page = 0, size = 10) {
         params: { page, size },
     });
 
-    return response.data.data;
+    return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
 export async function getSeasonHarvests(id, page = 0, size = 10) {
@@ -58,14 +59,14 @@ export async function getSeasonHarvests(id, page = 0, size = 10) {
         params: { page, size },
     });
 
-    return response.data.data;
+    return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
 export async function getSeasonHarvestHistories(id, page = 0, size = 10) {
     const response = await httpClient.get(`/seasons/${id}/harvests`, {
         params: { page, size },
     });
-    return response.data.data;
+    return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
 // Other Costs
@@ -73,7 +74,7 @@ export async function getSeasonOtherCosts(id, page = 0, size = 10) {
     const response = await httpClient.get(`/seasons/${id}/other-costs`, {
         params: { page, size },
     });
-    return response.data.data;
+    return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
 export async function createSeasonOtherCost(id, payload) {

@@ -3,6 +3,7 @@ import { CheckCircle2, Clock3, FileImage, RefreshCw, XCircle } from "lucide-reac
 import { ImagePreviewModal } from "../../../components/ui/ImagePreviewModal";
 import { useStaffTransactionHistory } from "../../../features/staff/transactions/hooks/useStaffTransactionHistory";
 import { OwnerPageHeader } from "../../owner/common/OwnerPageHeader";
+import Pagination from "../../../components/common/pagination/Pagination";
 import { formatNumber } from "../../../utils/formatUtils";
 
 const FILTERS = [
@@ -65,7 +66,7 @@ export function StaffTransactionHistoryPage() {
             <div className="flex flex-wrap gap-2">{FILTERS.map((filter) => <button type="button" key={filter.value || "all"} onClick={() => { setStatus(filter.value); setPage(0); }} className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${status === filter.value ? "bg-[#006948] text-white" : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>{filter.label}</button>)}</div>
             {error && <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
             {loading && !pageInfo.content ? <HistorySkeleton /> : transactions.length ? <div className="space-y-3">{transactions.map((transaction) => <TransactionCard key={transaction.transactionId} transaction={transaction} onPreview={setPreviewImage} />)}</div> : <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-sm text-slate-500">Chưa có giao dịch nào ở bộ lọc này.</div>}
-            {pageInfo.totalPages > 1 ? <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3"><p className="text-xs text-slate-500">Trang {page + 1} / {pageInfo.totalPages}</p><div className="flex gap-2"><button type="button" disabled={pageInfo.first || loading} onClick={() => setPage((current) => Math.max(current - 1, 0))} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:opacity-40">Trước</button><button type="button" disabled={pageInfo.last || loading} onClick={() => setPage((current) => current + 1)} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:opacity-40">Sau</button></div></div> : null}
+            <Pagination page={page} totalPages={pageInfo.totalPages} totalElements={pageInfo.totalElements} loading={loading} onPageChange={setPage} />
         </section><ImagePreviewModal open={Boolean(previewImage)} src={previewImage} onClose={() => setPreviewImage(null)} />
     </>;
 }

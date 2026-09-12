@@ -1,4 +1,5 @@
 import { httpClient } from "../../../../services/httpClient";
+import { normalizePageResponse } from "../../../../utils/pagination";
 
 function getOwnerIotDeviceEndpoint(farmId) {
     return `/farms/${farmId}/iot-devices`;
@@ -9,7 +10,7 @@ export async function getOwnerIotDevices(farmId, page = 0, size = 10) {
         params: { page, size },
     });
 
-    return response.data.data;
+    return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
 export async function getOwnerIotDeviceDetail(farmId, deviceId) {
@@ -33,7 +34,7 @@ export async function getOwnerScaleDeviceAuditLogs(farmId, deviceId, page = 0, s
         `${getOwnerIotDeviceEndpoint(farmId)}/${deviceId}/audit-logs`,
         { params: { page, size } },
     );
-    return response.data.data;
+    return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
 export async function updateOwnerScaleDeviceProfile(farmId, deviceId, payload) {
@@ -62,4 +63,3 @@ export async function activateOwnerIotDevice(farmId, payload) {
 
     return response.data.data;
 }
-

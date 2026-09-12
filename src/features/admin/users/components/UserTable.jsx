@@ -1,4 +1,5 @@
 import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
+import Pagination from "../../../../components/common/pagination/Pagination";
 import { UserStatusBadge } from "./UserStatusBadge";
 
 function UserAvatar({ user }) {
@@ -182,31 +183,13 @@ export function UserTable({
                         </table>
                     </div>
 
-                    <footer className="flex items-center justify-end border-t border-slate-200 px-5 py-3">
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                disabled={pageInfo.first}
-                                onClick={() => onPageChange(pageInfo.number - 1)}
-                                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                                Trước
-                            </button>
-
-                            <span className="text-xs text-slate-600">
-                                Trang {pageInfo.number + 1} / {Math.max(pageInfo.totalPages, 1)}
-                            </span>
-
-                            <button
-                                type="button"
-                                disabled={pageInfo.last}
-                                onClick={() => onPageChange(pageInfo.number + 1)}
-                                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                                Sau
-                            </button>
-                        </div>
-                    </footer>
+                    <Pagination
+                        page={pageInfo.number}
+                        totalPages={pageInfo.totalPages}
+                        totalElements={pageInfo.totalElements}
+                        loading={loading}
+                        onPageChange={onPageChange}
+                    />
                 </>
             )}
         </section>

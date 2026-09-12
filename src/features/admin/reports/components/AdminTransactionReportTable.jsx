@@ -1,4 +1,5 @@
 import { formatCurrency, formatDateTime, formatNumber } from "../../../../utils/formatUtils";
+import Pagination from "../../../../components/common/pagination/Pagination";
 
 const ACTION_LABELS = {
     IMPORT: "Nhập kho",
@@ -71,11 +72,13 @@ export function AdminTransactionReportTable({ report, loading, onPageChange }) {
                             </tbody>
                         </table>
                     </div>
-                    <footer className="flex items-center justify-end gap-3 border-t border-slate-200 px-5 py-3">
-                        <button type="button" disabled={page <= 0} onClick={() => onPageChange(page - 1)} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40">Trước</button>
-                        <span className="text-xs text-slate-600">Trang {page + 1} / {Math.max(totalPages, 1)}</span>
-                        <button type="button" disabled={page + 1 >= totalPages} onClick={() => onPageChange(page + 1)} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40">Sau</button>
-                    </footer>
+                    <Pagination
+                        page={page}
+                        totalPages={totalPages}
+                        totalElements={report?.totalElements ?? items.length}
+                        loading={loading}
+                        onPageChange={onPageChange}
+                    />
                 </>
             )}
         </section>
