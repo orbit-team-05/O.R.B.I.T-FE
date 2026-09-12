@@ -5,9 +5,9 @@ function getOwnerProductEndpoint(farmId) {
     return `/farms/${farmId}/products`;
 }
 
-export async function getOwnerProducts(farmId, page = 0, size = 20, filters = {}) {
+export async function getOwnerProducts(farmId, page = 0, size = 10, filters = {}, sort = "createdAt,desc") {
     const response = await httpClient.get(getOwnerProductEndpoint(farmId), {
-        params: { page, size, ...filters },
+        params: { page, size, sort, ...filters },
     });
     return normalizePageResponse(response.data?.data ?? response.data, size);
 }

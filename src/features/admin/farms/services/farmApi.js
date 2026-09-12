@@ -3,9 +3,9 @@ import { normalizePageResponse } from "../../../../utils/pagination";
 
 const FARM_ENDPOINT = "/admin/farms";
 
-export async function getFarms(page = 0, size = 10, filters = {}) {
+export async function getFarms(page = 0, size = 10, filters = {}, sort = "createdAt,desc") {
     const response = await httpClient.get(FARM_ENDPOINT, {
-        params: { page, size, ...filters },
+        params: { page, size, sort, ...filters },
     });
     return normalizePageResponse(response.data?.data ?? response.data, size);
 }

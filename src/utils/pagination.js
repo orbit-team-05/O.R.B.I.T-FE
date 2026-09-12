@@ -8,6 +8,8 @@ export const EMPTY_PAGE = Object.freeze({
     first: true,
     last: true,
     empty: true,
+    apiPage: 0,
+    frontendPage: 1,
 });
 
 function toNonNegativeInteger(value, fallback = 0) {
@@ -17,7 +19,8 @@ function toNonNegativeInteger(value, fallback = 0) {
 
 /**
  * Normalizes both Spring Page and ApiResponse<Page> into one frontend contract.
- * All page numbers remain zero-based internally.
+ * The API contract is zero-based. `number`/`apiPage` are API values and
+ * `frontendPage` is the one-based value used by labels and mobile/web UI.
  */
 export function normalizePageResponse(pageData, fallbackSize = 10) {
     const raw = pageData?.data ?? pageData ?? {};
@@ -29,7 +32,9 @@ export function normalizePageResponse(pageData, fallbackSize = 10) {
         ),
         1,
     );
-    const totalElements = toNonNegativeInteger(raw.totalElements, content.length);
+    // Never infer the total from the current page. Doing that turns a broken
+    // count query into a false one-page result (for example 22 records -> 10).
+    const totalElements = toNonNegativeInteger(raw.totalElements, 0);
     const calculatedTotalPages = totalElements === 0 ? 0 : Math.ceil(totalElements / size);
     const totalPages = toNonNegativeInteger(raw.totalPages, calculatedTotalPages);
     const requestedNumber = toNonNegativeInteger(
@@ -43,6 +48,8 @@ export function normalizePageResponse(pageData, fallbackSize = 10) {
         content,
         number,
         page: number,
+        apiPage: number,
+        frontendPage: number + 1,
         size,
         totalElements,
         totalPages,
@@ -50,4 +57,12 @@ export function normalizePageResponse(pageData, fallbackSize = 10) {
         last: totalPages <= 1 || number >= totalPages - 1,
         empty: content.length === 0,
     };
+}
+
+export function toApiPage(frontendPage) {
+    return Math.max((Number(frontendPage) || 1) - 1, 0);
+}
+
+export function toFrontendPage(apiPage) {
+    return Math.max(Number(apiPage) || 0, 0) + 1;
 }

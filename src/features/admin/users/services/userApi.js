@@ -1,9 +1,9 @@
 import { httpClient } from "../../../../services/httpClient";
 import { normalizePageResponse } from "../../../../utils/pagination";
 
-export async function getUsers(page = 0, size = 10, filters = {}) {
+export async function getUsers(page = 0, size = 10, filters = {}, sort = "createdAt,desc") {
     const response = await httpClient.get("/admin/users", {
-        params: { page, size, ...filters },
+        params: { page, size, sort, ...filters },
     });
     return normalizePageResponse(response.data?.data ?? response.data, size);
 }

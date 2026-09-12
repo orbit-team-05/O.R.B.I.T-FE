@@ -1,8 +1,8 @@
 import { httpClient } from "../../../../services/httpClient.js";
 import { normalizePageResponse } from "../../../../utils/pagination";
 
-export async function getOwnerInventoryStocks(farmId, category = "", page = 0, size = 10, warehouse = "MATERIAL") {
-    const params = { page, size, warehouse };
+export async function getOwnerInventoryStocks(farmId, category = "", page = 0, size = 10, warehouse = "MATERIAL", sort = "createdAt,desc") {
+    const params = { page, size, warehouse, sort };
     if (category) {
         params.category = category;
     }
@@ -21,10 +21,10 @@ export async function getOwnerInventoryStockDetail(farmId, stockId) {
 
     return response.data.data;
 }
-export async function getOwnerPendingTransactions(farmId, page = 0, size = 10, warehouse = "MATERIAL") {
+export async function getOwnerPendingTransactions(farmId, page = 0, size = 10, warehouse = "MATERIAL", sort = "createdAt,desc") {
     const response = await httpClient.get(
         `/farms/${farmId}/inventory/pending-transactions`,
-        { params: { page, size, warehouse } }
+        { params: { page, size, warehouse, sort } }
     );
     return normalizePageResponse(response.data?.data ?? response.data, size);
 }

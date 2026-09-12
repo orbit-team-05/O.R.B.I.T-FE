@@ -5,9 +5,9 @@ function getOwnerIotDeviceEndpoint(farmId) {
     return `/farms/${farmId}/iot-devices`;
 }
 
-export async function getOwnerIotDevices(farmId, page = 0, size = 10) {
+export async function getOwnerIotDevices(farmId, page = 0, size = 10, sort = "createdAt,desc") {
     const response = await httpClient.get(getOwnerIotDeviceEndpoint(farmId), {
-        params: { page, size },
+        params: { page, size, sort },
     });
 
     return normalizePageResponse(response.data?.data ?? response.data, size);
@@ -29,10 +29,10 @@ export async function getOwnerLatestScaleWeight(farmId, deviceId) {
     return response.data.data;
 }
 
-export async function getOwnerScaleDeviceAuditLogs(farmId, deviceId, page = 0, size = 10) {
+export async function getOwnerScaleDeviceAuditLogs(farmId, deviceId, page = 0, size = 10, sort = "createdAt,desc") {
     const response = await httpClient.get(
         `${getOwnerIotDeviceEndpoint(farmId)}/${deviceId}/audit-logs`,
-        { params: { page, size } },
+        { params: { page, size, sort } },
     );
     return normalizePageResponse(response.data?.data ?? response.data, size);
 }

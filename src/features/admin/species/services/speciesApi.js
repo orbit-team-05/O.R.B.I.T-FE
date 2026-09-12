@@ -3,9 +3,9 @@ import { normalizePageResponse } from "../../../../utils/pagination";
 
 const SPECIES_ENDPOINT = "/admin/species";
 
-export async function getSpecies(page = 0, size = 10) {
+export async function getSpecies(page = 0, size = 10, sort = "createdAt,desc") {
     const response = await httpClient.get(SPECIES_ENDPOINT, {
-        params: { page, size },
+        params: { page, size, sort },
     });
 
     return normalizePageResponse(response.data?.data ?? response.data, size);

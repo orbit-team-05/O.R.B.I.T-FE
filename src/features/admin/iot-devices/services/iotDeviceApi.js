@@ -3,25 +3,25 @@ import { normalizePageResponse } from "../../../../utils/pagination";
 
 const IOT_DEVICE_ENDPOINT = "/admin/iot-devices";
 
-export async function getIotDevices(page = 0, size = 12) {
+export async function getIotDevices(page = 0, size = 10, sort = "createdAt,desc") {
     const response = await httpClient.get(IOT_DEVICE_ENDPOINT, {
-        params: { page, size },
+        params: { page, size, sort },
     });
 
     return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
-export async function getUncreatedIotDevices(page = 0, size = 12) {
+export async function getUncreatedIotDevices(page = 0, size = 10, sort = "createdAt,desc") {
     const response = await httpClient.get(`${IOT_DEVICE_ENDPOINT}/uncreated`, {
-        params: { page, size },
+        params: { page, size, sort },
     });
 
     return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
-export async function getUnassignedIotDevices(page = 0, size = 12) {
+export async function getUnassignedIotDevices(page = 0, size = 10, sort = "createdAt,desc") {
     const response = await httpClient.get(`${IOT_DEVICE_ENDPOINT}/unassigned`, {
-        params: { page, size },
+        params: { page, size, sort },
     });
 
     return normalizePageResponse(response.data?.data ?? response.data, size);

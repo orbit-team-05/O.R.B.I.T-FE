@@ -13,6 +13,7 @@ function toParams(filters = {}) {
         keyword: filters.keyword?.trim() || undefined,
         page: filters.page ?? 0,
         size: filters.size ?? 50,
+        sort: filters.sort ?? "createdAt,desc",
     };
 }
 

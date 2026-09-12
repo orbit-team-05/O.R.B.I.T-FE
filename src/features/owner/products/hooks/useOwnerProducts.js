@@ -15,7 +15,7 @@ function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
 }
 
-export function useOwnerProducts(farmId, initialPage = 0, initialSize = 20) {
+export function useOwnerProducts(farmId, initialPage = 0, initialSize = 10) {
     const [productPage, setProductPage] = useState(null);
     const [createdProduct, setCreatedProduct] = useState(null);
 

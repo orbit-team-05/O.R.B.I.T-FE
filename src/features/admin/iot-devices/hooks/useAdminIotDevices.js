@@ -35,7 +35,7 @@ export function useAdminIotDevices(initialView = DEVICE_TABLE_VIEW.ALL) {
         brokenDevices: 0,
     });
     const [page, setPage] = useState(0);
-    const [pageSize] = useState(12);
+    const [pageSize] = useState(10);
     const [initialLoading, setInitialLoading] = useState(true);
     const [tableLoading, setTableLoading] = useState(false);
     const [error, setError] = useState("");

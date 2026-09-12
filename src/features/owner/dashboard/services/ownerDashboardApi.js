@@ -13,27 +13,29 @@ export async function getOwnerDashboardStockAlerts(
     farmId,
     page = 0,
     size = 5,
+    sort = "createdAt,desc",
 ) {
     const response = await httpClient.get(`/dashboard/${farmId}/stock-alerts`, {
-        params: { page, size },
+        params: { page, size, sort },
     });
 
-    return normalizePageResponse(response.data, size);
+    return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
 export async function getOwnerDashboardRecentScans(
     farmId,
     page = 0,
     size = 5,
+    sort = "createdAt,desc",
 ) {
     const response = await httpClient.get(
         `/dashboard/${farmId}/recent-transactions`,
         {
-            params: { page, size },
+            params: { page, size, sort },
         },
     );
 
-    return normalizePageResponse(response.data, size);
+    return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
 export async function getOwnerDashboardRecentTransactions(farmId, page = 0, size = 6) {
@@ -41,13 +43,15 @@ export async function getOwnerDashboardRecentTransactions(farmId, page = 0, size
 }
 
 export async function getOwnerFarmTransactionReport(farmId, filters) {
-    const response = await httpClient.get(`/owner/reports/${farmId}/transactions`, { params: filters });
+    const response = await httpClient.get(`/owner/reports/${farmId}/transactions`, {
+        params: { sort: "createdAt,desc", ...filters },
+    });
     return response.data.data;
 }
 
 export async function exportOwnerFarmTransactionReport(farmId, filters) {
     const response = await httpClient.get(`/owner/reports/${farmId}/transactions/export`, {
-        params: filters,
+        params: { sort: "createdAt,desc", ...filters },
         responseType: "blob",
         headers: { Accept: "application/pdf" },
     });

@@ -6,9 +6,9 @@ export async function getSeasonDashboard() {
     return response.data.data;
 }
 
-export async function getSeasonCards(page = 0, size = 10) {
+export async function getSeasonCards(page = 0, size = 10, sort = "createdAt,desc") {
     const response = await httpClient.get("/seasons/cards", {
-        params: { page, size },
+        params: { page, size, sort },
     });
     return normalizePageResponse(response.data?.data ?? response.data, size);
 }
@@ -46,33 +46,33 @@ export async function cancelSeason(id) {
     return response.data.data;
 }
 
-export async function getSeasonMaterialUsages(id, page = 0, size = 10) {
+export async function getSeasonMaterialUsages(id, page = 0, size = 10, sort = "createdAt,desc") {
     const response = await httpClient.get(`/seasons/${id}/material-usages`, {
-        params: { page, size },
+        params: { page, size, sort },
     });
 
     return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
-export async function getSeasonHarvests(id, page = 0, size = 10) {
+export async function getSeasonHarvests(id, page = 0, size = 10, sort = "createdAt,desc") {
     const response = await httpClient.get(`/seasons/${id}/harvests`, {
-        params: { page, size },
+        params: { page, size, sort },
     });
 
     return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
-export async function getSeasonHarvestHistories(id, page = 0, size = 10) {
+export async function getSeasonHarvestHistories(id, page = 0, size = 10, sort = "createdAt,desc") {
     const response = await httpClient.get(`/seasons/${id}/harvests`, {
-        params: { page, size },
+        params: { page, size, sort },
     });
     return normalizePageResponse(response.data?.data ?? response.data, size);
 }
 
 // Other Costs
-export async function getSeasonOtherCosts(id, page = 0, size = 10) {
+export async function getSeasonOtherCosts(id, page = 0, size = 10, sort = "createdAt,desc") {
     const response = await httpClient.get(`/seasons/${id}/other-costs`, {
-        params: { page, size },
+        params: { page, size, sort },
     });
     return normalizePageResponse(response.data?.data ?? response.data, size);
 }

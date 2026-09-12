@@ -1,9 +1,9 @@
 import { httpClient } from "../../../services/httpClient";
 import { normalizePageResponse } from "../../../utils/pagination";
 
-export const getStaffs = async ({ page = 0, size = 10, keyword = "", role = "", status = "" }) => {
+export const getStaffs = async ({ page = 0, size = 10, keyword = "", role = "", status = "", sort = "createdAt,desc" }) => {
     const response = await httpClient.get("/owner/staff", {
-        params: { page, size, keyword, role: role || undefined, status: status || undefined }
+        params: { page, size, sort, keyword, role: role || undefined, status: status || undefined }
     });
     return normalizePageResponse(response.data?.data ?? response.data, size);
 };
@@ -38,9 +38,9 @@ export const uploadStaffAvatar = async (id, file) => {
     return response.data.data || response.data;
 };
 
-export const getStaffAuditLogs = async (id, { page = 0, size = 20 } = {}) => {
+export const getStaffAuditLogs = async (id, { page = 0, size = 10, sort = "createdAt,desc" } = {}) => {
     const response = await httpClient.get(`/owner/staff/${id}/audit-logs`, {
-        params: { page, size },
+        params: { page, size, sort },
     });
     return normalizePageResponse(response.data?.data ?? response.data, size);
 };
