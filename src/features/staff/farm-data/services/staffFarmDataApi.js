@@ -22,10 +22,10 @@ export async function getStaffFarmData(farmId) {
             params: { page: 0, size: 50 },
         }),
         httpClient.get(`/farms/${farmId}/inventory/stocks`, {
-            params: { page: 0, size: 50, warehouse: "MATERIAL" },
+            params: { page: 0, size: 50, warehouse: "MATERIAL", sort: "updated,desc" },
         }),
         httpClient.get(`/farms/${farmId}/inventory/stocks`, {
-            params: { page: 0, size: 50, warehouse: "PRODUCT" },
+            params: { page: 0, size: 50, warehouse: "PRODUCT", sort: "updated,desc" },
         }),
         httpClient.get(`/farms/${farmId}/inventory/summary`, {
             params: { warehouse: "MATERIAL" },
