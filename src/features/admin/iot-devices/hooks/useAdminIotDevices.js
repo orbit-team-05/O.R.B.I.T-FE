@@ -18,6 +18,14 @@ export const DEVICE_TABLE_VIEW = {
 
 const IOT_DEVICE_REALTIME_TOPICS = ["iot-devices"];
 
+const DEVICE_SORTS = {
+    createdDesc: "created,desc",
+    createdAsc: "created,asc",
+    nameAsc: "name,asc",
+    nameDesc: "name,desc",
+    status: "status,asc",
+};
+
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
 }
@@ -36,6 +44,7 @@ export function useAdminIotDevices(initialView = DEVICE_TABLE_VIEW.ALL) {
     });
     const [page, setPage] = useState(0);
     const [pageSize] = useState(10);
+    const [sortKey, setSortKeyState] = useState("createdDesc");
     const [initialLoading, setInitialLoading] = useState(true);
     const [tableLoading, setTableLoading] = useState(false);
     const [error, setError] = useState("");
@@ -44,13 +53,13 @@ export function useAdminIotDevices(initialView = DEVICE_TABLE_VIEW.ALL) {
 
     const loadPage = useCallback(async () => {
         if (activeView === DEVICE_TABLE_VIEW.UNCREATED) {
-            return getUncreatedIotDevices(page, pageSize);
+            return getUncreatedIotDevices(page, pageSize, DEVICE_SORTS[sortKey] || DEVICE_SORTS.createdDesc);
         }
         if (activeView === DEVICE_TABLE_VIEW.UNASSIGNED) {
-            return getUnassignedIotDevices(page, pageSize);
+            return getUnassignedIotDevices(page, pageSize, DEVICE_SORTS[sortKey] || DEVICE_SORTS.createdDesc);
         }
-        return getIotDevices(page, pageSize);
-    }, [activeView, page, pageSize]);
+        return getIotDevices(page, pageSize, DEVICE_SORTS[sortKey] || DEVICE_SORTS.createdDesc);
+    }, [activeView, page, pageSize, sortKey]);
 
     const loadAll = useCallback(async () => {
         const [pageData, summaryData] = await Promise.all([
@@ -89,6 +98,11 @@ export function useAdminIotDevices(initialView = DEVICE_TABLE_VIEW.ALL) {
         setActiveView(nextView);
     }
 
+    function setSortKey(nextSortKey) {
+        setSortKeyState(nextSortKey);
+        setPage(0);
+    }
+
     async function handleCreateFromMac(macRecordId, payload) {
         try {
             setActionLoading(true);
@@ -124,6 +138,8 @@ export function useAdminIotDevices(initialView = DEVICE_TABLE_VIEW.ALL) {
         setActiveView: handleChangeView,
         devices: devicePage?.content ?? [],
         summary,
+        sortKey,
+        setSortKey,
         pageInfo: {
             number: devicePage?.number ?? page,
             size: devicePage?.size ?? pageSize,

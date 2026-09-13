@@ -47,6 +47,8 @@ export function OwnerIotDevicesPage() {
 
         summary,
         pageInfo,
+        sortKey,
+        setSortKey,
 
         initialLoading,
         tableLoading,
@@ -198,6 +200,8 @@ export function OwnerIotDevicesPage() {
                     loading={tableLoading}
                     actionLoading={actionLoading}
                     onPageChange={setPage}
+                    sortKey={sortKey}
+                    onSortChange={setSortKey}
                     onViewDetail={
                         openDetailDrawer
                     }

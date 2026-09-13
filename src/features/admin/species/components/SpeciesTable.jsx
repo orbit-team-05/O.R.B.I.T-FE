@@ -1,8 +1,6 @@
-import { useMemo, useState } from "react";
 import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
 import Pagination from "../../../../components/common/pagination/Pagination";
 import { SortSelect } from "../../../../components/common/sort/SortSelect";
-import { sortItems } from "../../../../utils/listSort";
 
 function SpeciesStatusBadge({ active }) {
     return (
@@ -56,21 +54,16 @@ export function SpeciesTable({
                                  loading = false,
                                  onEdit,
                                  onToggleStatus,
+                                 sortKey = "createdDesc",
+                                 onSortChange,
 }) {
-    const [sortKey, setSortKey] = useState("nameAsc");
-    const sortedSpecies = useMemo(() => sortItems(species, sortKey, {
-        nameAsc: { value: (item) => item.name || item.speciesName, direction: "asc" },
-        nameDesc: { value: (item) => item.name || item.speciesName, direction: "desc" },
-        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
-        status: { value: (item) => (item.isActive ?? item.active) ? 0 : 1, direction: "asc" },
-    }), [species, sortKey]);
 
     return (
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
             <header className="border-b border-slate-200 px-5 py-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <h2 className="text-base font-semibold text-slate-900">Danh sách Species</h2>
-                    <SortSelect value={sortKey} onChange={setSortKey} options={[
+                    <SortSelect value={sortKey} onChange={onSortChange} options={[
                         { value: "nameAsc", label: "Tên A → Z" },
                         { value: "nameDesc", label: "Tên Z → A" },
                         { value: "createdDesc", label: "Mới tạo trước" },
@@ -101,7 +94,7 @@ export function SpeciesTable({
                     </thead>
 
                     <tbody>
-                    {sortedSpecies.map((item) => {
+                    {species.map((item) => {
                         const active = item.isActive ?? item.active;
 
                         return (
@@ -166,7 +159,6 @@ export function SpeciesTable({
                 totalPages={pageInfo.totalPages}
                 totalElements={pageInfo.totalElements}
                 pageSize={pageInfo.size}
-                itemCount={species.length}
                 loading={loading}
                 onPageChange={onPageChange}
             />

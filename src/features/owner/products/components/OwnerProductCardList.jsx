@@ -1,8 +1,6 @@
-import { useMemo, useState } from "react";
 import { Image, Box, Calendar } from "lucide-react";
 import Pagination from "../../../../components/common/pagination/Pagination";
 import { SortSelect } from "../../../../components/common/sort/SortSelect";
-import { sortItems } from "../../../../utils/listSort";
 
 const CATEGORY_LABELS = {
     FEED: "Thức ăn",
@@ -39,15 +37,9 @@ export function OwnerProductCardList({
     loading = false,
     onViewDetail,
     onPageChange,
+    sortKey = "createdDesc",
+    onSortChange,
 }) {
-    const [sortKey, setSortKey] = useState("createdDesc");
-    const sortedProducts = useMemo(() => sortItems(products, sortKey, {
-        nameAsc: { value: (item) => item.productName, direction: "asc" },
-        nameDesc: { value: (item) => item.productName, direction: "desc" },
-        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
-        stockAsc: { value: (item) => Number(item.minimumStockGrams || 0), direction: "asc" },
-        category: { value: (item) => item.category, direction: "asc" },
-    }), [products, sortKey]);
 
     if (loading && products.length === 0) {
         return (
@@ -80,7 +72,7 @@ export function OwnerProductCardList({
         <div className="space-y-6">
             <div className="space-y-4">
                 <div className="flex justify-end">
-                    <SortSelect value={sortKey} onChange={setSortKey} options={[
+                    <SortSelect value={sortKey} onChange={onSortChange} options={[
                         { value: "createdDesc", label: "Mới tạo trước" },
                         { value: "nameAsc", label: "Tên A → Z" },
                         { value: "nameDesc", label: "Tên Z → A" },
@@ -89,7 +81,7 @@ export function OwnerProductCardList({
                     ]} />
                 </div>
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {sortedProducts.map((item) => (
+                {products.map((item) => (
                     <div
                         key={item.id}
                         onClick={() => onViewDetail?.(item)}
@@ -168,7 +160,6 @@ export function OwnerProductCardList({
                 totalPages={pageInfo?.totalPages}
                 totalElements={pageInfo?.totalElements}
                 pageSize={pageInfo?.size}
-                itemCount={products.length}
                 loading={loading}
                 onPageChange={onPageChange}
             />

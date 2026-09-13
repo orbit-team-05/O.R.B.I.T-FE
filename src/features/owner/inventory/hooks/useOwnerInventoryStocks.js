@@ -13,6 +13,15 @@ const INVENTORY_REALTIME_TOPICS = [
     "products",
 ];
 
+const STOCK_SORTS = {
+    createdDesc: "created,desc",
+    updatedDesc: "updated,desc",
+    nameAsc: "name,asc",
+    nameDesc: "name,desc",
+    quantityDesc: "quantity,desc",
+    quantityAsc: "quantity,asc",
+};
+
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
 }
@@ -25,6 +34,7 @@ export function useOwnerInventoryStocks(farmId, warehouseType = "MATERIAL", init
     const [category, setCategory] = useState("");
     const [page, setPage] = useState(initialPage);
     const [size] = useState(initialSize);
+    const [sortKey, setSortKeyState] = useState("createdDesc");
 
     useEffect(() => {
         // Reset the category/page when switching between material and product warehouses.
@@ -56,7 +66,14 @@ export function useOwnerInventoryStocks(farmId, warehouseType = "MATERIAL", init
             setError("");
 
             const [data, summaryData] = await Promise.all([
-                getOwnerInventoryStocks(farmId, warehouseType === "PRODUCT" ? "" : category, page, size, warehouseType),
+                getOwnerInventoryStocks(
+                    farmId,
+                    warehouseType === "PRODUCT" ? "" : category,
+                    page,
+                    size,
+                    warehouseType,
+                    STOCK_SORTS[sortKey] || STOCK_SORTS.createdDesc,
+                ),
                 getOwnerInventorySummary(farmId, warehouseType),
             ]);
 
@@ -68,7 +85,7 @@ export function useOwnerInventoryStocks(farmId, warehouseType = "MATERIAL", init
         } finally {
             setLoading(false);
         }
-    }, [farmId, category, page, size, warehouseType]);
+    }, [farmId, category, page, size, warehouseType, sortKey]);
 
     const loadStockDetail = useCallback(
         async (stockId) => {
@@ -114,7 +131,7 @@ export function useOwnerInventoryStocks(farmId, warehouseType = "MATERIAL", init
             number: stockPage?.number ?? stockPage?.page ?? page,
             size: stockPage?.size ?? size,
             totalPages: stockPage?.totalPages ?? 0,
-            totalElements: stockPage?.totalElements ?? stocks.length,
+            totalElements: stockPage?.totalElements ?? 0,
             first: stockPage?.first ?? true,
             last: stockPage?.last ?? true,
         },
@@ -130,6 +147,11 @@ export function useOwnerInventoryStocks(farmId, warehouseType = "MATERIAL", init
         category,
         setCategory,
         setPage,
+        sortKey,
+        setSortKey: (nextSortKey) => {
+            setSortKeyState(nextSortKey);
+            setPage(0);
+        },
         reload: loadStocks,
     };
 }

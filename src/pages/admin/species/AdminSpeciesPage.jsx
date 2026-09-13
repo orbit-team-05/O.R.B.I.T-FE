@@ -67,6 +67,8 @@ export function AdminSpeciesPage() {
         pageInfo,
         error,
         setPage,
+        sortKey,
+        setSortKey,
         reload,
 
         initialLoading,
@@ -244,6 +246,8 @@ export function AdminSpeciesPage() {
                     pageInfo={pageInfo}
                     loading={tableLoading}
                     onPageChange={setPage}
+                    sortKey={sortKey}
+                    onSortChange={setSortKey}
                     onEdit={openEditDrawer}
                     onToggleStatus={
                         handleToggleStatus

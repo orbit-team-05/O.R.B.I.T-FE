@@ -1,8 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { formatCurrency, formatDateTime, formatNumber } from "../../../../utils/formatUtils";
 import Pagination from "../../../../components/common/pagination/Pagination";
 import { SortSelect } from "../../../../components/common/sort/SortSelect";
-import { sortItems } from "../../../../utils/listSort";
 
 const ACTION_LABELS = {
     IMPORT: "Nhập kho",
@@ -22,19 +21,10 @@ function StatusBadge({ value }) {
     return <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ${className}`}>{label}</span>;
 }
 
-export function AdminTransactionReportTable({ report, loading, onPageChange }) {
+export function AdminTransactionReportTable({ report, loading, onPageChange, onSortChange, sortKey = "createdDesc" }) {
     const items = useMemo(() => report?.items || [], [report?.items]);
     const page = report?.page ?? 0;
     const totalPages = report?.totalPages ?? 0;
-    const [sortKey, setSortKey] = useState("createdDesc");
-    const sortedItems = useMemo(() => sortItems(items, sortKey, {
-        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
-        createdAsc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "asc" },
-        farm: { value: (item) => item.farmName, direction: "asc" },
-        quantityDesc: { value: (item) => Number(item.quantityGrams || 0), direction: "desc" },
-        amountDesc: { value: (item) => Number(item.totalAmount || 0), direction: "desc" },
-        status: { value: (item) => item.approvalStatus, direction: "asc" },
-    }), [items, sortKey]);
 
     return (
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -43,7 +33,7 @@ export function AdminTransactionReportTable({ report, loading, onPageChange }) {
                     <h2 className="text-base font-semibold text-slate-900">Preview báo cáo giao dịch</h2>
                     <p className="mt-1 text-xs text-slate-500">{report?.totalElements ?? 0} dòng theo bộ lọc hiện tại</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-3"><span className="text-xs text-slate-500">Đơn vị khối lượng: kg</span><SortSelect value={sortKey} onChange={setSortKey} options={[{ value: "createdDesc", label: "Mới nhất trước" }, { value: "createdAsc", label: "Cũ nhất trước" }, { value: "farm", label: "Farm A → Z" }, { value: "quantityDesc", label: "Khối lượng giảm dần" }, { value: "amountDesc", label: "Giá trị giảm dần" }, { value: "status", label: "Theo trạng thái" }]} /></div>
+                <div className="flex flex-wrap items-center gap-3"><span className="text-xs text-slate-500">Đơn vị khối lượng: kg</span><SortSelect value={sortKey} onChange={onSortChange} options={[{ value: "createdDesc", label: "Mới nhất trước" }, { value: "createdAsc", label: "Cũ nhất trước" }, { value: "farm", label: "Farm A → Z" }, { value: "quantityDesc", label: "Khối lượng giảm dần" }, { value: "amountDesc", label: "Giá trị giảm dần" }, { value: "status", label: "Theo trạng thái" }]} /></div>
             </header>
 
             {loading ? <div className="h-72 animate-pulse bg-slate-50" /> : (
@@ -64,7 +54,7 @@ export function AdminTransactionReportTable({ report, loading, onPageChange }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {sortedItems.map((item) => (
+                                {items.map((item) => (
                                     <tr key={item.transactionId} className="border-t border-slate-100 text-slate-700">
                                         <td className="px-5 py-4 font-medium text-slate-900">#{item.transactionId}</td>
                                         <td className="whitespace-nowrap px-5 py-4 text-slate-500">{formatDateTime(item.createdAt)}</td>
@@ -87,9 +77,8 @@ export function AdminTransactionReportTable({ report, loading, onPageChange }) {
                     <Pagination
                         page={page}
                         totalPages={totalPages}
-                        totalElements={report?.totalElements ?? items.length}
+                        totalElements={report?.totalElements ?? 0}
                         pageSize={report?.size ?? 50}
-                        itemCount={items.length}
                         loading={loading}
                         onPageChange={onPageChange}
                     />

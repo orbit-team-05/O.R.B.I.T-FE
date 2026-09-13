@@ -1,10 +1,8 @@
-import { useMemo, useState } from "react";
 import { Calendar, Sprout, TrendingUp, DollarSign, Image as ImageIcon } from "lucide-react";
 import { formatCurrency, formatNumber } from "../../../../utils/formatUtils";
 import { SeasonStatusBadge } from "./SeasonStatusBadge";
 import Pagination from "../../../../components/common/pagination/Pagination";
 import { SortSelect } from "../../../../components/common/sort/SortSelect";
-import { sortItems } from "../../../../utils/listSort";
 
 function formatDate(value) {
     if (!value) return "Chưa có";
@@ -28,15 +26,9 @@ export function SeasonCardList({
     loadingDetailId = null,
     onPageChange,
     onViewDetail,
+    sortKey = "createdDesc",
+    onSortChange,
 }) {
-    const [sortKey, setSortKey] = useState("createdDesc");
-    const sortedSeasons = useMemo(() => sortItems(seasons, sortKey, {
-        nameAsc: { value: (item) => item.seasonName, direction: "asc" },
-        nameDesc: { value: (item) => item.seasonName, direction: "desc" },
-        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
-        startAsc: { value: (item) => new Date(item.startDate || 0).getTime(), direction: "asc" },
-        status: { value: (item) => item.status, direction: "asc" },
-    }), [seasons, sortKey]);
 
     if (loading && seasons.length === 0) {
         return (
@@ -68,7 +60,7 @@ export function SeasonCardList({
     return (
         <div className="space-y-6">
             <div className="flex justify-end">
-                <SortSelect value={sortKey} onChange={setSortKey} options={[
+                <SortSelect value={sortKey} onChange={onSortChange} options={[
                     { value: "createdDesc", label: "Mới tạo trước" },
                     { value: "startAsc", label: "Bắt đầu sớm nhất" },
                     { value: "nameAsc", label: "Tên A → Z" },
@@ -77,7 +69,7 @@ export function SeasonCardList({
                 ]} />
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {sortedSeasons.map((season) => (
+                {seasons.map((season) => (
                     <div
                         key={season.id}
                         onClick={() => onViewDetail?.(season)}
@@ -199,7 +191,6 @@ export function SeasonCardList({
                 totalPages={pageInfo?.totalPages}
                 totalElements={pageInfo?.totalElements}
                 pageSize={pageInfo?.size}
-                itemCount={seasons.length}
                 loading={loading}
                 onPageChange={onPageChange}
             />

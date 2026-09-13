@@ -1,10 +1,9 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { PendingTransactionList } from "./PendingTransactionList";
 import { ApproveTransactionDrawer } from "./ApproveTransactionDrawer";
 import { useOwnerPendingTransactions } from "../hooks/useOwnerPendingTransactions";
 import Pagination from "../../../../components/common/pagination/Pagination";
 import { SortSelect } from "../../../../components/common/sort/SortSelect";
-import { sortItems } from "../../../../utils/listSort";
 
 export function OwnerPendingTransactionsTab({ farmId, warehouseType = "MATERIAL" }) {
     const {
@@ -13,18 +12,13 @@ export function OwnerPendingTransactionsTab({ farmId, warehouseType = "MATERIAL"
         loading,
         page,
         setPage,
+        sortKey,
+        setSortKey,
         approveTransaction,
         getTransactionDetail
     } = useOwnerPendingTransactions(farmId, warehouseType);
 
     const [selectedTx, setSelectedTx] = useState(null);
-    const [sortKey, setSortKey] = useState("createdDesc");
-    const sortedTransactions = useMemo(() => sortItems(transactions, sortKey, {
-        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
-        createdAsc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "asc" },
-        quantityDesc: { value: (item) => Number(item.quantityGrams || 0), direction: "desc" },
-        status: { value: (item) => item.approvalStatus, direction: "asc" },
-    }), [transactions, sortKey]);
 
     const handleApprove = async (txId, updates = {}) => {
         const success = await approveTransaction(txId, true, updates);
@@ -58,7 +52,7 @@ export function OwnerPendingTransactionsTab({ farmId, warehouseType = "MATERIAL"
             </div>
 
             <PendingTransactionList
-                transactions={sortedTransactions}
+                transactions={transactions}
                 loading={loading}
                 onApprove={handleApprove}
                 onReject={(txId) => handleReject(txId)}
@@ -72,7 +66,6 @@ export function OwnerPendingTransactionsTab({ farmId, warehouseType = "MATERIAL"
                     totalPages={pageInfo.totalPages}
                     totalElements={pageInfo.totalElements}
                     pageSize={pageInfo.size}
-                    itemCount={transactions.length}
                     loading={loading}
                     onPageChange={setPage}
                 />

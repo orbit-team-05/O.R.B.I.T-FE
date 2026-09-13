@@ -65,6 +65,8 @@ export function AdminUsersPage() {
         farms,
         pageInfo,
         setPage,
+        sortKey,
+        setSortKey,
         filters,
         updateFilters,
 
@@ -336,6 +338,8 @@ export function AdminUsersPage() {
                     pageInfo={pageInfo}
                     loading={tableLoading}
                     onPageChange={setPage}
+                    sortKey={sortKey}
+                    onSortChange={setSortKey}
                     onView={openViewDrawer}
                     onEdit={openEditDrawer}
                     onToggleStatus={handleOpenConfirm}

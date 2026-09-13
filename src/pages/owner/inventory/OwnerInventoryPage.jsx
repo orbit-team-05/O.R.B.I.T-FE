@@ -41,6 +41,8 @@ export function OwnerInventoryPage() {
         setCategory,
 
         setPage,
+        sortKey,
+        setSortKey,
         reload,
     } = useOwnerInventoryStocks(farmId, warehouseType);
 
@@ -188,11 +190,13 @@ export function OwnerInventoryPage() {
                     ))}
                 </div>
 
-                    <InventoryStockCardList
-                        stocks={stocks}
-                        pageInfo={pageInfo}
-                        loading={loading}
-                        onPageChange={setPage}
+                        <InventoryStockCardList
+                            stocks={stocks}
+                            pageInfo={pageInfo}
+                            loading={loading}
+                            onPageChange={setPage}
+                            sortKey={sortKey}
+                            onSortChange={setSortKey}
                         onViewDetail={openStockDetail}
                     />
                     </div>

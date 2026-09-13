@@ -13,6 +13,14 @@ import { useAdminRealtimeRefresh } from "../../../../hooks/useFarmTopic";
 
 const FARM_REALTIME_TOPICS = ["farms", "users"];
 
+const FARM_SORTS = {
+    createdDesc: "created,desc",
+    createdAsc: "created,asc",
+    nameAsc: "name,asc",
+    nameDesc: "name,desc",
+    status: "status,asc",
+};
+
 const INITIAL_SUMMARY = {
     totalFarms: 0,
     totalOwners: 0,
@@ -31,6 +39,7 @@ export function useAdminFarms(initialPage = 0, initialSize = 10) {
     const [summary, setSummary] = useState(INITIAL_SUMMARY);
     const [page, setPage] = useState(initialPage);
     const [size] = useState(initialSize);
+    const [sortKey, setSortKeyState] = useState("createdDesc");
     const [filters, setFilters] = useState({ keyword: "", active: "" });
 
     const [owners, setOwners] = useState([]);
@@ -49,7 +58,7 @@ export function useAdminFarms(initialPage = 0, initialSize = 10) {
                 getFarms(page, size, {
                     keyword: filters.keyword || undefined,
                     active: filters.active === "" ? undefined : filters.active === "ACTIVE",
-                }),
+                }, FARM_SORTS[sortKey] || FARM_SORTS.createdDesc),
                 getFarmSummary(),
                 getOwnersList(),
             ]);
@@ -62,7 +71,7 @@ export function useAdminFarms(initialPage = 0, initialSize = 10) {
         } finally {
             setLoading(false);
         }
-    }, [filters, page, size]);
+    }, [filters, page, size, sortKey]);
 
     useEffect(() => {
         // This effect synchronizes the list with page and filter state.
@@ -132,6 +141,11 @@ export function useAdminFarms(initialPage = 0, initialSize = 10) {
         setPage(0);
     }
 
+    function setSortKey(nextSortKey) {
+        setSortKeyState(nextSortKey);
+        setPage(0);
+    }
+
     return {
         farms: farmsPage?.content ?? [],
         summary,
@@ -145,6 +159,8 @@ export function useAdminFarms(initialPage = 0, initialSize = 10) {
         },
         page,
         setPage: handleSetPage,
+        sortKey,
+        setSortKey,
         filters,
         updateFilters,
         loading,

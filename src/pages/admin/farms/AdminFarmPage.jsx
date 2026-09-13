@@ -49,6 +49,8 @@ export function AdminFarmPage() {
         setPage,
         filters,
         updateFilters,
+        sortKey,
+        setSortKey,
         reload,
 
         initialLoading,
@@ -262,6 +264,8 @@ export function AdminFarmPage() {
                     pageInfo={pageInfo || {}}
                     loading={tableLoading}
                     onPageChange={setPage}
+                    sortKey={sortKey}
+                    onSortChange={setSortKey}
                     onView={openViewDrawer}
                     onEdit={openEditDrawer}
                     onToggleStatus={handleToggleFarmStatus}

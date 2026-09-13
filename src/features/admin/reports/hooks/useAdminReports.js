@@ -37,6 +37,15 @@ function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
 }
 
+const REPORT_SORTS = {
+    createdDesc: "created,desc",
+    createdAsc: "created,asc",
+    farm: "farm,asc",
+    quantityDesc: "quantity,desc",
+    amountDesc: "amount,desc",
+    status: "status,asc",
+};
+
 function downloadBlob(response, fallbackName) {
     const blob = response.data;
     const disposition = response.headers?.["content-disposition"] || "";
@@ -56,6 +65,7 @@ export function useAdminReports() {
     const [reportType, setReportType] = useState("transactions");
     const [filters, setFilters] = useState(getDefaultFilters);
     const [appliedFilters, setAppliedFilters] = useState(getDefaultFilters);
+    const [sortKey, setSortKey] = useState("createdDesc");
     const [transactionReport, setTransactionReport] = useState(null);
     const [systemReport, setSystemReport] = useState(null);
     const [farms, setFarms] = useState([]);
@@ -101,6 +111,15 @@ export function useAdminReports() {
         setAppliedFilters((current) => ({ ...current, page: Math.max(page, 0) }));
     }
 
+    function changeSort(sort) {
+        setSortKey(sort);
+        setAppliedFilters((current) => ({
+            ...current,
+            sort: REPORT_SORTS[sort] || REPORT_SORTS.createdDesc,
+            page: 0,
+        }));
+    }
+
     async function exportReport() {
         try {
             setExporting(true);
@@ -137,6 +156,8 @@ export function useAdminReports() {
         exporting,
         error,
         changePage,
+        changeSort,
+        sortKey,
         reload: loadReport,
         exportReport,
     };

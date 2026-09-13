@@ -11,6 +11,14 @@ const INITIAL_SUMMARY = {
 
 const USER_REALTIME_TOPICS = ["users", "farms"];
 
+const USER_SORTS = {
+    createdDesc: "created,desc",
+    createdAsc: "created,asc",
+    nameAsc: "name,asc",
+    nameDesc: "name,desc",
+    status: "status,asc",
+};
+
 function getErrorMessage(error, fallbackMessage) {
     return (
         error?.response?.data?.message ||
@@ -26,6 +34,7 @@ export function useAdminUsers(initialPage = 0, initialSize = 10) {
     const [farms, setFarms] = useState([]);
     const [page, setPage] = useState(initialPage);
     const [size] = useState(initialSize);
+    const [sortKey, setSortKeyState] = useState("createdDesc");
     const [filters, setFilters] = useState({ keyword: "", role: "", status: "", farmId: "" });
 
     const [loading, setLoading] = useState(true);
@@ -45,7 +54,7 @@ export function useAdminUsers(initialPage = 0, initialSize = 10) {
                     farmId: filters.farmId || undefined,
                     role: filters.role || undefined,
                     status: filters.status || undefined,
-                }),
+                }, USER_SORTS[sortKey] || USER_SORTS.createdDesc),
                 getUserDashboard(),
             ]);
 
@@ -56,7 +65,7 @@ export function useAdminUsers(initialPage = 0, initialSize = 10) {
         } finally {
             setLoading(false);
         }
-    }, [filters, page, size]);
+    }, [filters, page, size, sortKey]);
 
     // Load additional resources for form once
     useEffect(() => {
@@ -152,6 +161,11 @@ export function useAdminUsers(initialPage = 0, initialSize = 10) {
         setPage(0);
     }
 
+    function setSortKey(nextSortKey) {
+        setSortKeyState(nextSortKey);
+        setPage(0);
+    }
+
     // Pagination metadata belongs to the filtered page response. Dashboard
     // summaries must never be used as a substitute because they ignore filters.
     const totalElements = Number(usersPage?.totalElements ?? 0);
@@ -172,6 +186,8 @@ export function useAdminUsers(initialPage = 0, initialSize = 10) {
         },
         page,
         setPage: handleSetPage,
+        sortKey,
+        setSortKey,
         filters,
         updateFilters,
         loading,

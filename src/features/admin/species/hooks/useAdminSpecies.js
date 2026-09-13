@@ -17,6 +17,13 @@ const INITIAL_SUMMARY = {
 
 const SPECIES_REALTIME_TOPICS = ["species"];
 
+const SPECIES_SORTS = {
+    createdDesc: "created,desc",
+    nameAsc: "name,asc",
+    nameDesc: "name,desc",
+    status: "status,asc",
+};
+
 function getErrorMessage(error, fallbackMessage) {
     return (
         error?.response?.data?.message ||
@@ -30,6 +37,7 @@ export function useAdminSpecies(initialPage = 0, initialSize = 10) {
     const [summary, setSummary] = useState(INITIAL_SUMMARY);
     const [page, setPage] = useState(initialPage);
     const [size] = useState(initialSize);
+    const [sortKey, setSortKeyState] = useState("createdDesc");
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -43,7 +51,7 @@ export function useAdminSpecies(initialPage = 0, initialSize = 10) {
             setError("");
 
             const [speciesData, summaryData] = await Promise.all([
-                getSpecies(page, size),
+                getSpecies(page, size, SPECIES_SORTS[sortKey] || SPECIES_SORTS.createdDesc),
                 getSpeciesSummary(),
             ]);
 
@@ -54,7 +62,7 @@ export function useAdminSpecies(initialPage = 0, initialSize = 10) {
         } finally {
             setLoading(false);
         }
-    }, [page, size]);
+    }, [page, size, sortKey]);
 
     // Load the current page when pagination changes.
     useEffect(() => {
@@ -122,6 +130,11 @@ export function useAdminSpecies(initialPage = 0, initialSize = 10) {
         setPage(Math.max(Number(nextPage) || 0, 0));
     }
 
+    function setSortKey(nextSortKey) {
+        setSortKeyState(nextSortKey);
+        setPage(0);
+    }
+
     return {
         species: speciesPage?.content ?? [],
         summary,
@@ -135,6 +148,8 @@ export function useAdminSpecies(initialPage = 0, initialSize = 10) {
         },
         page,
         setPage: handleSetPage,
+        sortKey,
+        setSortKey,
         loading,
         initialLoading: loading && speciesPage === null,
         tableLoading: loading && speciesPage !== null,

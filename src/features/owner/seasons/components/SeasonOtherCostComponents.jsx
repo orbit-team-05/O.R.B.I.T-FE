@@ -1,9 +1,8 @@
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Upload, Image as ImageIcon, Trash2, Edit2, Plus, X } from "lucide-react";
 import { formatCurrency } from "../../../../utils/formatUtils";
 import Pagination from "../../../../components/common/pagination/Pagination";
 import { SortSelect } from "../../../../components/common/sort/SortSelect";
-import { sortItems } from "../../../../utils/listSort";
 
 function formatDate(value) {
     if (!value) return "Chưa có";
@@ -31,16 +30,11 @@ export function SeasonOtherCostHistory({
     onAdd,
     onEdit,
     onDelete,
-    isCompleted = false
+    isCompleted = false,
+    sortKey = "createdDesc",
+    onSortChange,
 }) {
     const [fullImage, setFullImage] = useState(null);
-    const [sortKey, setSortKey] = useState("createdDesc");
-    const sortedOtherCosts = useMemo(() => sortItems(otherCosts, sortKey, {
-        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
-        createdAsc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "asc" },
-        amountDesc: { value: (item) => Number(item.amount || 0), direction: "desc" },
-        description: { value: (item) => item.description, direction: "asc" },
-    }), [otherCosts, sortKey]);
 
     return (
         <div className="space-y-4 rounded-xl border border-slate-200 p-4">
@@ -70,7 +64,7 @@ export function SeasonOtherCostHistory({
                             <Plus size={14} /> Thêm chi phí
                         </button>
                     )}
-                    <SortSelect value={sortKey} onChange={setSortKey} options={[
+                    <SortSelect value={sortKey} onChange={onSortChange} options={[
                         { value: "createdDesc", label: "Mới thêm trước" },
                         { value: "createdAsc", label: "Cũ nhất trước" },
                         { value: "amountDesc", label: "Số tiền giảm dần" },
@@ -104,7 +98,7 @@ export function SeasonOtherCostHistory({
                                 </thead>
 
                                 <tbody>
-                                    {sortedOtherCosts.map((item) => (
+                                    {otherCosts.map((item) => (
                                         <tr
                                             key={item.id}
                                             className="border-t border-slate-100 text-slate-700"
@@ -174,9 +168,8 @@ export function SeasonOtherCostHistory({
                     <Pagination
                         page={pageInfo?.number}
                         totalPages={pageInfo?.totalPages}
-                        totalElements={pageInfo?.totalElements ?? otherCosts.length}
+                        totalElements={pageInfo?.totalElements ?? 0}
                         pageSize={pageInfo?.size}
-                        itemCount={otherCosts.length}
                         loading={loading}
                         onPageChange={onPageChange}
                     />

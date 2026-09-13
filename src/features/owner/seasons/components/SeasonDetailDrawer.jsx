@@ -8,7 +8,6 @@ import { useToast } from "../../../../components/common/toast/ToastProvider";
 import { formatCurrency, formatNumber } from "../../../../utils/formatUtils";
 import Pagination from "../../../../components/common/pagination/Pagination";
 import { SortSelect } from "../../../../components/common/sort/SortSelect";
-import { sortItems } from "../../../../utils/listSort";
 
 function formatDate(value) {
     if (!value) return "Chưa có";
@@ -121,14 +120,9 @@ function SeasonHarvestHistory({
                               pageInfo,
                                   loading = false,
                                   onPageChange,
+                                  sortKey = "createdDesc",
+                                  onSortChange,
                               }) {
-    const [sortKey, setSortKey] = useState("createdDesc");
-    const sortedHarvests = useMemo(() => sortItems(harvests, sortKey, {
-        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
-        createdAsc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "asc" },
-        quantityDesc: { value: (item) => Number(item.quantityGrams || 0), direction: "desc" },
-        revenueDesc: { value: (item) => Number(item.totalAmount || 0), direction: "desc" },
-    }), [harvests, sortKey]);
     const totalHarvestKg = harvests.reduce(
         (sum, item) => sum + Number(item.quantityKg || 0),
         0,
@@ -151,7 +145,7 @@ function SeasonHarvestHistory({
                     <p className="mt-0.5 text-sm font-bold text-emerald-700">
                         {formatNumber(totalHarvestKg)} kg
                     </p>
-                    <SortSelect value={sortKey} onChange={setSortKey} options={[
+                    <SortSelect value={sortKey} onChange={onSortChange} options={[
                         { value: "createdDesc", label: "Mới nhất trước" },
                         { value: "createdAsc", label: "Cũ nhất trước" },
                         { value: "quantityDesc", label: "Khối lượng giảm dần" },
@@ -186,7 +180,7 @@ function SeasonHarvestHistory({
                                 </thead>
 
                                 <tbody>
-                                {sortedHarvests.map((item) => (
+                                {harvests.map((item) => (
                                     <tr
                                         key={item.transactionId}
                                         className="border-t border-slate-100 text-slate-700"
@@ -253,15 +247,14 @@ function SeasonHarvestHistory({
 
                     <div className="flex items-center justify-between">
                         <p className="text-xs text-slate-500">
-                            Tổng {pageInfo?.totalElements ?? harvests.length} giao dịch
+                            Tổng {pageInfo?.totalElements ?? 0} giao dịch
                         </p>
 
                         <Pagination
                             page={pageInfo?.number}
                             totalPages={pageInfo?.totalPages}
-                            totalElements={pageInfo?.totalElements ?? harvests.length}
+                            totalElements={pageInfo?.totalElements ?? 0}
                             pageSize={pageInfo?.size}
-                            itemCount={harvests.length}
                             loading={loading}
                             onPageChange={onPageChange}
                         />
@@ -278,15 +271,9 @@ function SeasonMaterialUsageHistory({
     loading = false,
     onPageChange,
     consumedMaterialCost,
+    sortKey = "createdDesc",
+    onSortChange,
 }) {
-    const [sortKey, setSortKey] = useState("createdDesc");
-    const sortedUsages = useMemo(() => sortItems(usages, sortKey, {
-        createdDesc: { value: (item) => new Date(item.approvedAt || item.createdAt || 0).getTime(), direction: "desc" },
-        createdAsc: { value: (item) => new Date(item.approvedAt || item.createdAt || 0).getTime(), direction: "asc" },
-        quantityDesc: { value: (item) => Number(item.quantity || 0), direction: "desc" },
-        amountDesc: { value: (item) => Number(item.totalAmount || 0), direction: "desc" },
-        product: { value: (item) => item.productName, direction: "asc" },
-    }), [usages, sortKey]);
     return (
         <div className="space-y-4 rounded-xl border border-slate-200 p-4">
             <div className="flex items-start justify-between gap-3">
@@ -304,7 +291,7 @@ function SeasonMaterialUsageHistory({
                     <p className="mt-0.5 text-sm font-bold text-red-600">
                         {formatCurrency(consumedMaterialCost)}
                     </p>
-                    <SortSelect value={sortKey} onChange={setSortKey} options={[
+                    <SortSelect value={sortKey} onChange={onSortChange} options={[
                         { value: "createdDesc", label: "Mới xuất trước" },
                         { value: "createdAsc", label: "Cũ nhất trước" },
                         { value: "quantityDesc", label: "Khối lượng giảm dần" },
@@ -339,7 +326,7 @@ function SeasonMaterialUsageHistory({
                                 </thead>
 
                                 <tbody>
-                                    {sortedUsages.map((item) => (
+                                    {usages.map((item) => (
                                         <tr
                                             key={item.transactionId}
                                             className="border-t border-slate-100 text-slate-700"
@@ -394,15 +381,14 @@ function SeasonMaterialUsageHistory({
 
                     <div className="flex items-center justify-between">
                         <p className="text-xs text-slate-500">
-                            Tổng {pageInfo?.totalElements ?? usages.length} giao dịch
+                            Tổng {pageInfo?.totalElements ?? 0} giao dịch
                         </p>
 
                         <Pagination
                             page={pageInfo?.number}
                             totalPages={pageInfo?.totalPages}
-                            totalElements={pageInfo?.totalElements ?? usages.length}
+                            totalElements={pageInfo?.totalElements ?? 0}
                             pageSize={pageInfo?.size}
-                            itemCount={usages.length}
                             loading={loading}
                             onPageChange={onPageChange}
                         />
@@ -420,14 +406,20 @@ export function SeasonDetailDrawer({
        materialUsagePageInfo,
        materialUsageLoading = false,
        onMaterialUsagePageChange,
+       materialUsageSortKey = "createdDesc",
+       onMaterialUsageSortChange,
        harvests = [],
        harvestPageInfo,
        harvestLoading = false,
        onHarvestPageChange,
+       harvestSortKey = "createdDesc",
+       onHarvestSortChange,
        otherCosts = [],
        otherCostPageInfo,
        otherCostLoading = false,
        onOtherCostPageChange,
+       otherCostSortKey = "createdDesc",
+       onOtherCostSortChange,
        createOtherCost,
        updateOtherCost,
        deleteOtherCost,
@@ -1073,6 +1065,8 @@ export function SeasonDetailDrawer({
                                     pageInfo={materialUsagePageInfo}
                                     loading={materialUsageLoading}
                                     onPageChange={onMaterialUsagePageChange}
+                                    sortKey={materialUsageSortKey}
+                                    onSortChange={onMaterialUsageSortChange}
                                     consumedMaterialCost={season.consumedMaterialCost}
                                 />
 
@@ -1081,6 +1075,8 @@ export function SeasonDetailDrawer({
                                     pageInfo={otherCostPageInfo}
                                     loading={otherCostLoading}
                                     onPageChange={onOtherCostPageChange}
+                                    sortKey={otherCostSortKey}
+                                    onSortChange={onOtherCostSortChange}
                                     totalOtherCost={season.otherCost}
                                     onAdd={() => setOtherCostDialog({ open: true, initialData: null })}
                                     onEdit={(item) => setOtherCostDialog({ open: true, initialData: item })}
@@ -1104,6 +1100,8 @@ export function SeasonDetailDrawer({
                                     pageInfo={harvestPageInfo}
                                     loading={harvestLoading}
                                     onPageChange={onHarvestPageChange}
+                                    sortKey={harvestSortKey}
+                                    onSortChange={onHarvestSortChange}
                                 />
                             </>
                         )}

@@ -53,6 +53,8 @@ export function AdminIotDevicesPage() {
         devices,
         summary,
         pageInfo,
+        sortKey,
+        setSortKey,
         initialLoading,
         tableLoading,
         error,
@@ -138,6 +140,8 @@ export function AdminIotDevicesPage() {
                     pageInfo={pageInfo}
                     loading={tableLoading}
                     onPageChange={setPage}
+                    sortKey={sortKey}
+                    onSortChange={setSortKey}
                     onCreate={setCreateRecord}
                     onViewDetail={openDetail}
                     onToggleStatus={handleToggleStatus}

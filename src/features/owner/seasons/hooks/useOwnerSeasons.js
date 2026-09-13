@@ -25,6 +25,36 @@ const SEASON_REALTIME_TOPICS = [
     "iot-exports",
 ];
 
+const SEASON_SORTS = {
+    createdDesc: "created,desc",
+    nameAsc: "name,asc",
+    nameDesc: "name,desc",
+    startAsc: "startDate,asc",
+    status: "status,asc",
+};
+
+const MATERIAL_USAGE_SORTS = {
+    createdDesc: "created,desc",
+    createdAsc: "created,asc",
+    quantityDesc: "quantity,desc",
+    amountDesc: "amount,desc",
+    product: "product,asc",
+};
+
+const HARVEST_SORTS = {
+    createdDesc: "created,desc",
+    createdAsc: "created,asc",
+    quantityDesc: "quantity,desc",
+    revenueDesc: "amount,desc",
+};
+
+const OTHER_COST_SORTS = {
+    createdDesc: "created,desc",
+    createdAsc: "created,asc",
+    amountDesc: "amount,desc",
+    description: "description,asc",
+};
+
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
 }
@@ -40,6 +70,10 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
 
     const [page, setPage] = useState(initialPage);
     const [size] = useState(initialSize);
+    const [sortKey, setSortKeyState] = useState("createdDesc");
+    const [materialUsageSortKey, setMaterialUsageSortKeyState] = useState("createdDesc");
+    const [harvestSortKey, setHarvestSortKeyState] = useState("createdDesc");
+    const [otherCostSortKey, setOtherCostSortKeyState] = useState("createdDesc");
 
     const [loading, setLoading] = useState(true);
     const [detailLoading, setDetailLoading] = useState(false);
@@ -75,14 +109,14 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
         try {
             setLoading(true);
             setError("");
-            const data = await getSeasonCards(page, size);
+            const data = await getSeasonCards(page, size, SEASON_SORTS[sortKey] || SEASON_SORTS.createdDesc);
             setSeasonPage(data);
         } catch (err) {
             setError(getErrorMessage(err, "Không thể tải danh sách mùa vụ."));
         } finally {
             setLoading(false);
         }
-    }, [page, size]);
+    }, [page, size, sortKey]);
 
     const reload = useCallback(async () => {
         await Promise.all([loadDashboard(), loadSeasons()]);
@@ -103,7 +137,7 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
     }, [loadDashboard]);
 
     const loadMaterialUsages = useCallback(
-        async (seasonId, nextPage = 0) => {
+        async (seasonId, nextPage = 0, nextSortKey = materialUsageSortKey) => {
             if (!seasonId) return null;
 
             try {
@@ -113,6 +147,7 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
                     seasonId,
                     nextPage,
                     materialUsageSize,
+                    MATERIAL_USAGE_SORTS[nextSortKey] || MATERIAL_USAGE_SORTS.createdDesc,
                 );
 
                 setMaterialUsagePage(data);
@@ -126,11 +161,11 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
                 setMaterialUsageLoading(false);
             }
         },
-        [materialUsageSize],
+        [materialUsageSize, materialUsageSortKey],
     );
 
     const loadHarvests = useCallback(
-        async (seasonId, nextPage = 0) => {
+        async (seasonId, nextPage = 0, nextSortKey = harvestSortKey) => {
             if (!seasonId) return null;
 
             try {
@@ -140,6 +175,7 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
                     seasonId,
                     nextPage,
                     harvestSize,
+                    HARVEST_SORTS[nextSortKey] || HARVEST_SORTS.createdDesc,
                 );
 
                 setHarvestPage(data);
@@ -153,16 +189,21 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
                 setHarvestLoading(false);
             }
         },
-        [harvestSize],
+        [harvestSize, harvestSortKey],
     );
 
     const loadOtherCosts = useCallback(
-        async (seasonId, nextPage = 0) => {
+        async (seasonId, nextPage = 0, nextSortKey = otherCostSortKey) => {
             if (!seasonId) return null;
             
             try {
                 setOtherCostLoading(true);
-                const data = await getSeasonOtherCosts(seasonId, nextPage, otherCostSize);
+                const data = await getSeasonOtherCosts(
+                    seasonId,
+                    nextPage,
+                    otherCostSize,
+                    OTHER_COST_SORTS[nextSortKey] || OTHER_COST_SORTS.createdDesc,
+                );
                 setOtherCostPage(data);
                 return data;
             } catch (err) {
@@ -172,7 +213,7 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
                 setOtherCostLoading(false);
             }
         },
-        [otherCostSize]
+        [otherCostSize, otherCostSortKey]
     );
 
     const loadDetail = useCallback(
@@ -335,6 +376,30 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
         }
     }
 
+    async function handleSetMaterialUsageSort(nextSortKey) {
+        setMaterialUsageSortKeyState(nextSortKey);
+        setMaterialUsagePageNumber(0);
+        if (selectedDetail?.id) {
+            await loadMaterialUsages(selectedDetail.id, 0, nextSortKey);
+        }
+    }
+
+    async function handleSetHarvestSort(nextSortKey) {
+        setHarvestSortKeyState(nextSortKey);
+        setHarvestPageNumber(0);
+        if (selectedDetail?.id) {
+            await loadHarvests(selectedDetail.id, 0, nextSortKey);
+        }
+    }
+
+    async function handleSetOtherCostSort(nextSortKey) {
+        setOtherCostSortKeyState(nextSortKey);
+        setOtherCostPageNumber(0);
+        if (selectedDetail?.id) {
+            await loadOtherCosts(selectedDetail.id, 0, nextSortKey);
+        }
+    }
+
     const createOtherCost = async (seasonId, payload, file) => {
         try {
             setSubmitting(true);
@@ -411,6 +476,11 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
         setPage(Math.max(Number(nextPage) || 0, 0));
     }
 
+    function setSortKey(nextSortKey) {
+        setSortKeyState(nextSortKey);
+        setPage(0);
+    }
+
     return {
         seasons,
         dashboard,
@@ -447,6 +517,8 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
         },
         materialUsageLoading,
         setMaterialUsagePage: handleSetMaterialUsagePage,
+        materialUsageSortKey,
+        setMaterialUsageSortKey: handleSetMaterialUsageSort,
         reloadMaterialUsages: () => {
             if (!selectedDetail?.id) return Promise.resolve(null);
             return loadMaterialUsages(selectedDetail.id, materialUsagePageNumber);
@@ -463,6 +535,8 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
         },
         harvestLoading,
         setHarvestPage: handleSetHarvestPage,
+        harvestSortKey,
+        setHarvestSortKey: handleSetHarvestSort,
 
         otherCosts: otherCostPage?.content ?? [],
         otherCostPageInfo: {
@@ -475,8 +549,12 @@ export function useOwnerSeasons(farmId, initialPage = 0, initialSize = 10) {
         },
         otherCostLoading,
         setOtherCostPage: handleSetOtherCostPage,
+        otherCostSortKey,
+        setOtherCostSortKey: handleSetOtherCostSort,
 
         setPage: handleSetPage,
+        sortKey,
+        setSortKey,
         reload,
         loadDetail,
         createSeason,

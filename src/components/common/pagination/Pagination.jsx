@@ -9,30 +9,22 @@ export default function Pagination({
     totalPages = 0,
     totalElements = 0,
     pageSize = 10,
-    itemCount = 0,
     loading = false,
     onPageChange,
 }) {
-    // Prefer the server-provided total. itemCount is only a UI safety net for
-    // legacy/custom responses that omit pagination metadata; it must never
-    // override a valid totalElements value (e.g. 22 records over 3 pages).
+    // The server is the source of truth for a paged response. Never turn the
+    // current page length into the dataset total: 22 records split by size 10
+    // must remain 3 pages, not 1 page with 10 records.
     const parsedTotalElements = Number(totalElements);
-    const parsedItemCount = Number(itemCount);
-    const safeItemCount = Math.max(Number.isFinite(parsedItemCount) ? parsedItemCount : 0, 0);
-    const safeTotalElements = Math.max(
-        Number.isFinite(parsedTotalElements) && parsedTotalElements > 0
-            ? parsedTotalElements
-            : safeItemCount,
-        0,
-    );
+    const safeTotalElements = Math.max(Number.isFinite(parsedTotalElements) ? parsedTotalElements : 0, 0);
     const safePageSize = Math.max(Number(pageSize) || 10, 1);
     const calculatedTotalPages = safeTotalElements > 0
         ? Math.ceil(safeTotalElements / safePageSize)
         : 0;
-    const safeTotalPages = Math.max(
-        Number(totalPages) > 0 ? Number(totalPages) : calculatedTotalPages,
-        0,
-    );
+    const declaredTotalPages = Math.max(Number(totalPages) || 0, 0);
+    const safeTotalPages = safeTotalElements > 0
+        ? Math.max(declaredTotalPages, calculatedTotalPages)
+        : declaredTotalPages;
     const safePage = safeTotalPages > 0
         ? Math.min(Math.max(Number(page) || 0, 0), safeTotalPages - 1)
         : 0;

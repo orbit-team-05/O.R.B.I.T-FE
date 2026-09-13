@@ -13,6 +13,20 @@ import { useFarmRealtimeRefresh } from "../../../../hooks/useFarmTopic";
 
 const IOT_DEVICE_REALTIME_TOPICS = ["iot-devices"];
 
+const DEVICE_SORTS = {
+    createdDesc: "created,desc",
+    createdAsc: "created,asc",
+    nameAsc: "name,asc",
+    status: "status,asc",
+    lastSeenDesc: "lastSeen,desc",
+};
+
+const AUDIT_SORTS = {
+    createdDesc: "created,desc",
+    createdAsc: "created,asc",
+    action: "action,asc",
+};
+
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
 }
@@ -23,6 +37,7 @@ export function useOwnerIotDevices(farmId, initialPage = 0, initialSize = 10) {
 
     const [page, setPage] = useState(initialPage);
     const [size] = useState(initialSize);
+    const [sortKey, setSortKeyState] = useState("createdDesc");
 
     const [loading, setLoading] = useState(true);
     const [detailLoading, setDetailLoading] = useState(false);
@@ -40,17 +55,22 @@ export function useOwnerIotDevices(farmId, initialPage = 0, initialSize = 10) {
             setLoading(true);
             setError("");
 
-            const data = await getOwnerIotDevices(farmId, page, size);
+            const data = await getOwnerIotDevices(
+                farmId,
+                page,
+                size,
+                DEVICE_SORTS[sortKey] || DEVICE_SORTS.createdDesc,
+            );
             setDevicePage(data);
         } catch (err) {
             setError(getErrorMessage(err, "Không thể tải danh sách thiết bị IoT."));
         } finally {
             setLoading(false);
         }
-    }, [farmId, page, size]);
+    }, [farmId, page, size, sortKey]);
 
     const summary = useMemo(() => {
-        const totalDevices = devicePage?.totalElements ?? devices.length;
+        const totalDevices = devicePage?.totalElements ?? 0;
 
         const activeDevices = devices.filter(
             (item) => item.status === "ACTIVE",
@@ -105,10 +125,16 @@ export function useOwnerIotDevices(farmId, initialPage = 0, initialSize = 10) {
         }
     }
 
-    async function loadAuditLogs(deviceId, auditPage = 0) {
+    async function loadAuditLogs(deviceId, auditPage = 0, auditSortKey = "createdDesc") {
         if (!farmId || !deviceId) return null;
         try {
-            const data = await getOwnerScaleDeviceAuditLogs(farmId, deviceId, auditPage, 10);
+            const data = await getOwnerScaleDeviceAuditLogs(
+                farmId,
+                deviceId,
+                auditPage,
+                10,
+                AUDIT_SORTS[auditSortKey] || AUDIT_SORTS.createdDesc,
+            );
             return data;
         } catch (err) {
             setActionError(getErrorMessage(err, "Không thể tải nhật ký thiết bị."));
@@ -209,6 +235,11 @@ export function useOwnerIotDevices(farmId, initialPage = 0, initialSize = 10) {
 
         page,
         setPage: handleSetPage,
+        sortKey,
+        setSortKey: (nextSortKey) => {
+            setSortKeyState(nextSortKey);
+            setPage(0);
+        },
 
         loading,
         initialLoading: loading && devicePage === null,

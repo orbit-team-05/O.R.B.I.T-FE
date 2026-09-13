@@ -1,8 +1,6 @@
-import { useMemo, useState } from "react";
 import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
 import Pagination from "../../../../components/common/pagination/Pagination";
 import { SortSelect } from "../../../../components/common/sort/SortSelect";
-import { sortItems } from "../../../../utils/listSort";
 
 const STATUS_LABELS = {
     ACTIVE: "Đang hoạt động",
@@ -58,22 +56,16 @@ export function OwnerIotDeviceTable({
                                         loading = false,
                                         onPageChange,
                                         onViewDetail,
-                                    }) {
-    const [sortKey, setSortKey] = useState("createdDesc");
-    const sortedDevices = useMemo(() => sortItems(devices, sortKey, {
-        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
-        createdAsc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "asc" },
-        nameAsc: { value: (item) => item.deviceName || item.deviceId, direction: "asc" },
-        status: { value: (item) => item.status, direction: "asc" },
-        lastSeenDesc: { value: (item) => new Date(item.lastSeenAt || 0).getTime(), direction: "desc" },
-    }), [devices, sortKey]);
+                                        sortKey = "createdDesc",
+                                        onSortChange,
+}) {
 
     return (
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
             <header className="border-b border-slate-200 px-5 py-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <h2 className="text-base font-semibold text-slate-900">Danh sách thiết bị của farm</h2>
-                    <SortSelect value={sortKey} onChange={setSortKey} options={[
+                    <SortSelect value={sortKey} onChange={onSortChange} options={[
                         { value: "createdDesc", label: "Mới tạo trước" },
                         { value: "createdAsc", label: "Cũ nhất trước" },
                         { value: "nameAsc", label: "Tên thiết bị A → Z" },
@@ -107,7 +99,7 @@ export function OwnerIotDeviceTable({
                             </thead>
 
                             <tbody>
-                            {sortedDevices.map((item) => (
+                                {devices.map((item) => (
                                 <tr
                                     key={item.deviceId}
                                     className="border-t border-slate-200 text-sm text-slate-700"
@@ -170,7 +162,6 @@ export function OwnerIotDeviceTable({
                         totalPages={pageInfo?.totalPages}
                         totalElements={pageInfo?.totalElements}
                         pageSize={pageInfo?.size}
-                        itemCount={devices.length}
                         loading={loading}
                         onPageChange={onPageChange}
                     />

@@ -24,7 +24,11 @@ function toNonNegativeInteger(value, fallback = 0) {
  */
 export function normalizePageResponse(pageData, fallbackSize = 10) {
     const raw = pageData?.data ?? pageData ?? {};
-    const content = Array.isArray(raw.content) ? raw.content : [];
+    const content = Array.isArray(raw.content)
+        ? raw.content
+        : Array.isArray(raw.items)
+            ? raw.items
+            : [];
     const size = Math.max(
         toNonNegativeInteger(
             raw.size ?? raw.pageSize ?? raw.pageable?.pageSize,
@@ -36,9 +40,14 @@ export function normalizePageResponse(pageData, fallbackSize = 10) {
     // count query into a false one-page result (for example 22 records -> 10).
     const totalElements = toNonNegativeInteger(raw.totalElements, 0);
     const calculatedTotalPages = totalElements === 0 ? 0 : Math.ceil(totalElements / size);
-    const totalPages = toNonNegativeInteger(raw.totalPages, calculatedTotalPages);
+    const declaredTotalPages = toNonNegativeInteger(raw.totalPages, 0);
+    // A non-empty dataset cannot have zero pages. Prefer the declared value
+    // when valid, otherwise calculate it from the server-provided total.
+    const totalPages = totalElements > 0
+        ? Math.max(declaredTotalPages, calculatedTotalPages)
+        : declaredTotalPages;
     const requestedNumber = toNonNegativeInteger(
-        raw.number ?? raw.page ?? raw.pageable?.pageNumber,
+        raw.number ?? raw.page ?? raw.currentPage ?? raw.pageable?.pageNumber,
         0,
     );
     const number = totalPages > 0 ? Math.min(requestedNumber, totalPages - 1) : 0;

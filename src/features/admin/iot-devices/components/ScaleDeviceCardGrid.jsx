@@ -1,4 +1,3 @@
-import { useMemo, useState } from "react";
 import {
     Activity,
     Clock3,
@@ -11,7 +10,6 @@ import {
 } from "lucide-react";
 import Pagination from "../../../../components/common/pagination/Pagination";
 import { SortSelect } from "../../../../components/common/sort/SortSelect";
-import { sortItems } from "../../../../utils/listSort";
 
 const STATUS_META = {
     UNCREATED: {
@@ -182,15 +180,9 @@ export function ScaleDeviceCardGrid({
     onCreate,
     onViewDetail,
     onToggleStatus,
+    sortKey = "createdDesc",
+    onSortChange,
 }) {
-    const [sortKey, setSortKey] = useState("createdDesc");
-    const sortedDevices = useMemo(() => sortItems(devices, sortKey, {
-        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
-        createdAsc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "asc" },
-        nameAsc: { value: (item) => item.deviceName || item.deviceId || item.macAddress, direction: "asc" },
-        nameDesc: { value: (item) => item.deviceName || item.deviceId || item.macAddress, direction: "desc" },
-        status: { value: (item) => item.status, direction: "asc" },
-    }), [devices, sortKey]);
 
     return (
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 p-4 sm:p-5">
@@ -204,7 +196,7 @@ export function ScaleDeviceCardGrid({
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center justify-end gap-3">
-                    <SortSelect value={sortKey} onChange={setSortKey} options={[
+                    <SortSelect value={sortKey} onChange={onSortChange} options={[
                         { value: "createdDesc", label: "Mới tạo trước" },
                         { value: "createdAsc", label: "Cũ nhất trước" },
                         { value: "nameAsc", label: "Tên/MAC A → Z" },
@@ -229,7 +221,7 @@ export function ScaleDeviceCardGrid({
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    {sortedDevices.map((device) => (
+                    {devices.map((device) => (
                         <DeviceCard
                             key={device.id || device.deviceId || device.macAddress}
                             device={device}
@@ -247,7 +239,6 @@ export function ScaleDeviceCardGrid({
                 totalPages={pageInfo.totalPages}
                 totalElements={pageInfo.totalElements}
                 pageSize={pageInfo.size}
-                itemCount={devices.length}
                 loading={loading}
                 onPageChange={onPageChange}
             />

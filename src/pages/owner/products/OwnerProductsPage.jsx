@@ -98,6 +98,8 @@ export function OwnerProductsPage() {
 
         reload,
         setPage,
+        sortKey,
+        setSortKey,
         filters,
         setFilters,
 
@@ -215,6 +217,8 @@ export function OwnerProductsPage() {
                             pageInfo={pageInfo}
                             loading={tableLoading}
                             onPageChange={setPage}
+                            sortKey={sortKey}
+                            onSortChange={setSortKey}
                             onViewDetail={
                                 openProductDetail
                             }

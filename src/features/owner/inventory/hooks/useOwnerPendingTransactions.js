@@ -8,6 +8,7 @@ export function useOwnerPendingTransactions(farmId, warehouseType = "MATERIAL") 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [page, setPage] = useState(0);
+    const [sortKey, setSortKeyState] = useState("createdDesc");
     const toast = useToast();
 
     const fetchTransactions = useCallback(async () => {
@@ -17,7 +18,13 @@ export function useOwnerPendingTransactions(farmId, warehouseType = "MATERIAL") 
             setLoading(true);
             setError(null);
 
-            const pageData = await getOwnerPendingTransactions(farmId, page, 10, warehouseType);
+            const sort = {
+                createdDesc: "created,desc",
+                createdAsc: "created,asc",
+                quantityDesc: "quantity,desc",
+                status: "status,asc",
+            }[sortKey] || "created,desc";
+            const pageData = await getOwnerPendingTransactions(farmId, page, 10, warehouseType, sort);
             setTransactions(pageData.content);
             setPageInfo(pageData);
         } catch (err) {
@@ -26,7 +33,7 @@ export function useOwnerPendingTransactions(farmId, warehouseType = "MATERIAL") 
         } finally {
             setLoading(false);
         }
-    }, [farmId, page, warehouseType]);
+    }, [farmId, page, warehouseType, sortKey]);
 
     useEffect(() => {
         // Start the async pending-transaction loading lifecycle.
@@ -69,6 +76,11 @@ export function useOwnerPendingTransactions(farmId, warehouseType = "MATERIAL") 
         error,
         page,
         setPage,
+        sortKey,
+        setSortKey: (nextSortKey) => {
+            setSortKeyState(nextSortKey);
+            setPage(0);
+        },
         reload: fetchTransactions,
         approveTransaction,
         getTransactionDetail

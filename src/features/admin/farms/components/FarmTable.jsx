@@ -1,8 +1,6 @@
-import { useMemo, useState } from "react";
 import { TableLoadingOverlay } from "../../../../components/common/table/TableLoadingOverlay";
 import Pagination from "../../../../components/common/pagination/Pagination";
 import { SortSelect } from "../../../../components/common/sort/SortSelect";
-import { sortItems } from "../../../../utils/listSort";
 import { FarmStatusBadge } from "./FarmStatusBadge";
 
 function ActionButton({ children, variant = "default", ...props }) {
@@ -70,22 +68,16 @@ export function FarmTable({
                               onView,
                               onEdit,
                               onToggleStatus,
+                              sortKey = "createdDesc",
+                              onSortChange,
 }) {
-    const [sortKey, setSortKey] = useState("createdDesc");
-    const sortedFarms = useMemo(() => sortItems(farms, sortKey, {
-        nameAsc: { value: (item) => item.farmName, direction: "asc" },
-        nameDesc: { value: (item) => item.farmName, direction: "desc" },
-        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
-        createdAsc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "asc" },
-        status: { value: (item) => item.isActive ? 0 : 1, direction: "asc" },
-    }), [farms, sortKey]);
 
     return (
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <header className="border-b border-slate-100 bg-slate-50/60 px-5 py-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <h2 className="text-base font-semibold text-slate-900">Danh sách Nông trại</h2>
-                    <SortSelect value={sortKey} onChange={setSortKey} options={[
+                    <SortSelect value={sortKey} onChange={onSortChange} options={[
                         { value: "createdDesc", label: "Mới tạo trước" },
                         { value: "createdAsc", label: "Cũ nhất trước" },
                         { value: "nameAsc", label: "Tên A → Z" },
@@ -119,7 +111,7 @@ export function FarmTable({
                     </thead>
 
                     <tbody>
-                    {sortedFarms.map((item) => (
+                    {farms.map((item) => (
                         <tr
                             key={item.id}
                             onClick={() => onView?.(item)}
@@ -210,7 +202,6 @@ export function FarmTable({
                 totalPages={pageInfo.totalPages}
                 totalElements={pageInfo.totalElements}
                 pageSize={pageInfo.size}
-                itemCount={farms.length}
                 loading={loading}
                 onPageChange={onPageChange}
             />

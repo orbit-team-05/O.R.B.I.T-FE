@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { History, Image, RefreshCw, Save, Upload, X } from "lucide-react";
 import { ImagePreviewModal } from "../../../../components/ui/ImagePreviewModal";
+import Pagination from "../../../../components/common/pagination/Pagination";
+import { SortSelect } from "../../../../components/common/sort/SortSelect";
 
 const STATUS_LABELS = { ACTIVE: "Đang hoạt động", INACTIVE: "Đã tắt", LOST: "Mất kết nối", BROKEN: "Hư hỏng", UNASSIGNED: "Chưa gắn Farm" };
 const STATUS_CLASSES = { ACTIVE: "bg-[#006948] text-white", INACTIVE: "bg-slate-200 text-slate-600", LOST: "bg-red-50 text-red-600", BROKEN: "bg-red-100 text-red-700", UNASSIGNED: "bg-amber-50 text-amber-700" };
@@ -19,14 +21,20 @@ export function OwnerIotDeviceDetailDrawer({ open, device, loading = false, acti
     const [previewOpen, setPreviewOpen] = useState(false);
     const [auditPage, setAuditPage] = useState(null);
     const [auditLoading, setAuditLoading] = useState(false);
+    const [auditSortKey, setAuditSortKey] = useState("createdDesc");
 
     if (!open) return null;
 
-    async function loadAudit() {
+    async function loadAudit(page = 0, nextSortKey = auditSortKey) {
         if (!device?.deviceId || !onLoadAuditLogs) return;
         setAuditLoading(true);
-        setAuditPage(await onLoadAuditLogs(device.deviceId, 0));
+        setAuditPage(await onLoadAuditLogs(device.deviceId, page, nextSortKey));
         setAuditLoading(false);
+    }
+
+    function handleAuditSortChange(nextSortKey) {
+        setAuditSortKey(nextSortKey);
+        void loadAudit(0, nextSortKey);
     }
 
     async function handleSave() {
@@ -50,7 +58,7 @@ export function OwnerIotDeviceDetailDrawer({ open, device, loading = false, acti
                     {canEdit && <section className="rounded-xl border border-slate-200 bg-white p-4"><div className="flex items-end gap-2"><label className="flex-1"><span className="text-xs font-medium text-slate-600">Tên thiết bị</span><input value={deviceName} onChange={(event) => setDeviceName(event.target.value)} maxLength={160} className="mt-1 h-10 w-full rounded-lg border border-slate-300 px-3 text-sm focus:border-[#006948] focus:outline-none" /></label><button type="button" disabled={actionLoading || !deviceName.trim()} onClick={handleSave} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#006948] px-3 text-sm font-semibold text-white disabled:opacity-50"><Save size={15} />Lưu</button></div><label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"><Upload size={14} />Thay ảnh (tối đa 20MB)<input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={actionLoading} onChange={handleImageChange} /></label></section>}
                     <section className="grid grid-cols-1 gap-3"><DetailItem label="Farm" value={device?.farmName} /><DetailItem label="Địa chỉ MAC" value={device?.macAddress} /><DetailItem label="Last seen" value={formatDateTime(device?.lastSeenAt)} /><DetailItem label="Ngày kích hoạt" value={formatDateTime(device?.activatedAt)} /><DetailItem label="Ngày tạo" value={formatDateTime(device?.createdAt)} /><DetailItem label="Cập nhật lần cuối" value={formatDateTime(device?.updatedAt)} /></section>
                     <section className="rounded-xl border border-blue-200 bg-blue-50 p-4"><div className="flex items-center justify-between gap-3"><div><p className="text-xs font-medium uppercase text-blue-700">Latest weight</p><p className="mt-1 text-2xl font-bold text-slate-900">{device?.lastWeightGrams == null ? "Chưa có dữ liệu" : `${Number(device.lastWeightGrams).toLocaleString("vi-VN")} g`}</p><p className="mt-1 text-xs text-blue-700">{formatDateTime(device?.lastWeightAt)}</p></div><button type="button" disabled={actionLoading} onClick={() => onRefreshWeight?.(device.deviceId)} className="inline-flex h-9 items-center gap-2 rounded-lg border border-blue-200 bg-white px-3 text-xs font-semibold text-blue-700 disabled:opacity-50"><RefreshCw size={14} />Làm mới</button></div></section>
-                    <section className="rounded-xl border border-slate-200 bg-white"><div className="flex items-center justify-between border-b border-slate-200 px-4 py-3"><div className="flex items-center gap-2"><History size={16} className="text-[#006948]" /><h3 className="text-sm font-semibold text-slate-900">Nhật ký thiết bị</h3></div>{!auditPage && <button type="button" onClick={loadAudit} disabled={auditLoading} className="text-xs font-semibold text-[#006948]">{auditLoading ? "Đang tải..." : "Xem nhật ký"}</button>}</div>{auditPage && <div className="divide-y divide-slate-100">{auditPage.content?.length ? auditPage.content.map((log) => <div key={log.id} className="px-4 py-3"><div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold text-slate-800">{log.action}</p><span className="text-[11px] text-slate-400">{formatDateTime(log.createdAt)}</span></div><p className="mt-1 text-xs text-slate-600">{log.details || "Không có mô tả"}</p><p className="mt-1 text-[11px] text-slate-400">Thực hiện bởi: {log.actorName || "System"}</p></div>) : <p className="px-4 py-5 text-center text-xs text-slate-500">Chưa có nhật ký.</p>}</div>}</section>
+                    <section className="rounded-xl border border-slate-200 bg-white"><div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3"><div className="flex items-center gap-2"><History size={16} className="text-[#006948]" /><h3 className="text-sm font-semibold text-slate-900">Nhật ký thiết bị</h3></div>{!auditPage ? <button type="button" onClick={() => void loadAudit()} disabled={auditLoading} className="text-xs font-semibold text-[#006948]">{auditLoading ? "Đang tải..." : "Xem nhật ký"}</button> : <SortSelect value={auditSortKey} onChange={handleAuditSortChange} options={[{ value: "createdDesc", label: "Mới nhất trước" }, { value: "createdAsc", label: "Cũ nhất trước" }, { value: "action", label: "Theo thao tác" }]} />}</div>{auditPage && <><div className="divide-y divide-slate-100">{auditPage.content?.length ? auditPage.content.map((log) => <div key={log.id} className="px-4 py-3"><div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold text-slate-800">{log.action}</p><span className="text-[11px] text-slate-400">{formatDateTime(log.createdAt)}</span></div><p className="mt-1 text-xs text-slate-600">{log.details || "Không có mô tả"}</p><p className="mt-1 text-[11px] text-slate-400">Thực hiện bởi: {log.actorName || "System"}</p></div>) : <p className="px-4 py-5 text-center text-xs text-slate-500">Chưa có nhật ký.</p>}</div><Pagination page={auditPage.number} totalPages={auditPage.totalPages} totalElements={auditPage.totalElements} pageSize={auditPage.size} loading={auditLoading} onPageChange={(page) => void loadAudit(page)} /></>}</section>
                 </div>}
                 <footer className="flex justify-end border-t border-slate-200 bg-slate-50 px-5 py-4"><button type="button" onClick={onClose} className="h-9 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700">Đóng</button></footer>
             </aside>

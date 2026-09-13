@@ -37,6 +37,8 @@ export function AdminReportsPage() {
         exporting,
         error,
         changePage,
+        changeSort,
+        sortKey,
         reload,
         exportReport,
     } = useAdminReports();
@@ -84,7 +86,7 @@ export function AdminReportsPage() {
                     <AdminReportFilters filters={filters} farms={farms} loading={loading} onChange={setFilters} onSubmit={() => applyFilters()} onReset={resetFilters} />
                     {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
                     <AdminReportStats summary={transactionReport?.summary} />
-                    <AdminTransactionReportTable report={transactionReport} loading={loading} onPageChange={changePage} />
+                    <AdminTransactionReportTable report={transactionReport} loading={loading} onPageChange={changePage} onSortChange={changeSort} sortKey={sortKey} />
                 </>
             )}
 

@@ -11,6 +11,15 @@ import { useFarmRealtimeRefresh } from "../../../../hooks/useFarmTopic";
 
 const PRODUCT_REALTIME_TOPICS = ["products"];
 
+const PRODUCT_SORTS = {
+    createdDesc: "created,desc",
+    createdAsc: "created,asc",
+    nameAsc: "name,asc",
+    nameDesc: "name,desc",
+    stockAsc: "stock,asc",
+    category: "category,asc",
+};
+
 function getErrorMessage(error, fallbackMessage) {
     return error?.response?.data?.message || error?.message || fallbackMessage;
 }
@@ -21,6 +30,7 @@ export function useOwnerProducts(farmId, initialPage = 0, initialSize = 10) {
 
     const [page, setPage] = useState(initialPage);
     const [size] = useState(initialSize);
+    const [sortKey, setSortKeyState] = useState("createdDesc");
     const [filters, setFilters] = useState({ keyword: "", category: "", status: "" });
 
     const [loading, setLoading] = useState(true);
@@ -39,14 +49,20 @@ export function useOwnerProducts(farmId, initialPage = 0, initialSize = 10) {
             setLoading(true);
             setError("");
 
-            const data = await getOwnerProducts(farmId, page, size, filters);
+            const data = await getOwnerProducts(
+                farmId,
+                page,
+                size,
+                filters,
+                PRODUCT_SORTS[sortKey] || PRODUCT_SORTS.createdDesc,
+            );
             setProductPage(data);
         } catch (err) {
             setError(getErrorMessage(err, "Không thể tải danh sách sản phẩm."));
         } finally {
             setLoading(false);
         }
-    }, [farmId, page, size, filters]);
+    }, [farmId, page, size, filters, sortKey]);
 
     async function createProduct(payload) {
         if (!farmId) return null;
@@ -129,7 +145,7 @@ export function useOwnerProducts(farmId, initialPage = 0, initialSize = 10) {
 
     const summary = useMemo(() => {
         return {
-            totalProducts: productPage?.totalElements ?? products.length,
+            totalProducts: productPage?.totalElements ?? 0,
             feed: products.filter((item) => item.category === "FEED").length,
             medicine: products.filter((item) => item.category === "MEDICINE").length,
             chemical: products.filter((item) => item.category === "CHEMICAL").length,
@@ -140,6 +156,11 @@ export function useOwnerProducts(farmId, initialPage = 0, initialSize = 10) {
 
     function handleSetPage(nextPage) {
         setPage(Math.max(Number(nextPage) || 0, 0));
+    }
+
+    function setSortKey(nextSortKey) {
+        setSortKeyState(nextSortKey);
+        setPage(0);
     }
 
     return {
@@ -167,6 +188,8 @@ export function useOwnerProducts(farmId, initialPage = 0, initialSize = 10) {
         actionSuccess,
 
         setPage: handleSetPage,
+        sortKey,
+        setSortKey,
         filters,
         setFilters,
         reload: loadProducts,

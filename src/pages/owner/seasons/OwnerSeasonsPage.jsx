@@ -81,14 +81,20 @@ export function OwnerSeasonsPage() {
         materialUsagePageInfo,
         materialUsageLoading,
         setMaterialUsagePage,
+        materialUsageSortKey,
+        setMaterialUsageSortKey,
         harvests,
         harvestPageInfo,
         harvestLoading,
         setHarvestPage,
+        harvestSortKey,
+        setHarvestSortKey,
         otherCosts,
         otherCostPageInfo,
         otherCostLoading,
         setOtherCostPage,
+        otherCostSortKey,
+        setOtherCostSortKey,
         createOtherCost,
         updateOtherCost,
         deleteOtherCost,
@@ -102,6 +108,8 @@ export function OwnerSeasonsPage() {
         actionSuccess,
         reload,
         setPage,
+        sortKey,
+        setSortKey,
         loadDetail,
         createSeason,
         updateSeason,
@@ -184,6 +192,8 @@ export function OwnerSeasonsPage() {
                         loading={tableLoading}
                         loadingDetailId={loadingDetailId}
                         onPageChange={setPage}
+                        sortKey={sortKey}
+                        onSortChange={setSortKey}
                         onViewDetail={handleOpenDetail}
                     />
                 </main>
@@ -210,14 +220,20 @@ export function OwnerSeasonsPage() {
                 onMaterialUsagePageChange={
                     setMaterialUsagePage
                 }
+                materialUsageSortKey={materialUsageSortKey}
+                onMaterialUsageSortChange={setMaterialUsageSortKey}
                 harvests={harvests}
                 harvestPageInfo={harvestPageInfo}
                 harvestLoading={harvestLoading}
                 onHarvestPageChange={setHarvestPage}
+                harvestSortKey={harvestSortKey}
+                onHarvestSortChange={setHarvestSortKey}
                 otherCosts={otherCosts}
                 otherCostPageInfo={otherCostPageInfo}
                 otherCostLoading={otherCostLoading}
                 onOtherCostPageChange={setOtherCostPage}
+                otherCostSortKey={otherCostSortKey}
+                onOtherCostSortChange={setOtherCostSortKey}
                 createOtherCost={createOtherCost}
                 updateOtherCost={updateOtherCost}
                 deleteOtherCost={deleteOtherCost}

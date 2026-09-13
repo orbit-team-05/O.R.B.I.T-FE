@@ -34,7 +34,20 @@ import {
     updateStaff,
     uploadStaffAvatar,
 } from "../../../features/owner/services/ownerStaffApi";
-import { sortItems } from "../../../utils/listSort";
+
+const STAFF_SORTS = {
+    createdDesc: "created,desc",
+    nameAsc: "name,asc",
+    nameDesc: "name,desc",
+    lastLoginDesc: "lastLogin,desc",
+    status: "status,asc",
+};
+
+const AUDIT_SORTS = {
+    createdDesc: "created,desc",
+    createdAsc: "created,asc",
+    action: "action,asc",
+};
 
 const EMPTY_FORM = {
     username: "",
@@ -133,6 +146,7 @@ export function OwnerStaffPage() {
     const [roleFilter, setRoleFilter] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
     const [page, setPage] = useState(0);
+    const [sortKey, setSortKeyState] = useState("createdDesc");
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
 
@@ -141,6 +155,9 @@ export function OwnerStaffPage() {
     const [detailLoading, setDetailLoading] = useState(false);
     const [detailTab, setDetailTab] = useState("overview");
     const [auditLogs, setAuditLogs] = useState([]);
+    const [auditPage, setAuditPage] = useState(0);
+    const [auditPageInfo, setAuditPageInfo] = useState({ totalPages: 0, totalElements: 0, size: 10 });
+    const [auditSortKey, setAuditSortKey] = useState("createdDesc");
     const [auditLoading, setAuditLoading] = useState(false);
     const [formData, setFormData] = useState(EMPTY_FORM);
     const [submitting, setSubmitting] = useState(false);
@@ -157,6 +174,7 @@ export function OwnerStaffPage() {
                 keyword,
                 role: roleFilter,
                 status: statusFilter,
+                sort: STAFF_SORTS[sortKey] || STAFF_SORTS.createdDesc,
             });
             setStaffs(data?.content || []);
             setTotalPages(data?.totalPages || 0);
@@ -166,7 +184,7 @@ export function OwnerStaffPage() {
         } finally {
             setLoading(false);
         }
-    }, [keyword, page, roleFilter, statusFilter, toast]);
+    }, [keyword, page, roleFilter, statusFilter, sortKey, toast]);
 
     useEffect(() => {
         // This effect synchronizes the page with server-side filters and pagination.
@@ -178,6 +196,9 @@ export function OwnerStaffPage() {
         setSelectedStaff(staff);
         setPanel("detail");
         setDetailTab("overview");
+        setAuditPage(0);
+        setAuditSortKey("createdDesc");
+        setAuditPageInfo({ totalPages: 0, totalElements: 0, size: 10 });
         setDetailLoading(true);
         try {
             const detail = await getStaff(staff.id);
@@ -196,9 +217,21 @@ export function OwnerStaffPage() {
         // Loading state belongs to the lazy audit request lifecycle.
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setAuditLoading(true);
-        getStaffAuditLogs(selectedStaff.id)
+        getStaffAuditLogs(selectedStaff.id, {
+            page: auditPage,
+            size: 10,
+            sort: AUDIT_SORTS[auditSortKey] || AUDIT_SORTS.createdDesc,
+        })
             .then((data) => {
-                if (mounted) setAuditLogs(data?.content || []);
+                if (mounted) {
+                    setAuditLogs(data?.content || []);
+                    setAuditPageInfo({
+                        number: data?.number ?? auditPage,
+                        size: data?.size ?? 10,
+                        totalPages: data?.totalPages ?? 0,
+                        totalElements: data?.totalElements ?? 0,
+                    });
+                }
             })
             .catch((error) => {
                 if (mounted) toast.error(getErrorMessage(error, "Không thể tải lịch sử thay đổi."));
@@ -208,7 +241,12 @@ export function OwnerStaffPage() {
         return () => {
             mounted = false;
         };
-    }, [detailTab, panel, selectedStaff?.id, toast]);
+    }, [auditPage, auditSortKey, detailTab, panel, selectedStaff?.id, toast]);
+
+    function handleAuditSortChange(nextSortKey) {
+        setAuditSortKey(nextSortKey);
+        setAuditPage(0);
+    }
 
     const roleOptions = useMemo(() => (
         isOwner
@@ -219,14 +257,10 @@ export function OwnerStaffPage() {
             : [{ value: "STAFF", label: "Nhân viên" }]
     ), [isOwner]);
 
-    const [sortKey, setSortKey] = useState("createdDesc");
-    const sortedStaffs = useMemo(() => sortItems(staffs, sortKey, {
-        nameAsc: { value: (item) => item.fullName || item.username, direction: "asc" },
-        nameDesc: { value: (item) => item.fullName || item.username, direction: "desc" },
-        createdDesc: { value: (item) => new Date(item.createdAt || 0).getTime(), direction: "desc" },
-        lastLoginDesc: { value: (item) => new Date(item.lastLoginAt || 0).getTime(), direction: "desc" },
-        status: { value: (item) => item.status, direction: "asc" },
-    }), [staffs, sortKey]);
+    function setSortKey(nextSortKey) {
+        setSortKeyState(nextSortKey);
+        setPage(0);
+    }
 
     function openCreate() {
         setFormData({ ...EMPTY_FORM, role: roleOptions[0].value });
@@ -442,7 +476,7 @@ export function OwnerStaffPage() {
                                         <p className="mt-1 text-sm text-slate-400">Thử thay đổi bộ lọc hoặc tạo tài khoản mới.</p>
                                     </td>
                                 </tr>
-                            ) : sortedStaffs.map((staff) => (
+                            ) : staffs.map((staff) => (
                                 <tr key={staff.id} className="cursor-pointer transition hover:bg-slate-50" onClick={() => loadDetail(staff)}>
                                     <td className="px-5 py-4">
                                         <div className="flex items-center gap-3">
@@ -483,7 +517,6 @@ export function OwnerStaffPage() {
                     totalPages={totalPages}
                     totalElements={totalElements}
                     pageSize={10}
-                    itemCount={staffs.length}
                     loading={loading}
                     onPageChange={setPage}
                 />
@@ -556,6 +589,14 @@ export function OwnerStaffPage() {
                                         </div>
                                     ) : (
                                         <section>
+                                            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                                                <p className="text-xs text-slate-500">{auditPageInfo.totalElements} bản ghi thay đổi</p>
+                                                <SortSelect value={auditSortKey} onChange={handleAuditSortChange} options={[
+                                                    { value: "createdDesc", label: "Mới nhất trước" },
+                                                    { value: "createdAsc", label: "Cũ nhất trước" },
+                                                    { value: "action", label: "Theo thao tác" },
+                                                ]} />
+                                            </div>
                                             {auditLoading ? (
                                                 <div className="space-y-3">{[1, 2, 3].map((item) => <div key={item} className="h-16 animate-pulse rounded-xl bg-slate-100" />)}</div>
                                             ) : auditLogs.length === 0 ? (
@@ -573,6 +614,16 @@ export function OwnerStaffPage() {
                                                         </div>
                                                     ))}
                                                 </div>
+                                            )}
+                                            {!auditLoading && auditLogs.length > 0 && (
+                                                <Pagination
+                                                    page={auditPageInfo.number ?? auditPage}
+                                                    totalPages={auditPageInfo.totalPages}
+                                                    totalElements={auditPageInfo.totalElements}
+                                                    pageSize={auditPageInfo.size}
+                                                    loading={auditLoading}
+                                                    onPageChange={setAuditPage}
+                                                />
                                             )}
                                         </section>
                                     )}
