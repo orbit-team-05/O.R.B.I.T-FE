@@ -50,10 +50,9 @@ export async function getOwnerFarmTransactionReport(farmId, filters) {
 }
 
 export async function exportOwnerFarmTransactionReport(farmId, filters) {
-    const response = await httpClient.get(`/owner/reports/${farmId}/transactions/export`, {
+    return httpClient.get(`/owner/reports/${farmId}/transactions/export`, {
         params: { sort: "createdAt,desc", ...filters },
         responseType: "blob",
-        headers: { Accept: "application/pdf" },
+        headers: { Accept: "application/pdf, application/json" },
     });
-    return response.data;
 }

@@ -46,15 +46,23 @@ export function OwnerReportsPage() {
     async function handleExport() {
         try {
             setExporting(true);
-            const blob = await exportOwnerFarmTransactionReport(farmId, filters);
+            setError("");
+            const response = await exportOwnerFarmTransactionReport(farmId, filters);
+            const blob = response.data || response;
+            const disposition = response.headers?.["content-disposition"] || "";
+            const fileNameMatch = disposition.match(/filename\*=UTF-8'([^;]+)|filename="?([^;"]+)"?/i);
+            const fileName = decodeURIComponent(fileNameMatch?.[1] || fileNameMatch?.[2] || `orbit-farm-report-${filters.from}-to-${filters.to}.pdf`);
+
             const url = URL.createObjectURL(blob);
             const anchor = document.createElement("a");
             anchor.href = url;
-            anchor.download = `orbit-farm-report-${filters.from}-to-${filters.to}.pdf`;
+            anchor.download = fileName;
+            document.body.appendChild(anchor);
             anchor.click();
+            anchor.remove();
             URL.revokeObjectURL(url);
         } catch (err) {
-            setError(err?.response?.data?.message || "Không thể xuất file PDF.");
+            setError(err?.response?.data?.message || err?.message || "Không thể xuất file PDF.");
         } finally {
             setExporting(false);
         }

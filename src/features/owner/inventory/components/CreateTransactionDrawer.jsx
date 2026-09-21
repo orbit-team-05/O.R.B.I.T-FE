@@ -280,7 +280,7 @@ export function CreateTransactionDrawer({ open, onClose, onSuccess, warehouseTyp
 
                         <div>
                             <label className="mb-1.5 flex justify-between text-sm font-medium text-slate-700">
-                                <span>Số lượng / Khối lượng {selectedProduct ? `(${selectedProduct.storageUnit})` : ""} <span className="text-red-500">*</span></span>
+                                <span>Số lượng / Khối lượng {selectedProduct ? `(${selectedProduct.storageUnit === "PIECE" ? "cái" : selectedProduct.storageUnit === "MILLILITER" ? "lít/ml" : "kg"})` : ""} <span className="text-red-500">*</span></span>
                                 <button type="button" onClick={fetchWeightFromDevice} className="text-[#006948] hover:underline flex items-center gap-1">
                                     <Weight size={14} /> Lấy từ cân
                                 </button>

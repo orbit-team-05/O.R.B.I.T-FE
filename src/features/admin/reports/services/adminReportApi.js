@@ -28,7 +28,7 @@ export async function exportAdminTransactionReport(filters) {
     return httpClient.get(`${REPORT_ENDPOINT}/transactions/export`, {
         params: toParams(filters),
         responseType: "blob",
-        headers: { Accept: "application/pdf" },
+        headers: { Accept: "application/pdf, application/json" },
     });
 }
 
@@ -40,7 +40,7 @@ export async function getAdminSystemReport() {
 export async function exportAdminSystemReport() {
     return httpClient.get(`${REPORT_ENDPOINT}/system-summary/export`, {
         responseType: "blob",
-        headers: { Accept: "application/pdf" },
+        headers: { Accept: "application/pdf, application/json" },
     });
 }
 

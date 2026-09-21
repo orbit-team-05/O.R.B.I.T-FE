@@ -19,8 +19,11 @@ function formatDate(value) {
     return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString("vi-VN");
 }
 
-function formatKg(value) {
-    return `${formatNumber(Number(value || 0) / 1000)} kg`;
+function formatStockQuantity(value, storageUnit) {
+    const num = Number(value || 0);
+    if (storageUnit === "PIECE") return `${formatNumber(num)} cái`;
+    if (storageUnit === "MILLILITER") return num >= 1000 ? `${formatNumber(num / 1000)} lít` : `${formatNumber(num)} ml`;
+    return `${formatNumber(num / 1000)} kg`;
 }
 
 function getEnumLabel(value) {
@@ -107,7 +110,7 @@ function StockTable({ stocks }) {
         lowStock: { value: (item) => item.lowStock ? 0 : 1, direction: "asc" },
     }), [sortKey, stocks]);
     if (!stocks.length) return <EmptySection>Kho chưa có dữ liệu tồn.</EmptySection>;
-    return <div className="space-y-3"><div className="flex justify-end"><SortSelect value={sortKey} onChange={setSortKey} options={[{ value: "nameAsc", label: "Sản phẩm A → Z" }, { value: "quantityDesc", label: "Tồn thực tế giảm dần" }, { value: "projectedDesc", label: "Tồn dự kiến giảm dần" }, { value: "lowStock", label: "Ưu tiên sắp hết" }]} /></div><div className="overflow-x-auto"><table className="w-full min-w-[560px] text-left text-sm"><thead className="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-400"><tr><th className="pb-3 font-medium">Sản phẩm</th><th className="pb-3 font-medium">Tồn thực tế</th><th className="pb-3 font-medium">Tồn dự kiến</th><th className="pb-3 text-right font-medium">Trạng thái</th></tr></thead><tbody className="divide-y divide-slate-100">{sortedStocks.map((stock) => <tr key={stock.stockId || stock.productId}><td className="py-3"><p className="font-medium text-slate-800">{stock.productName || "Sản phẩm"}</p><p className="mt-1 text-xs text-slate-500">{getEnumLabel(stock.storageUnit)}</p></td><td className="py-3 font-medium text-slate-700">{formatKg(stock.quantityGrams)}</td><td className="py-3 font-medium text-[#006948]">{formatKg(stock.projectedQuantityGrams)}</td><td className="py-3 text-right">{stock.lowStock ? <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">Sắp hết</span> : <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">Ổn định</span>}</td></tr>)}</tbody></table></div></div>;
+    return <div className="space-y-3"><div className="flex justify-end"><SortSelect value={sortKey} onChange={setSortKey} options={[{ value: "nameAsc", label: "Sản phẩm A → Z" }, { value: "quantityDesc", label: "Tồn thực tế giảm dần" }, { value: "projectedDesc", label: "Tồn dự kiến giảm dần" }, { value: "lowStock", label: "Ưu tiên sắp hết" }]} /></div><div className="overflow-x-auto"><table className="w-full min-w-[560px] text-left text-sm"><thead className="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-400"><tr><th className="pb-3 font-medium">Sản phẩm</th><th className="pb-3 font-medium">Tồn thực tế</th><th className="pb-3 font-medium">Tồn dự kiến</th><th className="pb-3 text-right font-medium">Trạng thái</th></tr></thead><tbody className="divide-y divide-slate-100">{sortedStocks.map((stock) => <tr key={stock.stockId || stock.productId}><td className="py-3"><p className="font-medium text-slate-800">{stock.productName || "Sản phẩm"}</p><p className="mt-1 text-xs text-slate-500">{getEnumLabel(stock.storageUnit)}</p></td><td className="py-3 font-medium text-slate-700">{formatStockQuantity(stock.quantityGrams, stock.storageUnit)}</td><td className="py-3 font-medium text-[#006948]">{formatStockQuantity(stock.projectedQuantityGrams, stock.storageUnit)}</td><td className="py-3 text-right">{stock.lowStock ? <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">Sắp hết</span> : <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">Ổn định</span>}</td></tr>)}</tbody></table></div></div>;
 }
 
 function DataSkeleton() {

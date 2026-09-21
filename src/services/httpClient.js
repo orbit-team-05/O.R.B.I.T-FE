@@ -21,7 +21,7 @@ export const httpClient = axios.create({
     headers: {
         "Content-Type": "application/json",
     },
-    timeout: 15000,
+    timeout: 30000,
     withCredentials: true,
 });
 
@@ -78,6 +78,16 @@ httpClient.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config || {};
 
+        // If response is a Blob containing JSON error from server, parse it to an object
+        if (error?.response?.data instanceof Blob) {
+            try {
+                const text = await error.response.data.text();
+                error.response.data = JSON.parse(text);
+            } catch {
+                // If not valid JSON, leave as is
+            }
+        }
+
         if (error?.response?.status === 401) {
             const serverMsg = error.response.data?.message;
             const isAuthEndpoint = originalRequest.url?.includes("/auth/login")
@@ -99,7 +109,9 @@ httpClient.interceptors.response.use(
             }
 
             if (originalRequest._skipAuthRefresh || originalRequest._retry) {
-                forceLogout("session_expired");
+                if (["AUTH_SESSION_REVOKED", "AUTH_SESSION_EXPIRED", "AUTH_REFRESH_REUSED"].includes(serverMsg)) {
+                    forceLogout("session_expired");
+                }
                 return Promise.reject(error);
             }
 
@@ -135,9 +147,11 @@ httpClient.interceptors.response.use(
         if (!error.response) {
             error.message = "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng hoặc thử lại sau.";
         } else if (error.response.status >= 500) {
-            error.message = "Hệ thống đang gặp sự cố, vui lòng thử lại sau.";
+            error.message = error.response.data?.message || "Hệ thống đang gặp sự cố, vui lòng thử lại sau.";
         } else if (error.response.status === 404) {
-            error.message = "Không tìm thấy dữ liệu yêu cầu hoặc đường dẫn không hợp lệ.";
+            error.message = error.response.data?.message || "Không tìm thấy dữ liệu yêu cầu hoặc đường dẫn không hợp lệ.";
+        } else if (error.response.data?.message) {
+            error.message = error.response.data.message;
         }
 
         return Promise.reject(error);

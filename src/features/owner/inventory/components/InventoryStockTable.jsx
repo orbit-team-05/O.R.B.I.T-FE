@@ -21,6 +21,10 @@ function formatDateTime(value) {
 function formatQuantity(value, storageUnit) {
     const numberValue = Number(value || 0);
 
+    if (storageUnit === "PIECE") {
+        return `${numberValue.toLocaleString("vi-VN")} cái`;
+    }
+
     if (storageUnit === "MILLILITER") {
         if (numberValue >= 1000) {
             return `${(numberValue / 1000).toLocaleString("vi-VN")} lít`;
