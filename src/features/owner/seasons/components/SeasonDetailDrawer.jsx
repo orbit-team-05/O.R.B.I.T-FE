@@ -1001,7 +1001,11 @@ export function SeasonDetailDrawer({
                                         <div className="col-span-2 border-t border-slate-100 pt-3">
                                             <span className="text-xs text-slate-500">Tổng chi phí:</span>
                                             <p className="mt-0.5 text-base font-bold text-red-600">
-                                                {formatCurrency(season.totalCost)}
+                                                {formatCurrency(
+                                                    season.totalCost != null
+                                                        ? season.totalCost
+                                                        : (Number(season.initialCapitalCost || 0) + Number(season.consumedMaterialCost || 0) + Number(season.otherCost || 0))
+                                                )}
                                             </p>
                                         </div>
 
