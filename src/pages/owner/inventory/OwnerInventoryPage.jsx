@@ -51,7 +51,7 @@ export function OwnerInventoryPage() {
         : [
             { id: "", label: "Tất cả vật tư" },
             { id: "FEED", label: "Thức ăn (Cám)" },
-            { id: "MEDICINE", label: "Thuốc thú y" },
+            { id: "MEDICINE", label: "Thuốc thủy sản" },
             { id: "CHEMICAL", label: "Hóa chất" },
             { id: "MATERIAL", label: "Vật tư khác" },
         ];

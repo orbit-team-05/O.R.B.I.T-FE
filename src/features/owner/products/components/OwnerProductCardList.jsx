@@ -4,7 +4,7 @@ import { SortSelect } from "../../../../components/common/sort/SortSelect";
 
 const CATEGORY_LABELS = {
     FEED: "Thức ăn",
-    MEDICINE: "Thuốc thú y",
+    MEDICINE: "Thuốc thủy sản",
     CHEMICAL: "Hóa chất",
     MATERIAL: "Vật tư khác",
     HARVEST_PRODUCT: "Sản phẩm thu hoạch",

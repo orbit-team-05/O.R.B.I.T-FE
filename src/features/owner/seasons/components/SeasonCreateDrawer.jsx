@@ -9,6 +9,8 @@ const INITIAL_FORM = {
     initialCapitalCost: "",
     expectedYieldKg: "",
     expectedPricePerKg: "",
+    stockingQuantity: "",
+    sizeCategory: "",
     imageFile: null,
 };
 
@@ -119,6 +121,9 @@ export function SeasonCreateDrawer({
         if (form.expectedPricePerKg !== "" && Number(form.expectedPricePerKg) <= 0) {
             tempErrors.expectedPricePerKg = "Giá bán dự kiến phải lớn hơn 0";
         }
+        if (form.stockingQuantity !== "" && Number(form.stockingQuantity) <= 0) {
+            tempErrors.stockingQuantity = "Số lượng con giống phải lớn hơn 0";
+        }
 
         setErrors(tempErrors);
         return Object.keys(tempErrors).length === 0;
@@ -136,6 +141,8 @@ export function SeasonCreateDrawer({
             initialCapitalCost: Number(form.initialCapitalCost),
             expectedYieldKg: form.expectedYieldKg === "" ? null : Number(form.expectedYieldKg),
             expectedPricePerKg: form.expectedPricePerKg === "" ? null : Number(form.expectedPricePerKg),
+            stockingQuantity: form.stockingQuantity === "" ? null : Number(form.stockingQuantity),
+            sizeCategory: form.sizeCategory.trim() || null,
         }, form.imageFile);
     }
 
@@ -196,6 +203,26 @@ export function SeasonCreateDrawer({
                                     onChange={(value) => updateField("expectedPricePerKg", value)}
                                     className={inputClass(!!errors.expectedPricePerKg)}
                                     placeholder="Ví dụ: 85000"
+                                />
+                            </Field>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <Field label="Số lượng con giống (con) — tùy chọn" error={errors.stockingQuantity} helper="Số lượng giống thả ban đầu.">
+                                <NumberInput
+                                    min="0"
+                                    value={form.stockingQuantity}
+                                    onChange={(value) => updateField("stockingQuantity", value)}
+                                    className={inputClass(!!errors.stockingQuantity)}
+                                    placeholder="Ví dụ: 200000"
+                                />
+                            </Field>
+                            <Field label="Size tôm mục tiêu — tùy chọn" error={errors.sizeCategory} helper="Cỡ tôm mong muốn khi thu hoạch.">
+                                <input
+                                    value={form.sizeCategory}
+                                    onChange={(e) => updateField("sizeCategory", e.target.value)}
+                                    className={inputClass(!!errors.sizeCategory)}
+                                    placeholder="Ví dụ: 40 con/kg"
                                 />
                             </Field>
                         </div>

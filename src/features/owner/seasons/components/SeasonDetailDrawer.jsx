@@ -445,6 +445,7 @@ export function SeasonDetailDrawer({
         expectedPricePerKg: "",
         harvestPricePerKg: "",
         sizeCategory: "",
+        stockingQuantity: "",
         imageFile: null,
     });
     const localImageUrl = useMemo(
@@ -492,6 +493,7 @@ export function SeasonDetailDrawer({
                 expectedPricePerKg: season.expectedPricePerKg != null ? String(season.expectedPricePerKg) : "",
                 harvestPricePerKg: season.harvestPricePerKg != null ? String(season.harvestPricePerKg) : "",
                 sizeCategory: season.sizeCategory || "",
+                stockingQuantity: season.stockingQuantity != null ? String(season.stockingQuantity) : "",
                 imageFile: null,
             });
             setHarvestPriceDialog({
@@ -566,6 +568,7 @@ export function SeasonDetailDrawer({
             expectedPricePerKg: form.expectedPricePerKg ? Number(form.expectedPricePerKg) : undefined,
             harvestPricePerKg: form.harvestPricePerKg ? Number(form.harvestPricePerKg) : undefined,
             sizeCategory: form.sizeCategory.trim(),
+            stockingQuantity: form.stockingQuantity ? Number(form.stockingQuantity) : undefined,
         }, form.imageFile).then((res) => {
             if (res) {
                 setIsEditing(false);
@@ -916,6 +919,27 @@ export function SeasonDetailDrawer({
                                         />
                                         {fieldErrors.expectedPricePerKg && <p className="mt-1 text-xs text-red-500">{fieldErrors.expectedPricePerKg}</p>}
                                     </div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-500">Số lượng giống thả (con)</label>
+                                        <NumberInput
+                                            value={form.stockingQuantity}
+                                            onChange={(val) => setForm({ ...form, stockingQuantity: val })}
+                                            disabled={isFieldDisabled("stockingQuantity")}
+                                            className={`${inputClass(isFieldDisabled("stockingQuantity"))} ${fieldErrors.stockingQuantity ? "!border-red-400 !ring-red-100" : ""}`}
+                                            placeholder="Ví dụ: 200000"
+                                        />
+                                        {fieldErrors.stockingQuantity && <p className="mt-1 text-xs text-red-500">{fieldErrors.stockingQuantity}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-500">Size tôm mục tiêu</label>
+                                        <input
+                                            value={form.sizeCategory}
+                                            onChange={(e) => setForm({ ...form, sizeCategory: e.target.value })}
+                                            disabled={isFieldDisabled("sizeCategory")}
+                                            className={`${inputClass(isFieldDisabled("sizeCategory"))} ${fieldErrors.sizeCategory ? "!border-red-400 !ring-red-100" : ""}`}
+                                            placeholder="Ví dụ: 40 con/kg"
+                                        />
+                                    </div>
                                     {season.endDate && (
                                         <div className="col-span-2">
                                             <label className="text-xs font-semibold text-slate-500">Ngày kết thúc thực tế</label>
@@ -1022,6 +1046,15 @@ export function SeasonDetailDrawer({
                                                 <p className="mt-0.5 text-sm font-semibold text-blue-700">
                                                     {season.harvestPricePerKg != null
                                                         ? `${formatCurrency(season.harvestPricePerKg)} / kg`
+                                                        : "Chưa có"}
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <span className="text-xs text-slate-500">Số lượng giống thả:</span>
+                                                <p className="mt-0.5 text-sm font-semibold text-slate-800">
+                                                    {season.stockingQuantity != null
+                                                        ? `${formatNumber(season.stockingQuantity)} con`
                                                         : "Chưa có"}
                                                 </p>
                                             </div>

@@ -119,7 +119,7 @@ export function InventoryStockTable({
 
                                         <td className="overflow-hidden px-2 py-3">
                                             <span className="truncate rounded bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600" title={item.category}>
-                                                {{ FEED: 'Thức ăn', MEDICINE: 'Thuốc thú y', CHEMICAL: 'Hóa chất', MATERIAL: 'Vật tư khác' }[item.category] || item.category}
+                                                {{ FEED: 'Thức ăn', MEDICINE: 'Thuốc thủy sản', CHEMICAL: 'Hóa chất', MATERIAL: 'Vật tư khác' }[item.category] || item.category}
                                             </span>
                                         </td>
 
