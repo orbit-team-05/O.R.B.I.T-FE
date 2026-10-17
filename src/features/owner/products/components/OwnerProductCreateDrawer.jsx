@@ -154,7 +154,8 @@ export function OwnerProductCreateDrawer({
                                                 window.alert("Ảnh sản phẩm không được vượt quá 20MB.");
                                                 return;
                                             }
-                                            if (!file.type.match(/^image\/(jpeg|png|webp)$/)) {
+                                            const isImage = file.type ? /^image\/(jpeg|jpg|png|webp|pjpeg)$/i.test(file.type) : /\.(jpe?g|png|webp)$/i.test(file.name);
+                                            if (!isImage) {
                                                 window.alert("Chỉ hỗ trợ ảnh JPG, PNG hoặc WebP.");
                                                 return;
                                             }

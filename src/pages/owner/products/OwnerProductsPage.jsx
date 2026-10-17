@@ -104,6 +104,7 @@ export function OwnerProductsPage() {
         setFilters,
 
         createProduct,
+        uploadProductImage,
         clearActionMessages,
         saveProduct,
         changeProductStatus,
@@ -150,13 +151,20 @@ export function OwnerProductsPage() {
     }
 
     async function handleCreateProduct(payload, imageFile) {
-        const result = await createProduct(payload);
+        let imageUrl = null;
+        if (imageFile) {
+            imageUrl = await uploadProductImage(imageFile);
+            if (!imageUrl) {
+                return;
+            }
+        }
+
+        const result = await createProduct({
+            ...payload,
+            ...(imageUrl ? { imageUrl } : {}),
+        });
 
         if (result) {
-            if (imageFile) {
-                const updatedProduct = await uploadImageForProduct(result.id, imageFile);
-                if (updatedProduct) setCreatedProduct(updatedProduct);
-            }
             setCreateOpen(false);
         }
     }
@@ -238,9 +246,23 @@ export function OwnerProductsPage() {
             <OwnerProductDetailDrawer
                 open={Boolean(createdProduct)}
                 product={createdProduct}
-                onClose={() =>
-                    setCreatedProduct(null)
-                }
+                onClose={() => setCreatedProduct(null)}
+                submitting={submitting}
+                onSave={async (productId, payload) => {
+                    const result = await saveProduct(productId, payload);
+                    if (result) setCreatedProduct(result);
+                    return result;
+                }}
+                onStatusChange={async (productId, status) => {
+                    const result = await changeProductStatus(productId, status);
+                    if (result) setCreatedProduct(result);
+                    return result;
+                }}
+                onUploadImage={async (productId, file) => {
+                    const result = await uploadImageForProduct(productId, file);
+                    if (result) setCreatedProduct(result);
+                    return result;
+                }}
             />
 
             <OwnerProductDetailDrawer

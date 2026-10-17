@@ -91,10 +91,14 @@ export function useOwnerProducts(farmId, initialPage = 0, initialSize = 10) {
     async function uploadProductImage(file) {
         if (!farmId || !file) return null;
         try {
+            setSubmitting(true);
+            setActionError("");
             return await uploadOwnerProductImage(farmId, file);
         } catch (err) {
-            setActionError(getErrorMessage(err, "Không thể tải lên ảnh nền."));
+            setActionError(getErrorMessage(err, "Không thể tải lên ảnh sản phẩm."));
             return null;
+        } finally {
+            setSubmitting(false);
         }
     }
 

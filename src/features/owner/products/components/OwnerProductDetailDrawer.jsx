@@ -42,8 +42,8 @@ export function OwnerProductDetailDrawer({ open, product, onClose, onSave, onSta
     async function handleImageChange(event) {
         const file = event.target.files[0];
         if (!file) return;
-        if (file.size > 20 * 1024 * 1024) return window.alert("Ảnh sản phẩm không được vượt quá 20MB.");
-        if (!file.type.match(/^image\/(jpeg|png|webp)$/)) return window.alert("Chỉ hỗ trợ ảnh JPG, PNG hoặc WebP.");
+        const isImage = file.type ? /^image\/(jpeg|jpg|png|webp|pjpeg)$/i.test(file.type) : /\.(jpe?g|png|webp)$/i.test(file.name);
+        if (!isImage) return window.alert("Chỉ hỗ trợ ảnh JPG, PNG hoặc WebP.");
         setImageFile(file);
         const uploaded = await onUploadImage?.(product.id, file);
         if (uploaded) setImageFile(null);
