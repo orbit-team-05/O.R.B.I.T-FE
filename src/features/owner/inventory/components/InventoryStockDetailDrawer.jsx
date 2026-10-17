@@ -18,6 +18,13 @@ function formatDateTime(value) {
     }).format(new Date(value));
 }
 
+const STORAGE_UNIT_LABELS = {
+    KILOGRAM: "Kilogram (kg)",
+    GRAM: "Gram (g)",
+    MILLILITER: "Mililit (ml)",
+    PIECE: "Cái / Kiện",
+};
+
 function formatQuantity(value, storageUnit) {
     const numberValue = Number(value || 0);
 
@@ -31,6 +38,10 @@ function formatQuantity(value, storageUnit) {
         }
 
         return `${numberValue.toLocaleString("vi-VN")} ml`;
+    }
+
+    if (storageUnit === "KILOGRAM") {
+        return `${(numberValue / 1000).toLocaleString("vi-VN")} kg`;
     }
 
     if (numberValue >= 1000) {
@@ -137,7 +148,7 @@ export function InventoryStockDetailDrawer({
                             <DetailItem label="Sản phẩm" value={stock?.productName} />
                             <DetailItem label="Mã sản phẩm" value={stock?.productCode} />
                             <DetailItem label="Loại" value={stock?.category} />
-                            <DetailItem label="Đơn vị" value={stock?.storageUnit} />
+                            <DetailItem label="Đơn vị" value={STORAGE_UNIT_LABELS[stock?.storageUnit] ?? stock?.storageUnit} />
                             <DetailItem
                                 label="Tồn kho"
                                 value={formatQuantity(stock?.quantityGrams, stock?.storageUnit)}

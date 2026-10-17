@@ -10,6 +10,7 @@ const PRODUCT_CATEGORIES = [
 ];
 
 const STORAGE_UNITS = [
+    { value: "KILOGRAM", label: "Kilogram (kg)" },
     { value: "GRAM", label: "Gram (g)" },
     { value: "MILLILITER", label: "Mililit (ml)" },
     { value: "PIECE", label: "Cái / Bao / Chai / Lọ" },
@@ -213,7 +214,7 @@ export function OwnerProductCreateDrawer({
 
                             <Field
                                 label="Đơn vị lưu kho"
-                                helper="Hệ thống lưu theo g, ml hoặc đếm kiện (Bao/Chai)."
+                                helper="Hệ thống lưu theo kg, g, ml hoặc đếm kiện (Bao/Chai)."
                             >
                                 <select
                                     value={form.storageUnit}
@@ -245,7 +246,7 @@ export function OwnerProductCreateDrawer({
 
                         <Field
                             label="Tồn kho tối thiểu"
-                            helper="Nhập theo đơn vị đã chọn ở trên."
+                            helper="Nhập theo đơn vị đã chọn ở trên (VD: 50 kg hoặc 10 bao)."
                         >
                             <input
                                 type="number"
@@ -253,7 +254,7 @@ export function OwnerProductCreateDrawer({
                                 value={form.minimumStockQuantity}
                                 onChange={(event) => updateField("minimumStockQuantity", event.target.value)}
                                 className={inputClass()}
-                                placeholder="Ví dụ: 1000"
+                                placeholder="Ví dụ: 50"
                                 required
                             />
                         </Field>

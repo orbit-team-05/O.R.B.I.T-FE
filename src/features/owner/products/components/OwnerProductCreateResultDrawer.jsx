@@ -1,5 +1,12 @@
 import { Download, ExternalLink, X } from "lucide-react";
 
+const STORAGE_UNIT_LABELS = {
+    KILOGRAM: "Kilogram (kg)",
+    GRAM: "Gram (g)",
+    MILLILITER: "Mililit (ml)",
+    PIECE: "Cái / Bao / Chai / Lọ",
+};
+
 function formatNumber(value) {
     if (value == null) return "0";
     return Number(value).toLocaleString("vi-VN");
@@ -137,7 +144,10 @@ export function OwnerProductCreateResultDrawer({
                         <InfoItem label="Mã sản phẩm" value={result.productCode} />
                         <InfoItem label="Tên sản phẩm" value={result.productName} />
                         <InfoItem label="Mã keypad" value={result.keypadCode} />
-                        <InfoItem label="Đơn vị lưu kho" value={result.storageUnit} />
+                        <InfoItem
+                            label="Đơn vị lưu kho"
+                            value={STORAGE_UNIT_LABELS[result.storageUnit] ?? result.storageUnit}
+                        />
                         <InfoItem label="Dạng đóng gói" value={result.packagingType} />
                         <InfoItem label="Kiểu đo" value={result.measureMode} />
                         <InfoItem

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Image, Pencil, Upload, X } from "lucide-react";
 
 const CATEGORY_LABELS = { FEED: "Thức ăn", MEDICINE: "Thuốc", CHEMICAL: "Hóa chất", MATERIAL: "Vật tư", HARVEST_PRODUCT: "Sản phẩm thu hoạch" };
-const STORAGE_UNIT_LABELS = { GRAM: "Gram (g)", MILLILITER: "Mililit (ml)", PIECE: "Cái / Bao / Chai / Lọ" };
+const STORAGE_UNIT_LABELS = { KILOGRAM: "Kilogram (kg)", GRAM: "Gram (g)", MILLILITER: "Mililit (ml)", PIECE: "Cái / Bao / Chai / Lọ" };
 const PACKAGING_LABELS = { LOOSE: "Hàng rời", BAG: "Bao", JAR: "Hũ", BOTTLE: "Chai", CAN: "Can", BOX: "Thùng / Hộp", OTHER: "Khác" };
 const INITIAL_FORM = { productName: "", category: "CHEMICAL", storageUnit: "MILLILITER", packagingType: "BOTTLE", minimumStockQuantity: "" };
 

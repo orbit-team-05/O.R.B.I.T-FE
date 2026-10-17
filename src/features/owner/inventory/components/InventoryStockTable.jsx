@@ -33,6 +33,10 @@ function formatQuantity(value, storageUnit) {
         return `${numberValue.toLocaleString("vi-VN")} ml`;
     }
 
+    if (storageUnit === "KILOGRAM") {
+        return `${(numberValue / 1000).toLocaleString("vi-VN")} kg`;
+    }
+
     if (numberValue >= 1000) {
         return `${(numberValue / 1000).toLocaleString("vi-VN")} kg`;
     }

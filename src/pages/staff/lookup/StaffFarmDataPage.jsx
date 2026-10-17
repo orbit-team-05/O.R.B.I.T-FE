@@ -23,10 +23,15 @@ function formatStockQuantity(value, storageUnit) {
     const num = Number(value || 0);
     if (storageUnit === "PIECE") return `${formatNumber(num)} cái`;
     if (storageUnit === "MILLILITER") return num >= 1000 ? `${formatNumber(num / 1000)} lít` : `${formatNumber(num)} ml`;
-    return `${formatNumber(num / 1000)} kg`;
+    if (storageUnit === "KILOGRAM") return `${formatNumber(num / 1000)} kg`;
+    return num >= 1000 ? `${formatNumber(num / 1000)} kg` : `${formatNumber(num)} g`;
 }
 
 function getEnumLabel(value) {
+    if (value === "KILOGRAM") return "Kilogram (kg)";
+    if (value === "GRAM") return "Gram (g)";
+    if (value === "MILLILITER") return "Mililit (ml)";
+    if (value === "PIECE") return "Cái / Kiện";
     return String(value || "").replaceAll("_", " ") || "Chưa xác định";
 }
 
