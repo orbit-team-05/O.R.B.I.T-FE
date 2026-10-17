@@ -14,7 +14,7 @@ import {
 } from "../../../features/owner/services/ownerFarmApi";
 
 const MAX_IMAGE_SIZE = 20 * 1024 * 1024;
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/pjpeg"];
 
 const EMPTY_FORM = {
     farmName: "",
@@ -138,7 +138,10 @@ export function OwnerFarmPage() {
         event.target.value = "";
         if (!file || !formData.canEdit) return;
 
-        if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        const isImage = file.type
+            ? ALLOWED_IMAGE_TYPES.includes(file.type.toLowerCase())
+            : /\.(jpe?g|png|webp)$/i.test(file.name);
+        if (!isImage) {
             toast.error("Ảnh chỉ hỗ trợ JPEG, PNG hoặc WebP.");
             return;
         }

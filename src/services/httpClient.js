@@ -1,4 +1,5 @@
 import axios from "axios";
+import { compressImage } from "../utils/imageCompressor";
 
 const STORAGE_USER_KEY = "orbit_user";
 
@@ -26,7 +27,7 @@ export const httpClient = axios.create({
 });
 
 httpClient.interceptors.request.use(
-    (config) => {
+    async (config) => {
         if (accessToken) {
             config.headers = config.headers || {};
             config.headers.Authorization = `Bearer ${accessToken}`;
@@ -38,6 +39,21 @@ httpClient.interceptors.request.use(
             config.headers = config.headers || {};
             delete config.headers["Content-Type"];
             delete config.headers["content-type"];
+
+            try {
+                const newFormData = new FormData();
+                for (const [key, value] of config.data.entries()) {
+                    if (value instanceof Blob && value.type && value.type.startsWith("image/") && value.size > 1.5 * 1024 * 1024) {
+                        const compressed = await compressImage(value);
+                        newFormData.append(key, compressed);
+                    } else {
+                        newFormData.append(key, value);
+                    }
+                }
+                config.data = newFormData;
+            } catch {
+                // If compression fails for any reason, proceed with original FormData
+            }
         }
 
         return config;
