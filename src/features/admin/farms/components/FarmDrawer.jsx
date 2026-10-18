@@ -1,6 +1,7 @@
 import { CalendarDays, Camera, Clock3, MapPin, Ruler, UploadCloud, UserRound, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ImagePreviewModal } from "../../../../components/ui/ImagePreviewModal";
+import { NumberInput } from "../../../../components/common/form/NumberInput";
 
 const INITIAL_FORM = {
     farmName: "",
@@ -191,7 +192,7 @@ export function FarmDrawer({
         const payload = {
             farmName: form.farmName.trim(),
             location: form.location.trim(),
-            areaM2: form.areaM2 === "" ? null : Number(form.areaM2),
+            areaM2: form.areaM2 === "" ? null : Number(String(form.areaM2).replace(/,/g, "")),
         };
 
         if (!isEditMode) {
@@ -338,13 +339,10 @@ export function FarmDrawer({
                                 Diện tích (m²)
                             </label>
 
-                            <input
+                            <NumberInput
                                 name="areaM2"
-                                type="number"
-                                min="0"
-                                step="0.01"
                                 value={form.areaM2}
-                                onChange={handleChange}
+                                onChange={(val) => setForm((prev) => ({ ...prev, areaM2: val }))}
                                 disabled={isViewMode}
                                 placeholder="Chưa cập nhật"
                                 className="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15"

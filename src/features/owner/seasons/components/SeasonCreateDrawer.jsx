@@ -39,15 +39,21 @@ function inputClass(hasError = false) {
 
 function formatEditableNumber(value) {
     if (value === null || value === undefined || value === "") return "";
-    const normalized = String(value).replace(/,/g, ".");
-    const [integerPart, decimalPart] = normalized.split(".");
-    const formattedInteger = Number(integerPart || 0).toLocaleString("vi-VN");
-    return decimalPart !== undefined ? `${formattedInteger},${decimalPart}` : formattedInteger;
+    const str = String(value).replace(/,/g, "");
+    const parts = str.split(".");
+    const integerPart = parts[0].replace(/\D/g, "");
+    const formattedInteger = integerPart ? Number(integerPart).toLocaleString("en-US") : (parts.length > 1 ? "0" : "");
+    return parts.length > 1 ? `${formattedInteger}.${parts[1].replace(/\D/g, "")}` : formattedInteger;
 }
 
 function parseEditableNumber(value) {
-    const normalized = String(value || "").replace(/\./g, "").replace(",", ".");
-    return normalized.replace(/[^0-9.]/g, "");
+    const str = String(value || "").replace(/,/g, "");
+    const parts = str.split(".");
+    const integerPart = parts[0].replace(/\D/g, "");
+    if (parts.length > 1) {
+        return `${integerPart}.${parts[1].replace(/\D/g, "")}`;
+    }
+    return integerPart;
 }
 
 function NumberInput({ value, onChange, className, ...props }) {
@@ -138,10 +144,10 @@ export function SeasonCreateDrawer({
             cropName: form.cropName.trim(),
             startDate: form.startDate,
             endDate: form.endDate,
-            initialCapitalCost: Number(form.initialCapitalCost),
-            expectedYieldKg: form.expectedYieldKg === "" ? null : Number(form.expectedYieldKg),
-            expectedPricePerKg: form.expectedPricePerKg === "" ? null : Number(form.expectedPricePerKg),
-            stockingQuantity: form.stockingQuantity === "" ? null : Number(form.stockingQuantity),
+            initialCapitalCost: Number(String(form.initialCapitalCost || "").replace(/,/g, "")),
+            expectedYieldKg: form.expectedYieldKg === "" ? null : Number(String(form.expectedYieldKg).replace(/,/g, "")),
+            expectedPricePerKg: form.expectedPricePerKg === "" ? null : Number(String(form.expectedPricePerKg).replace(/,/g, "")),
+            stockingQuantity: form.stockingQuantity === "" ? null : Number(String(form.stockingQuantity).replace(/,/g, "")),
             sizeCategory: form.sizeCategory.trim() || null,
         }, form.imageFile);
     }
@@ -193,7 +199,7 @@ export function SeasonCreateDrawer({
                                     value={form.expectedYieldKg}
                                     onChange={(value) => updateField("expectedYieldKg", value)}
                                     className={inputClass(!!errors.expectedYieldKg)}
-                                    placeholder="Ví dụ: 1200"
+                                    placeholder="Ví dụ: 1,200"
                                 />
                             </Field>
                             <Field label="Giá bán mục tiêu (₫/kg) — tùy chọn" error={errors.expectedPricePerKg} helper="Dùng để ước tính doanh thu/lợi nhuận khi đã có mục tiêu.">
@@ -202,7 +208,7 @@ export function SeasonCreateDrawer({
                                     value={form.expectedPricePerKg}
                                     onChange={(value) => updateField("expectedPricePerKg", value)}
                                     className={inputClass(!!errors.expectedPricePerKg)}
-                                    placeholder="Ví dụ: 85000"
+                                    placeholder="Ví dụ: 85,000"
                                 />
                             </Field>
                         </div>
@@ -214,7 +220,7 @@ export function SeasonCreateDrawer({
                                     value={form.stockingQuantity}
                                     onChange={(value) => updateField("stockingQuantity", value)}
                                     className={inputClass(!!errors.stockingQuantity)}
-                                    placeholder="Ví dụ: 200000"
+                                    placeholder="Ví dụ: 200,000"
                                 />
                             </Field>
                             <Field label="Size tôm mục tiêu — tùy chọn" error={errors.sizeCategory} helper="Cỡ tôm mong muốn khi thu hoạch.">
@@ -311,7 +317,7 @@ export function SeasonCreateDrawer({
                                 value={form.initialCapitalCost}
                                 onChange={(value) => updateField("initialCapitalCost", value)}
                                 className={inputClass(!!errors.initialCapitalCost)}
-                                placeholder="Ví dụ: 25000000"
+                                placeholder="Ví dụ: 25,000,000"
                             />
                         </Field>
 

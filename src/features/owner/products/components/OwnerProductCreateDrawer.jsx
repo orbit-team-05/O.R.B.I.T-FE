@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { X, Upload } from "lucide-react";
+import { NumberInput } from "../../../../components/common/form/NumberInput";
 
 const PRODUCT_CATEGORIES = [
     { value: "FEED", label: "Thức ăn" },
-    { value: "MEDICINE", label: "Thuốc" },
+    { value: "MEDICINE", label: "Thuốc thủy sản" },
     { value: "CHEMICAL", label: "Hóa chất" },
     { value: "MATERIAL", label: "Vật tư" },
     { value: "HARVEST_PRODUCT", label: "Sản phẩm thu hoạch" },
@@ -98,7 +99,7 @@ export function OwnerProductCreateDrawer({
             category: form.category,
             storageUnit: form.storageUnit,
             packagingType: form.packagingType,
-            minimumStockQuantity: Number(form.minimumStockQuantity || 0),
+            minimumStockQuantity: Number(String(form.minimumStockQuantity || "").replace(/,/g, "") || 0),
         }, imageFile);
     }
 
@@ -248,13 +249,11 @@ export function OwnerProductCreateDrawer({
                             label="Tồn kho tối thiểu"
                             helper="Nhập theo đơn vị đã chọn ở trên (VD: 50 kg hoặc 10 bao)."
                         >
-                            <input
-                                type="number"
-                                min="0"
+                            <NumberInput
                                 value={form.minimumStockQuantity}
-                                onChange={(event) => updateField("minimumStockQuantity", event.target.value)}
+                                onChange={(val) => updateField("minimumStockQuantity", val)}
                                 className={inputClass()}
-                                placeholder="Ví dụ: 50"
+                                placeholder="Ví dụ: 2,000"
                                 required
                             />
                         </Field>

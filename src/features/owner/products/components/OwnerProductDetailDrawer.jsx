@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { Image, Pencil, Upload, X } from "lucide-react";
+import { NumberInput } from "../../../../components/common/form/NumberInput";
 
-const CATEGORY_LABELS = { FEED: "Thức ăn", MEDICINE: "Thuốc", CHEMICAL: "Hóa chất", MATERIAL: "Vật tư", HARVEST_PRODUCT: "Sản phẩm thu hoạch" };
+const CATEGORY_LABELS = { FEED: "Thức ăn", MEDICINE: "Thuốc thủy sản", CHEMICAL: "Hóa chất", MATERIAL: "Vật tư khác", HARVEST_PRODUCT: "Sản phẩm thu hoạch" };
 const STORAGE_UNIT_LABELS = { KILOGRAM: "Kilogram (kg)", GRAM: "Gram (g)", MILLILITER: "Mililit (ml)", PIECE: "Cái / Bao / Chai / Lọ" };
 const PACKAGING_LABELS = { LOOSE: "Hàng rời", BAG: "Bao", JAR: "Hũ", BOTTLE: "Chai", CAN: "Can", BOX: "Thùng / Hộp", OTHER: "Khác" };
+const PACKAGING_UNIT_LABELS = { BAG: "bao", JAR: "hũ", BOTTLE: "chai", CAN: "can", BOX: "hộp", LOOSE: "cái", OTHER: "cái" };
+const SHORT_STORAGE_UNITS = { KILOGRAM: "kg", GRAM: "g", MILLILITER: "ml", PIECE: "cái" };
 const INITIAL_FORM = { productName: "", category: "CHEMICAL", storageUnit: "MILLILITER", packagingType: "BOTTLE", minimumStockQuantity: "" };
 
 function formatDateTime(value) {
@@ -11,6 +14,12 @@ function formatDateTime(value) {
     return new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 }
 function formatNumber(value) { return value == null ? "0" : Number(value).toLocaleString("vi-VN"); }
+function formatMinimumStock(product) {
+    if (!product) return "0";
+    const qty = formatNumber(product.minimumStockQuantity ?? product.minimumStockGrams);
+    const unit = product.storageUnit === "PIECE" ? (PACKAGING_UNIT_LABELS[product.packagingType] || "cái") : (SHORT_STORAGE_UNITS[product.storageUnit] || product.storageUnit || "");
+    return unit ? `${qty} ${unit}` : qty;
+}
 function InfoItem({ label, value }) {
     return <div className="rounded-lg border border-slate-200 bg-white px-3 py-3"><p className="text-xs font-medium uppercase text-slate-500">{label}</p><p className="mt-1 break-all text-sm font-semibold text-slate-900">{value || "Chưa có"}</p></div>;
 }
@@ -36,7 +45,8 @@ export function OwnerProductDetailDrawer({ open, product, onClose, onSave, onSta
 
     async function handleSave(event) {
         event.preventDefault();
-        const saved = await onSave?.(product.id, { ...form, productName: form.productName.trim(), minimumStockQuantity: Number(form.minimumStockQuantity || 0) });
+        const rawMinStock = String(form.minimumStockQuantity || "").replace(/,/g, "");
+        const saved = await onSave?.(product.id, { ...form, productName: form.productName.trim(), minimumStockQuantity: Number(rawMinStock || 0) });
         if (saved) setEditing(false);
     }
     async function handleImageChange(event) {
@@ -56,12 +66,12 @@ export function OwnerProductDetailDrawer({ open, product, onClose, onSave, onSta
             {editing ? <form onSubmit={handleSave} className="flex flex-1 flex-col overflow-hidden"><div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
                 <label className="block"><span className="text-xs font-medium uppercase text-slate-500">Tên sản phẩm</span><input required className={`${inputClass()} mt-1`} value={form.productName} onChange={(e) => setForm({ ...form, productName: e.target.value })} /></label>
                 <div className="grid grid-cols-2 gap-3"><label className="block"><span className="text-xs font-medium uppercase text-slate-500">Loại</span><select className={`${inputClass()} mt-1`} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>{Object.entries(CATEGORY_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label className="block"><span className="text-xs font-medium uppercase text-slate-500">Đơn vị lưu kho</span><select className={`${inputClass()} mt-1`} value={form.storageUnit} onChange={(e) => setForm({ ...form, storageUnit: e.target.value })}>{Object.entries(STORAGE_UNIT_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label></div>
-                <div className="grid grid-cols-2 gap-3"><label className="block"><span className="text-xs font-medium uppercase text-slate-500">Quy cách</span><select className={`${inputClass()} mt-1`} value={form.packagingType} onChange={(e) => setForm({ ...form, packagingType: e.target.value })}>{Object.entries(PACKAGING_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label className="block"><span className="text-xs font-medium uppercase text-slate-500">Tồn tối thiểu</span><input required min="0" type="number" className={`${inputClass()} mt-1`} value={form.minimumStockQuantity} onChange={(e) => setForm({ ...form, minimumStockQuantity: e.target.value })} /></label></div>
+                <div className="grid grid-cols-2 gap-3"><label className="block"><span className="text-xs font-medium uppercase text-slate-500">Quy cách</span><select className={`${inputClass()} mt-1`} value={form.packagingType} onChange={(e) => setForm({ ...form, packagingType: e.target.value })}>{Object.entries(PACKAGING_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label className="block"><span className="text-xs font-medium uppercase text-slate-500">Tồn tối thiểu</span><NumberInput required className={`${inputClass()} mt-1`} value={form.minimumStockQuantity} onChange={(val) => setForm({ ...form, minimumStockQuantity: val })} placeholder="Ví dụ: 2,000" /></label></div>
                 <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">Mã sản phẩm, keypad, QR và nhãn AI được hệ thống sinh tự động nên không chỉnh sửa tại đây.</div>
             </div><footer className="flex justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4"><button type="button" onClick={() => setEditing(false)} className="h-9 rounded-lg border border-slate-300 bg-white px-4 text-sm">Hủy</button><button disabled={submitting} className="h-9 rounded-lg bg-[#006948] px-4 text-sm font-semibold text-white disabled:opacity-50">{submitting ? "Đang lưu..." : "Lưu thay đổi"}</button></footer></form> : <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
                 <section className="flex items-center gap-4 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-4"><span className={`rounded-full px-3 py-1 text-xs font-semibold ${product.status === "INACTIVE" ? "bg-slate-200 text-slate-600" : "bg-emerald-600 text-white"}`}>{product.status === "INACTIVE" ? "Ngừng sử dụng" : "Đang sử dụng"}</span><span className="text-sm text-slate-600">{CATEGORY_LABELS[product.category] ?? product.category}</span></section>
                 <section className="rounded-xl border border-slate-200 bg-slate-50 p-4">{product.imageUrl ? <button type="button" onClick={() => setImageOpen(true)} className="block w-full cursor-zoom-in"><img src={product.imageUrl} alt={product.productName} className="max-h-64 w-full rounded-lg object-contain" /></button> : <div className="flex h-40 flex-col items-center justify-center text-slate-400"><Image size={34} /><span className="mt-2 text-sm">Chưa có ảnh sản phẩm</span></div>}<label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"><Upload size={15} />Thay ảnh (tối đa 20MB)<input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleImageChange} /></label>{imageFile && <span className="ml-2 text-xs text-slate-500">Đang tải...</span>}</section>
-                <section className="grid grid-cols-2 gap-3"><InfoItem label="Mã sản phẩm" value={product.productCode} /><InfoItem label="Keypad" value={product.keypadCode} /><InfoItem label="Nhãn AI" value={product.aiLabel} /><InfoItem label="QR sản phẩm" value={product.productQrCodeValue} /><InfoItem label="Đơn vị" value={STORAGE_UNIT_LABELS[product.storageUnit] ?? product.storageUnit} /><InfoItem label="Quy cách" value={PACKAGING_LABELS[product.packagingType] ?? product.packagingType} /><InfoItem label="Tồn tối thiểu" value={formatNumber(product.minimumStockQuantity ?? product.minimumStockGrams)} /><InfoItem label="Ngày tạo" value={formatDateTime(product.createdAt)} /><InfoItem label="Cập nhật lần cuối" value={formatDateTime(product.updatedAt)} /></section>
+                <section className="grid grid-cols-2 gap-3"><InfoItem label="Mã sản phẩm" value={product.productCode} /><InfoItem label="Keypad" value={product.keypadCode} /><InfoItem label="Nhãn AI" value={product.aiLabel} /><InfoItem label="QR sản phẩm" value={product.productQrCodeValue} /><InfoItem label="Đơn vị" value={STORAGE_UNIT_LABELS[product.storageUnit] ?? product.storageUnit} /><InfoItem label="Quy cách" value={PACKAGING_LABELS[product.packagingType] ?? product.packagingType} /><InfoItem label="Tồn tối thiểu" value={formatMinimumStock(product)} /><InfoItem label="Ngày tạo" value={formatDateTime(product.createdAt)} /><InfoItem label="Cập nhật lần cuối" value={formatDateTime(product.updatedAt)} /></section>
                 <button type="button" disabled={submitting} onClick={() => onStatusChange?.(product.id, product.status === "INACTIVE" ? "ACTIVE" : "INACTIVE")} className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">{product.status === "INACTIVE" ? "Kích hoạt lại sản phẩm" : "Ngừng sử dụng sản phẩm"}</button>
             </div>}
         </aside>

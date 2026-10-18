@@ -55,59 +55,61 @@ function inputClass(disabled = false) {
         } px-3 text-sm outline-none focus:ring-2`;
 }
 
-function CurrencyInput({ value, onChange, disabled, className }) {
+function CurrencyInput({ value, onChange, disabled, className, placeholder }) {
     const [displayValue, setDisplayValue] = useState("");
 
     useEffect(() => {
         if (value) {
-            // Keep the formatted display value synchronized with the numeric value.
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setDisplayValue(Number(value).toLocaleString("vi-VN"));
+            const raw = String(value).replace(/,/g, "").replace(/\D/g, "");
+            setDisplayValue(raw ? Number(raw).toLocaleString("en-US") : "");
         } else {
             setDisplayValue("");
         }
     }, [value]);
 
     const handleChange = (e) => {
-        const rawValue = e.target.value.replace(/\D/g, "");
-        setDisplayValue(rawValue ? Number(rawValue).toLocaleString("vi-VN") : "");
+        const rawValue = e.target.value.replace(/,/g, "").replace(/\D/g, "");
+        setDisplayValue(rawValue ? Number(rawValue).toLocaleString("en-US") : "");
         onChange(rawValue);
     };
 
     return (
         <input
             type="text"
+            inputMode="numeric"
             value={displayValue}
             onChange={handleChange}
             disabled={disabled}
             className={className}
+            placeholder={placeholder}
         />
     );
 }
 
-function NumberInput({ value, onChange, disabled, className }) {
+function NumberInput({ value, onChange, disabled, className, placeholder }) {
     const [displayValue, setDisplayValue] = useState("");
 
     useEffect(() => {
         if (value !== null && value !== undefined && value !== "") {
-            const normalized = String(value).replace(/,/g, ".");
-            const [integerPart, decimalPart] = normalized.split(".");
-            const formatted = Number(integerPart || 0).toLocaleString("vi-VN");
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setDisplayValue(decimalPart !== undefined ? `${formatted},${decimalPart}` : formatted);
+            const str = String(value).replace(/,/g, "");
+            const parts = str.split(".");
+            const integerPart = parts[0].replace(/\D/g, "");
+            const formattedInteger = integerPart ? Number(integerPart).toLocaleString("en-US") : (parts.length > 1 ? "0" : "");
+            setDisplayValue(parts.length > 1 ? `${formattedInteger}.${parts[1].replace(/\D/g, "")}` : formattedInteger);
         } else {
             setDisplayValue("");
         }
     }, [value]);
 
     const handleChange = (event) => {
-        const rawValue = event.target.value
-            .replace(/\./g, "")
-            .replace(",", ".")
-            .replace(/[^0-9.]/g, "");
-        const [integerPart, decimalPart] = rawValue.split(".");
-        const formatted = Number(integerPart || 0).toLocaleString("vi-VN");
-        setDisplayValue(decimalPart !== undefined ? `${formatted},${decimalPart}` : formatted);
+        const rawInput = event.target.value.replace(/,/g, "");
+        const parts = rawInput.split(".");
+        const integerPart = parts[0].replace(/\D/g, "");
+        const decimalPart = parts.length > 1 ? parts[1].replace(/\D/g, "") : null;
+        const formattedInteger = integerPart ? Number(integerPart).toLocaleString("en-US") : (parts.length > 1 ? "0" : "");
+        const formatted = decimalPart !== null ? `${formattedInteger}.${decimalPart}` : formattedInteger;
+        setDisplayValue(formatted);
+        const rawValue = decimalPart !== null ? `${integerPart}.${decimalPart}` : integerPart;
         onChange(rawValue);
     };
 
@@ -119,6 +121,7 @@ function NumberInput({ value, onChange, disabled, className }) {
             onChange={handleChange}
             disabled={disabled}
             className={className}
+            placeholder={placeholder}
         />
     );
 }
@@ -567,12 +570,12 @@ export function SeasonDetailDrawer({
             seasonName: form.seasonName.trim(),
             startDate: isFieldDisabled("startDate") ? undefined : form.startDate,
             plannedEndDate: form.plannedEndDate,
-            initialCapitalCost: form.initialCapitalCost ? Number(form.initialCapitalCost) : undefined,
-            expectedYieldKg: form.expectedYieldKg ? Number(form.expectedYieldKg) : undefined,
-            expectedPricePerKg: form.expectedPricePerKg ? Number(form.expectedPricePerKg) : undefined,
-            harvestPricePerKg: form.harvestPricePerKg ? Number(form.harvestPricePerKg) : undefined,
+            initialCapitalCost: form.initialCapitalCost ? Number(String(form.initialCapitalCost).replace(/,/g, "")) : undefined,
+            expectedYieldKg: form.expectedYieldKg ? Number(String(form.expectedYieldKg).replace(/,/g, "")) : undefined,
+            expectedPricePerKg: form.expectedPricePerKg ? Number(String(form.expectedPricePerKg).replace(/,/g, "")) : undefined,
+            harvestPricePerKg: form.harvestPricePerKg ? Number(String(form.harvestPricePerKg).replace(/,/g, "")) : undefined,
             sizeCategory: form.sizeCategory.trim(),
-            stockingQuantity: form.stockingQuantity ? Number(form.stockingQuantity) : undefined,
+            stockingQuantity: form.stockingQuantity ? Number(String(form.stockingQuantity).replace(/,/g, "")) : undefined,
         }, form.imageFile).then((res) => {
             if (res) {
                 setIsEditing(false);
@@ -642,7 +645,7 @@ export function SeasonDetailDrawer({
     }
 
     function handleConfirmHarvestPrice() {
-        const price = Number(harvestPriceDialog.value);
+        const price = Number(String(harvestPriceDialog.value || "").replace(/,/g, ""));
 
         if (!price || price <= 0) {
             setHarvestPriceDialog((prev) => ({
@@ -930,7 +933,7 @@ export function SeasonDetailDrawer({
                                             onChange={(val) => setForm({ ...form, stockingQuantity: val })}
                                             disabled={isFieldDisabled("stockingQuantity")}
                                             className={`${inputClass(isFieldDisabled("stockingQuantity"))} ${fieldErrors.stockingQuantity ? "!border-red-400 !ring-red-100" : ""}`}
-                                            placeholder="Ví dụ: 200000"
+                                            placeholder="Ví dụ: 200,000"
                                         />
                                         {fieldErrors.stockingQuantity && <p className="mt-1 text-xs text-red-500">{fieldErrors.stockingQuantity}</p>}
                                     </div>
@@ -1274,16 +1277,13 @@ export function SeasonDetailDrawer({
                             </label>
 
                             <CurrencyInput
-                                type="number"
-                                min="1"
-                                step="any"
                                 value={harvestPriceDialog.value}
                                 onChange={(value) => setHarvestPriceDialog((prev) => ({ ...prev, value, error: "" }))}
                                 className={`mt-1 h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none focus:ring-2 ${harvestPriceDialog.error
                                         ? "border-red-300 focus:border-red-500 focus:ring-red-100"
                                         : "border-slate-300 focus:border-[#006948] focus:ring-emerald-100"
                                     }`}
-                                placeholder="Ví dụ: 150000"
+                                placeholder="Ví dụ: 150,000"
                             />
 
                             {harvestPriceDialog.error && (

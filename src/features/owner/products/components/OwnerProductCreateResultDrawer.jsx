@@ -7,9 +7,43 @@ const STORAGE_UNIT_LABELS = {
     PIECE: "Cái / Bao / Chai / Lọ",
 };
 
+const PACKAGING_LABELS = {
+    LOOSE: "Hàng rời",
+    BAG: "Bao",
+    JAR: "Hũ",
+    BOTTLE: "Chai",
+    CAN: "Can",
+    BOX: "Thùng / Hộp",
+    OTHER: "Khác",
+};
+
+const PACKAGING_UNIT_LABELS = {
+    BAG: "bao",
+    JAR: "hũ",
+    BOTTLE: "chai",
+    CAN: "can",
+    BOX: "hộp",
+    LOOSE: "cái",
+    OTHER: "cái",
+};
+
+const SHORT_STORAGE_UNITS = {
+    KILOGRAM: "kg",
+    GRAM: "g",
+    MILLILITER: "ml",
+    PIECE: "cái",
+};
+
 function formatNumber(value) {
     if (value == null) return "0";
     return Number(value).toLocaleString("vi-VN");
+}
+
+function formatMinimumStock(product) {
+    if (!product) return "0";
+    const qty = formatNumber(product.minimumStockQuantity ?? product.minimumStockGrams);
+    const unit = product.storageUnit === "PIECE" ? (PACKAGING_UNIT_LABELS[product.packagingType] || "cái") : (SHORT_STORAGE_UNITS[product.storageUnit] || product.storageUnit || "");
+    return unit ? `${qty} ${unit}` : qty;
 }
 
 function InfoItem({ label, value }) {
@@ -148,11 +182,11 @@ export function OwnerProductCreateResultDrawer({
                             label="Đơn vị lưu kho"
                             value={STORAGE_UNIT_LABELS[result.storageUnit] ?? result.storageUnit}
                         />
-                        <InfoItem label="Dạng đóng gói" value={result.packagingType} />
+                        <InfoItem label="Dạng đóng gói" value={PACKAGING_LABELS[result.packagingType] ?? result.packagingType} />
                         <InfoItem label="Kiểu đo" value={result.measureMode} />
                         <InfoItem
                             label="Tồn kho tối thiểu"
-                            value={formatNumber(result.minimumStockQuantity)}
+                            value={formatMinimumStock(result)}
                         />
                     </section>
 

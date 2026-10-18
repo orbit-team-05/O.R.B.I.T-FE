@@ -215,7 +215,7 @@ export function SeasonOtherCostModal({ open, onClose, onSave, submitting, initia
                     description: initialData.description || "",
                     receiptFile: null
                 });
-                setDisplayCost(Number(initialData.cost).toLocaleString("vi-VN"));
+                setDisplayCost(Number(initialData.cost).toLocaleString("en-US"));
             } else {
                 setForm({ cost: "", description: "", receiptFile: null });
                 setDisplayCost("");
@@ -226,7 +226,7 @@ export function SeasonOtherCostModal({ open, onClose, onSave, submitting, initia
 
     const handleCostChange = (e) => {
         const rawValue = e.target.value.replace(/\D/g, "");
-        setDisplayCost(rawValue ? Number(rawValue).toLocaleString("vi-VN") : "");
+        setDisplayCost(rawValue ? Number(rawValue).toLocaleString("en-US") : "");
         setForm({ ...form, cost: rawValue });
     };
 

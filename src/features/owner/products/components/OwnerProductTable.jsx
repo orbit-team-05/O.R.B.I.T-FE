@@ -5,11 +5,42 @@ import { SortSelect } from "../../../../components/common/sort/SortSelect";
 
 const CATEGORY_LABELS = {
     FEED: "Thức ăn",
-    MEDICINE: "Thuốc",
+    MEDICINE: "Thuốc thủy sản",
     CHEMICAL: "Hóa chất",
-    MATERIAL: "Vật tư",
+    MATERIAL: "Vật tư khác",
     HARVEST_PRODUCT: "Sản phẩm thu hoạch",
 };
+
+const PACKAGING_UNIT_LABELS = {
+    BAG: "bao",
+    JAR: "hũ",
+    BOTTLE: "chai",
+    CAN: "can",
+    BOX: "hộp",
+    LOOSE: "cái",
+    OTHER: "cái",
+};
+
+const STORAGE_UNIT_LABELS = {
+    KILOGRAM: "kg",
+    GRAM: "g",
+    MILLILITER: "ml",
+    PIECE: "cái",
+};
+
+function formatStockUnit(storageUnit, packagingType) {
+    if (storageUnit === "PIECE") {
+        return PACKAGING_UNIT_LABELS[packagingType] || "cái";
+    }
+    return STORAGE_UNIT_LABELS[storageUnit] || storageUnit || "";
+}
+
+function formatMinimumStock(item) {
+    if (!item) return "0";
+    const qty = formatNumber(item.minimumStockQuantity ?? item.minimumStockGrams);
+    const unit = formatStockUnit(item.storageUnit, item.packagingType);
+    return unit ? `${qty} ${unit}` : qty;
+}
 
 function formatDateTime(value) {
     if (!value) return "Chưa có";
@@ -101,7 +132,7 @@ export function OwnerProductTable({
                                     </td>
 
                                     <td className="px-5 py-4 font-medium text-slate-900">
-                                        {formatNumber(item.minimumStockQuantity ?? item.minimumStockGrams)}
+                                        {formatMinimumStock(item)}
                                     </td>
 
                                     <td className="px-5 py-4">

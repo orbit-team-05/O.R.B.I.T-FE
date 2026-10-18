@@ -4,9 +4,15 @@ import { useState, useEffect, useRef } from "react";
 import { ImagePreviewModal } from "../../../../components/ui/ImagePreviewModal";
 import { uploadInventoryEvidence } from "../services/inventoryEvidenceApi";
 import { useToast } from "../../../../components/common/toast/ToastProvider";
+import { NumberInput } from "../../../../components/common/form/NumberInput";
 
 function parseLocalizedNumber(value) {
-    return Number(String(value ?? "").replace(/\./g, "").replace(",", "."));
+    if (value === null || value === undefined || value === "") return 0;
+    const str = String(value).trim();
+    const withoutCommas = str.replace(/,/g, "");
+    const num = Number(withoutCommas);
+    if (!Number.isNaN(num)) return num;
+    return Number(str.replace(/\./g, "").replace(",", ".")) || 0;
 }
 
 export function ApproveTransactionDrawer({ transaction, open, onClose, onApprove, onReject }) {
@@ -180,12 +186,10 @@ export function ApproveTransactionDrawer({ transaction, open, onClose, onApprove
                             <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Số lượng</p>
                             {isEditing ? (
                                 <div className="flex items-center gap-2 mt-1">
-                                    <input 
-                                        type="text"
-                                        inputMode="decimal"
-                                        className="w-24 text-right rounded-lg border-slate-200 text-lg font-bold text-slate-900 focus:border-blue-500 focus:ring-blue-500" 
+                                    <NumberInput 
+                                        className="w-28 text-right rounded-lg border-slate-200 text-lg font-bold text-slate-900 focus:border-blue-500 focus:ring-blue-500" 
                                         value={editData.quantityKg} 
-                                        onChange={e => setEditData({...editData, quantityKg: e.target.value})}
+                                        onChange={val => setEditData({...editData, quantityKg: val})}
                                     />
                                     <span className="font-bold text-slate-900">{transaction.storageUnit === "PIECE" ? "cái" : "kg"}</span>
                                 </div>
@@ -204,11 +208,10 @@ export function ApproveTransactionDrawer({ transaction, open, onClose, onApprove
                             <p className="text-xs font-medium text-slate-500">Đơn giá</p>
                             {isEditing ? (
                                 <div className="flex items-center gap-2 mt-1">
-                                    <input 
-                                        type="text" 
+                                    <NumberInput 
                                         className="w-full rounded-lg border-slate-200 font-semibold text-slate-900 focus:border-blue-500 focus:ring-blue-500" 
                                         value={editData.unitPrice} 
-                                        onChange={e => setEditData({...editData, unitPrice: e.target.value})}
+                                        onChange={val => setEditData({...editData, unitPrice: val})}
                                     />
                                     <span className="text-slate-500">/{transaction.storageUnit === "PIECE" ? "cái" : "kg"}</span>
                                 </div>

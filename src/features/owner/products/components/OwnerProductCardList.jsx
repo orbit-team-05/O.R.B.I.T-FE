@@ -31,6 +31,47 @@ function formatNumber(value) {
     return Number(value).toLocaleString("vi-VN");
 }
 
+const PACKAGING_LABELS = {
+    LOOSE: "Hàng rời",
+    BAG: "Bao",
+    JAR: "Hũ",
+    BOTTLE: "Chai",
+    CAN: "Can",
+    BOX: "Thùng / Hộp",
+    OTHER: "Khác",
+};
+
+const PACKAGING_UNIT_LABELS = {
+    BAG: "bao",
+    JAR: "hũ",
+    BOTTLE: "chai",
+    CAN: "can",
+    BOX: "hộp",
+    LOOSE: "cái",
+    OTHER: "cái",
+};
+
+const STORAGE_UNIT_LABELS = {
+    KILOGRAM: "kg",
+    GRAM: "g",
+    MILLILITER: "ml",
+    PIECE: "cái",
+};
+
+function formatStockUnit(storageUnit, packagingType) {
+    if (storageUnit === "PIECE") {
+        return PACKAGING_UNIT_LABELS[packagingType] || "cái";
+    }
+    return STORAGE_UNIT_LABELS[storageUnit] || storageUnit || "";
+}
+
+function formatMinimumStock(item) {
+    if (!item) return "0";
+    const qty = formatNumber(item.minimumStockQuantity ?? item.minimumStockGrams);
+    const unit = formatStockUnit(item.storageUnit, item.packagingType);
+    return unit ? `${qty} ${unit}` : qty;
+}
+
 export function OwnerProductCardList({
     products = [],
     pageInfo,
@@ -132,7 +173,7 @@ export function OwnerProductCardList({
                                         Tồn tối thiểu
                                     </div>
                                     <p className="mt-1 text-sm font-bold text-emerald-600">
-                                        {formatNumber(item.minimumStockQuantity ?? item.minimumStockGrams)}
+                                        {formatMinimumStock(item)}
                                     </p>
                                 </div>
                                 <div>
@@ -145,9 +186,16 @@ export function OwnerProductCardList({
                                     </p>
                                 </div>
                             </div>
-                            <p className="mt-4 truncate text-xs font-medium text-slate-500" title={item.productCode}>
-                                Mã: <span className="font-semibold text-slate-700">{item.productCode || "Chưa có"}</span>
-                            </p>
+                            <div className="mt-4 flex items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs">
+                                <p className="truncate font-medium text-slate-500" title={item.productCode}>
+                                    Mã: <span className="font-semibold text-slate-700">{item.productCode || "Chưa có"}</span>
+                                </p>
+                                {item.packagingType && (
+                                    <span className="shrink-0 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                                        {PACKAGING_LABELS[item.packagingType] || item.packagingType}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     </div>
                 ))}

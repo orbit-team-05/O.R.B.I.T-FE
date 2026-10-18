@@ -20,36 +20,25 @@ const MATERIAL_TRANSACTION_TYPES = new Set(["IMPORT", "EXPORT_FEED", "RETURN_OUT
 const PRODUCT_TRANSACTION_TYPES = new Set(["HARVEST_IN", "HARVEST_EXPORT", "PRODUCT_SALE"]);
 
 function parseLocalizedNumber(value) {
-    return Number(String(value ?? "").replace(/\./g, "").replace(",", "."));
+    if (value === null || value === undefined || value === "") return 0;
+    const str = String(value).trim();
+    const withoutCommas = str.replace(/,/g, "");
+    const num = Number(withoutCommas);
+    if (!Number.isNaN(num)) return num;
+    return Number(str.replace(/\./g, "").replace(",", ".")) || 0;
 }
 
 function formatLocalizedNumber(value) {
     if (value === null || value === undefined || value === "") return "";
-    return Number(value).toLocaleString("vi-VN", { maximumFractionDigits: 3 });
+    return Number(value).toLocaleString("en-US", { maximumFractionDigits: 3 });
 }
 
 function formatNumberField(event) {
-    const value = event.target.value.replace(/\s/g, "").replace(/[^0-9,.]/g, "");
-    const commaIndex = value.indexOf(",");
-    const dotCount = (value.match(/\./g) || []).length;
-    let integerPart;
-    let decimalPart = "";
-
-    if (commaIndex >= 0) {
-        integerPart = value.slice(0, commaIndex).replace(/\./g, "").replace(/\D/g, "");
-        decimalPart = value.slice(commaIndex + 1).replace(/\D/g, "");
-    } else if (dotCount === 1 && value.split(".")[1].length <= 2) {
-        [integerPart, decimalPart] = value.split(".");
-        integerPart = integerPart.replace(/\D/g, "");
-        decimalPart = decimalPart.replace(/\D/g, "");
-    } else {
-        integerPart = value.replace(/\./g, "").replace(/\D/g, "");
-    }
-
-    const formattedInteger = integerPart ? Number(integerPart).toLocaleString("vi-VN") : "";
-    event.target.value = decimalPart.length > 0
-        ? `${formattedInteger},${decimalPart}`
-        : formattedInteger;
+    const value = event.target.value.replace(/\s/g, "").replace(/,/g, "");
+    const parts = value.split(".");
+    const integerPart = parts[0].replace(/\D/g, "");
+    const formattedInteger = integerPart ? Number(integerPart).toLocaleString("en-US") : (parts.length > 1 ? "0" : "");
+    event.target.value = parts.length > 1 ? `${formattedInteger}.${parts[1].replace(/\D/g, "")}` : formattedInteger;
     return event;
 }
 
@@ -341,7 +330,7 @@ export function CreateTransactionDrawer({ open, onClose, onSuccess, warehouseTyp
                                 <input
                                     type="text"
                                     inputMode="decimal"
-                                    placeholder="VD: 1.500.000"
+                                    placeholder="VD: 1,500,000"
                                     {...register("totalAmount", { 
                                         required: "Vui lòng nhập tổng tiền/đơn giá",
                                         onChange: formatNumberField,
@@ -361,7 +350,7 @@ export function CreateTransactionDrawer({ open, onClose, onSuccess, warehouseTyp
                                 <input
                                     type="text"
                                     inputMode="decimal"
-                                    placeholder="VD: 85.000"
+                                    placeholder="VD: 85,000"
                                     {...register("salePriceKg", {
                                         required: "Vui lòng nhập giá bán thực tế",
                                         onChange: formatNumberField,

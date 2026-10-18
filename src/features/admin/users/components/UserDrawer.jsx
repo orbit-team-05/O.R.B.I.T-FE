@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { UserStatusBadge } from "./UserStatusBadge";
 import { ImagePreviewModal } from "../../../../components/ui/ImagePreviewModal";
 import { PasswordInput } from "../../../../components/common/form/PasswordInput";
+import { NumberInput } from "../../../../components/common/form/NumberInput";
 
 const INITIAL_FORM = {
     username: "",
@@ -336,7 +337,7 @@ export function UserDrawer({
             payload.farmDraft = {
                 farmName: form.farmName.trim(),
                 location: form.farmLocation.trim(),
-                areaM2: form.farmAreaM2 === "" ? null : Number(form.farmAreaM2),
+                areaM2: form.farmAreaM2 === "" ? null : Number(String(form.farmAreaM2).replace(/,/g, "")),
             };
         }
 
@@ -617,13 +618,10 @@ export function UserDrawer({
                                             placeholder="Địa chỉ Farm *"
                                             className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15"
                                         />
-                                        <input
+                                        <NumberInput
                                             name="farmAreaM2"
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
                                             value={form.farmAreaM2}
-                                            onChange={handleChange}
+                                            onChange={(val) => setForm((prev) => ({ ...prev, farmAreaM2: val }))}
                                             placeholder="Diện tích (m², tùy chọn)"
                                             className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-[#006948] focus:ring-2 focus:ring-[#006948]/15"
                                         />

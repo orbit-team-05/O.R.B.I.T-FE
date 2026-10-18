@@ -5,6 +5,7 @@ import { AdminPageSkeleton } from "../../../components/common/loading/AdminPageS
 import { FarmStatusBadge } from "../../../components/common/status/FarmStatusBadge";
 import { ImagePreviewModal } from "../../../components/ui/ImagePreviewModal";
 import { MapPickerModal } from "../../../components/map/MapPickerModal";
+import { NumberInput } from "../../../components/common/form/NumberInput";
 import { OwnerPageHeader } from "../common/OwnerPageHeader";
 import { useToast } from "../../../components/common/toast/ToastProvider";
 import {
@@ -120,7 +121,7 @@ export function OwnerFarmPage() {
             const updated = await updateMyFarm({
                 farmName: formData.farmName.trim(),
                 location: formData.location.trim() || null,
-                areaM2: formData.areaM2 === "" ? null : Number(formData.areaM2),
+                areaM2: formData.areaM2 === "" ? null : Number(String(formData.areaM2).replace(/,/g, "")),
                 latitude: formData.latitude,
                 longitude: formData.longitude,
             });
@@ -252,7 +253,14 @@ export function OwnerFarmPage() {
                             <label className="mb-1.5 block text-sm font-medium text-slate-700">Diện tích hồ sơ</label>
                             <div className="relative">
                                 <Ruler className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                                <input type="number" name="areaM2" min="0" step="0.01" value={formData.areaM2} onChange={handleChange} disabled={!formData.canEdit} placeholder="Ví dụ: 10000" className="h-10 w-full rounded-lg border border-slate-300 pl-9 pr-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15 disabled:bg-slate-100 disabled:text-slate-500" />
+                                <NumberInput
+                                    name="areaM2"
+                                    value={formData.areaM2}
+                                    onChange={(val) => setFormData((previous) => ({ ...previous, areaM2: val }))}
+                                    disabled={!formData.canEdit}
+                                    placeholder="Ví dụ: 10,000"
+                                    className="h-10 w-full rounded-lg border border-slate-300 pl-9 pr-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15 disabled:bg-slate-100 disabled:text-slate-500"
+                                />
                             </div>
                             <p className="mt-1.5 text-xs text-slate-500">Đơn vị: mét vuông (m²)</p>
                         </div>
