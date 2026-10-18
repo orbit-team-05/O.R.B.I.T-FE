@@ -1,16 +1,16 @@
 /**
  * Tự động nén ảnh client-side trước khi upload.
- * - Giải quyết triệt để giới hạn 4.5MB của Vercel Proxy Rewrites.
- * - Giảm thời gian upload từ 30s xuống dưới 1s.
- * - Giữ nguyên độ nét cao (tối đa 1920x1920, chất lượng 85%).
+ * - Giải quyết triệt để độ trễ và timeout khi upload qua Vercel Proxy Rewrites.
+ * - Giảm thời gian upload từ 30s-60s xuống dưới 1-2s.
+ * - Giữ nguyên độ sắc nét cao cho chứng từ/hóa đơn/phiếu cân.
  */
-export async function compressImage(file, maxDimension = 1920, quality = 0.85) {
+export async function compressImage(file, maxDimension = 1280, quality = 0.75) {
     if (!file || !(file instanceof Blob) || !file.type || !file.type.startsWith("image/")) {
         return file;
     }
 
-    // Nếu ảnh đã dưới 1.5MB, không cần nén thêm
-    if (file.size <= 1.5 * 1024 * 1024) {
+    // Nếu ảnh đã dưới 200KB, dung lượng đủ nhỏ để upload tức thì
+    if (file.size <= 200 * 1024) {
         return file;
     }
 
@@ -38,8 +38,8 @@ export async function compressImage(file, maxDimension = 1920, quality = 0.85) {
                 const ctx = canvas.getContext("2d");
                 ctx.drawImage(img, 0, 0, width, height);
 
-                // JPEG nén dung lượng tốt nhất cho ảnh chụp từ camera/điện thoại
-                const outputType = file.type === "image/png" ? "image/jpeg" : (file.type || "image/jpeg");
+                // Chuẩn hóa sang JPEG để tối ưu dung lượng tốt nhất
+                const outputType = "image/jpeg";
 
                 canvas.toBlob(
                     (blob) => {

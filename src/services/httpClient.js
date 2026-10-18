@@ -36,16 +36,27 @@ httpClient.interceptors.request.use(
         // Let the browser generate the multipart boundary for file uploads.
         // The client has a JSON default header, which must not be sent with FormData.
         if (typeof FormData !== "undefined" && config.data instanceof FormData) {
-            config.headers = config.headers || {};
-            delete config.headers["Content-Type"];
-            delete config.headers["content-type"];
+            // Increase timeout for file uploads so network latency doesn't cause false aborts
+            if (!config.timeout || config.timeout === 30000) {
+                config.timeout = 90000;
+            }
+
+            if (config.headers?.delete) {
+                config.headers.delete("Content-Type");
+                config.headers.delete("content-type");
+            } else if (config.headers) {
+                delete config.headers["Content-Type"];
+                delete config.headers["content-type"];
+            }
 
             try {
                 const newFormData = new FormData();
                 for (const [key, value] of config.data.entries()) {
-                    if (value instanceof Blob && value.type && value.type.startsWith("image/") && value.size > 1.5 * 1024 * 1024) {
-                        const compressed = await compressImage(value);
-                        newFormData.append(key, compressed);
+                    if (value instanceof Blob && value.type && value.type.startsWith("image/") && value.size > 200 * 1024) {
+                        const compressed = await compressImage(value, 1280, 0.75);
+                        newFormData.append(key, compressed, compressed.name || "upload.jpg");
+                    } else if (value instanceof File) {
+                        newFormData.append(key, value, value.name);
                     } else {
                         newFormData.append(key, value);
                     }
