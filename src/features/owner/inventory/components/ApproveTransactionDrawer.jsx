@@ -89,15 +89,18 @@ export function ApproveTransactionDrawer({ transaction, open, onClose, onApprove
                         uploadedUrl = await uploadInventoryEvidence(imageFile);
                     }
                     
+                    const isExportFeed = transaction.transactionType === "EXPORT_FEED";
                     const quantityKg = parseLocalizedNumber(editData.quantityKg);
-                    const unitPrice = editData.unitPrice === "" || editData.unitPrice == null
+                    const unitPrice = isExportFeed
                         ? null
-                        : parseLocalizedNumber(editData.unitPrice);
+                        : (editData.unitPrice === "" || editData.unitPrice == null
+                            ? null
+                            : parseLocalizedNumber(editData.unitPrice));
                     if (!Number.isFinite(quantityKg) || quantityKg <= 0) {
                         toast.error("Số lượng phải lớn hơn 0.");
                         return;
                     }
-                    if (unitPrice !== null && (!Number.isFinite(unitPrice) || unitPrice <= 0)) {
+                    if (!isExportFeed && unitPrice !== null && (!Number.isFinite(unitPrice) || unitPrice <= 0)) {
                         toast.error("Đơn giá phải lớn hơn 0.");
                         return;
                     }
@@ -207,8 +210,10 @@ export function ApproveTransactionDrawer({ transaction, open, onClose, onApprove
                             <p className="mt-1 font-semibold text-slate-900">{formatCategory(transaction.productCategory)}</p>
                         </div>
                         <div className="rounded-xl border border-slate-200 p-4">
-                            <p className="text-xs font-medium text-slate-500">Đơn giá</p>
-                            {isEditing ? (
+                            <p className="text-xs font-medium text-slate-500">{transaction.transactionType === "EXPORT_FEED" ? "Định giá xuất kho" : "Đơn giá"}</p>
+                            {transaction.transactionType === "EXPORT_FEED" ? (
+                                <p className="mt-1 text-sm font-semibold text-emerald-700">Tự động tính theo FIFO khi duyệt</p>
+                            ) : isEditing ? (
                                 <div className="flex items-center gap-2 mt-1">
                                     <NumberInput 
                                         className="w-full rounded-lg border-slate-200 font-semibold text-slate-900 focus:border-blue-500 focus:ring-blue-500" 

@@ -285,7 +285,7 @@ export function InventoryStockDetailDrawer({
                                             <th className="px-4 py-3">Người xuất</th>
                                             <th className="px-4 py-3">Loại giao dịch</th>
                                             <th className="px-4 py-3">Số lượng xuất</th>
-                                            <th className="px-4 py-3">Đơn giá</th>
+                                            <th className="px-4 py-3">Tổng tiền xuất</th>
                                             <th className="px-4 py-3">Ngày duyệt</th>
                                             <th className="px-4 py-3">Minh chứng</th>
                                             <th className="px-4 py-3">Trạng thái</th>
@@ -314,8 +314,21 @@ export function InventoryStockDetailDrawer({
                                                     {formatQuantity(exp.quantity, stock?.storageUnit)}
                                                 </td>
 
-                                                <td className="px-4 py-3 font-medium text-[#006948] whitespace-nowrap">
-                                                    {formatMoney(exp.unitPrice)}
+                                                <td className="px-4 py-3 font-semibold text-[#006948] whitespace-nowrap">
+                                                    <div>
+                                                        {formatMoney(
+                                                            exp.totalAmount != null
+                                                                ? exp.totalAmount
+                                                                : (exp.quantity && exp.unitPrice
+                                                                    ? (stock?.storageUnit === 'PIECE' ? exp.quantity * exp.unitPrice : (exp.quantity / 1000) * exp.unitPrice)
+                                                                    : 0)
+                                                        )}
+                                                    </div>
+                                                    {exp.unitPrice > 0 && (
+                                                        <div className="text-[11px] font-normal text-slate-500">
+                                                            ({formatMoney(exp.unitPrice)}/{stock?.storageUnit === 'PIECE' ? 'cái' : 'kg'})
+                                                        </div>
+                                                    )}
                                                 </td>
 
                                                 <td className="px-4 py-3 text-slate-500 whitespace-nowrap">
