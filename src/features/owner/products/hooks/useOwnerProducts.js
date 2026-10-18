@@ -148,8 +148,11 @@ export function useOwnerProducts(farmId, initialPage = 0, initialSize = 10) {
     }
 
     const summary = useMemo(() => {
+        const total = (productPage?.totalElements && productPage.totalElements > 0)
+            ? productPage.totalElements
+            : products.length;
         return {
-            totalProducts: productPage?.totalElements ?? 0,
+            totalProducts: total,
             feed: products.filter((item) => item.category === "FEED").length,
             medicine: products.filter((item) => item.category === "MEDICINE").length,
             chemical: products.filter((item) => item.category === "CHEMICAL").length,
