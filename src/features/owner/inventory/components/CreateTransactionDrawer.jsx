@@ -1,11 +1,28 @@
 import { useForm } from "react-hook-form";
-import { X, Save, Upload, Loader2, Weight } from "lucide-react";
+import { X, Save, Upload, Loader2, Weight, Info } from "lucide-react";
 import { useEffect, useState } from "react";
 import { httpClient } from "../../../../services/httpClient";
 import { useAuth } from "../../../auth/context/AuthContext";
 import { useToast } from "../../../../components/common/toast/ToastProvider";
 import { uploadInventoryEvidence } from "../services/inventoryEvidenceApi";
 import { ImagePreviewModal } from "../../../../components/ui/ImagePreviewModal";
+
+function getProductUnit(product) {
+    if (!product) return "kg";
+    if (product.storageUnit === "PIECE") {
+        switch (product.packagingType) {
+            case "BAG": return "bao";
+            case "JAR": return "hũ";
+            case "BOTTLE": return "chai";
+            case "CAN": return "can";
+            case "BOX": return "hộp";
+            default: return "cái";
+        }
+    }
+    if (product.storageUnit === "MILLILITER") return "ml";
+    if (product.storageUnit === "GRAM") return "g";
+    return "kg";
+}
 
 const TRANSACTION_TYPES = [
     { value: "IMPORT", label: "Nhập kho (Mua mới)" },
@@ -72,6 +89,7 @@ export function CreateTransactionDrawer({ open, onClose, onSuccess, warehouseTyp
     const watchType = watch("transactionType");
     const watchProductId = watch("productId");
     const selectedProduct = products?.find(p => p.id === Number(watchProductId));
+    const isPieceProduct = selectedProduct?.storageUnit === "PIECE";
     const isProductWarehouse = warehouseType === "PRODUCT";
     const staffTransactionTypes = isProductWarehouse
         ? new Set(["HARVEST_EXPORT", "HARVEST_IN"])
@@ -182,7 +200,7 @@ export function CreateTransactionDrawer({ open, onClose, onSuccess, warehouseTyp
                     : isPurchaseInbound && parsedTotal > 0 ? (parsedTotal / parsedQty) : null,
                 evidenceImageUrl: imageUrl || null,
                 certificateImageUrls,
-                deviceId: data.deviceId || null,
+                deviceId: isPieceProduct ? null : (data.deviceId || null),
                 seasonId: requiresSeason && data.seasonId ? Number(data.seasonId) : null
             };
 
@@ -261,7 +279,7 @@ export function CreateTransactionDrawer({ open, onClose, onSuccess, warehouseTyp
                             >
                                 <option value="">-- Chọn vật tư --</option>
                                 {availableProducts?.map(p => (
-                                    <option key={p.id} value={p.id}>{p.productName || p.name}</option>
+                                    <option key={p.id} value={p.id}>{p.productName || p.name} ({getProductUnit(p)})</option>
                                 ))}
                             </select>
                             {errors.productId && <p className="mt-1 text-xs text-red-500">{errors.productId.message}</p>}
@@ -269,15 +287,17 @@ export function CreateTransactionDrawer({ open, onClose, onSuccess, warehouseTyp
 
                         <div>
                             <label className="mb-1.5 flex justify-between text-sm font-medium text-slate-700">
-                                <span>Số lượng / Khối lượng {selectedProduct ? `(${selectedProduct.storageUnit === "PIECE" ? "cái" : selectedProduct.storageUnit === "MILLILITER" ? "lít/ml" : "kg"})` : ""} <span className="text-red-500">*</span></span>
-                                <button type="button" onClick={fetchWeightFromDevice} className="text-[#006948] hover:underline flex items-center gap-1">
-                                    <Weight size={14} /> Lấy từ cân
-                                </button>
+                                <span>{isPieceProduct ? `Số lượng (${getProductUnit(selectedProduct)})` : `Khối lượng (${getProductUnit(selectedProduct)})`} <span className="text-red-500">*</span></span>
+                                {!isPieceProduct && (
+                                    <button type="button" onClick={fetchWeightFromDevice} className="text-[#006948] hover:underline flex items-center gap-1">
+                                        <Weight size={14} /> Lấy từ cân
+                                    </button>
+                                )}
                             </label>
                             <input
                                 type="text"
                                 inputMode="decimal"
-                                placeholder="VD: 25.5"
+                                placeholder={isPieceProduct ? "VD: 10" : "VD: 25.5"}
                                 {...register("quantityKg", {
                                     required: "Vui lòng nhập số lượng/khối lượng",
                                     onChange: formatNumberField,
@@ -286,6 +306,14 @@ export function CreateTransactionDrawer({ open, onClose, onSuccess, warehouseTyp
                                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#006948] focus:outline-none focus:ring-1 focus:ring-[#006948]"
                             />
                             {errors.quantityKg && <p className="mt-1 text-xs text-red-500">{errors.quantityKg.message}</p>}
+                            {watchType === "EXPORT_FEED" && (
+                                <div className="mt-2.5 rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-800 flex items-start gap-2.5">
+                                    <Info size={16} className="text-emerald-600 mt-0.5 shrink-0" />
+                                    <div>
+                                        <span className="font-semibold">Xuất kho vật tư:</span> Đơn giá và giá trị xuất kho sẽ được hệ thống tự động tính theo giá vốn các lô trong kho (FIFO) khi duyệt giao dịch.
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {requiresSeason && (
@@ -302,25 +330,28 @@ export function CreateTransactionDrawer({ open, onClose, onSuccess, warehouseTyp
                                         <option key={s.seasonId || s.id} value={s.seasonId || s.id}>{s.seasonName || s.name || s.title || `Mùa vụ #${s.seasonId || s.id}`}</option>
                                     ))}
                                 </select>
+                                <p className="mt-1 text-xs text-slate-500">Mùa vụ bắt buộc cho giao dịch này</p>
                                 {errors.seasonId && <p className="mt-1 text-xs text-red-500">{errors.seasonId.message}</p>}
                             </div>
                         )}
 
-                        <div>
-                            <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                                Thiết bị cân IoT (Tùy chọn)
-                            </label>
-                            <select
-                                {...register("deviceId")}
-                                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#006948] focus:outline-none focus:ring-1 focus:ring-[#006948]"
-                            >
-                                <option value="">-- Chọn cân --</option>
-                                {availableDevices?.map(d => (
-                                    <option key={d.deviceId} value={d.deviceId}>{d.deviceName || d.deviceId}</option>
-                                ))}
-                            </select>
-                            <p className="mt-1 text-xs text-slate-500">Chọn cân nếu bạn muốn lấy khối lượng tự động</p>
-                        </div>
+                        {!isPieceProduct && (
+                            <div>
+                                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                    Thiết bị cân IoT (Tùy chọn)
+                                </label>
+                                <select
+                                    {...register("deviceId")}
+                                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#006948] focus:outline-none focus:ring-1 focus:ring-[#006948]"
+                                >
+                                    <option value="">-- Chọn cân --</option>
+                                    {availableDevices?.map(d => (
+                                        <option key={d.deviceId} value={d.deviceId}>{d.deviceName || d.deviceId}</option>
+                                    ))}
+                                </select>
+                                <p className="mt-1 text-xs text-slate-500">Chọn cân nếu bạn muốn lấy khối lượng tự động</p>
+                            </div>
+                        )}
 
                         {isPurchaseInbound && (
                             <div>
@@ -345,7 +376,7 @@ export function CreateTransactionDrawer({ open, onClose, onSuccess, warehouseTyp
                         {isSale && (
                             <div>
                                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                                    Giá bán thực tế (VNĐ/kg) <span className="text-red-500">*</span>
+                                    Giá bán thực tế (VNĐ/{getProductUnit(selectedProduct)}) <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="text"
