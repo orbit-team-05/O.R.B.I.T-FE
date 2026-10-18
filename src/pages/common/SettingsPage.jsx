@@ -21,6 +21,7 @@ import { AdminPageSkeleton } from "../../components/common/loading/AdminPageSkel
 import { useToast } from "../../components/common/toast/ToastProvider";
 import { ImagePreviewModal } from "../../components/ui/ImagePreviewModal";
 import { PasswordInput } from "../../components/common/form/PasswordInput";
+import { formatRole } from "../../utils/formatUtils";
 
 export function SettingsPage({
     pageTitle = "Cài đặt",
@@ -442,7 +443,7 @@ export function SettingsPage({
                                                         }
                                                         className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-[#006948]"
                                                     >
-                                                        {role.roleName}
+                                                        {formatRole(role.roleName || role)}
                                                     </span>
                                                 ),
                                             )

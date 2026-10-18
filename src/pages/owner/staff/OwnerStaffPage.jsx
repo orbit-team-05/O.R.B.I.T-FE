@@ -23,6 +23,7 @@ import { PasswordInput } from "../../../components/common/form/PasswordInput";
 import { ImagePreviewModal } from "../../../components/ui/ImagePreviewModal";
 import { useToast } from "../../../components/common/toast/ToastProvider";
 import { useAuth } from "../../../features/auth/context/AuthContext";
+import { formatRole } from "../../../utils/formatUtils";
 import { OwnerPageHeader } from "../common/OwnerPageHeader";
 import {
     createStaff,
@@ -610,7 +611,7 @@ export function OwnerStaffPage() {
                                                                 <span className="text-xs text-slate-400">{formatDate(log.createdAt)}</span>
                                                             </div>
                                                             <p className="mt-2 text-sm text-slate-600">{log.details || "Đã cập nhật thông tin."}</p>
-                                                            <p className="mt-2 text-xs text-slate-400">Thực hiện bởi {log.actorName || "Hệ thống"} · {log.actorRole || "SYSTEM"}</p>
+                                                            <p className="mt-2 text-xs text-slate-400">Thực hiện bởi {log.actorName || "Hệ thống"} · {formatRole(log.actorRole) || "Hệ thống"}</p>
                                                         </div>
                                                     ))}
                                                 </div>

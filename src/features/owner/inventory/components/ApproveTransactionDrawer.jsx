@@ -1,5 +1,5 @@
 import { X, CheckCircle, XCircle, Inbox, PackageOpen, Edit2, Upload, Trash2, Loader2 } from "lucide-react";
-import { formatCurrency, formatDateTime } from "../../../../utils/formatUtils";
+import { formatCurrency, formatDateTime, formatCategory, formatRole, formatUnit, formatTransactionType } from "../../../../utils/formatUtils";
 import { useState, useEffect, useRef } from "react";
 import { ImagePreviewModal } from "../../../../components/ui/ImagePreviewModal";
 import { uploadInventoryEvidence } from "../services/inventoryEvidenceApi";
@@ -123,18 +123,20 @@ export function ApproveTransactionDrawer({ transaction, open, onClose, onApprove
     };
 
     const getTypeConfig = (type) => {
+        const label = formatTransactionType(type);
         switch (type) {
             case "IMPORT":
-                return { label: "Nhập kho", color: "text-blue-700 bg-blue-50 border-blue-200", icon: Inbox };
+            case "HARVEST_IN":
+            case "RETURN_IN":
+                return { label, color: "text-blue-700 bg-blue-50 border-blue-200", icon: Inbox };
             case "EXPORT_FEED":
             case "HARVEST_EXPORT":
-                return { label: "Xuất kho", color: "text-orange-700 bg-orange-50 border-orange-200", icon: PackageOpen };
+            case "RETURN_OUT":
+                return { label, color: "text-orange-700 bg-orange-50 border-orange-200", icon: PackageOpen };
             case "PRODUCT_SALE":
-                return { label: "Bán từ kho sản phẩm", color: "text-emerald-700 bg-emerald-50 border-emerald-200", icon: PackageOpen };
-            case "HARVEST_IN":
-                return { label: "Lưu kho thu hoạch", color: "text-emerald-700 bg-emerald-50 border-emerald-200", icon: Inbox };
+                return { label, color: "text-emerald-700 bg-emerald-50 border-emerald-200", icon: PackageOpen };
             default:
-                return { label: type, color: "text-slate-700 bg-slate-50 border-slate-200", icon: PackageOpen };
+                return { label, color: "text-slate-700 bg-slate-50 border-slate-200", icon: PackageOpen };
         }
     };
 
@@ -191,10 +193,10 @@ export function ApproveTransactionDrawer({ transaction, open, onClose, onApprove
                                         value={editData.quantityKg} 
                                         onChange={val => setEditData({...editData, quantityKg: val})}
                                     />
-                                    <span className="font-bold text-slate-900">{transaction.storageUnit === "PIECE" ? "cái" : "kg"}</span>
+                                    <span className="font-bold text-slate-900">{formatUnit(transaction.storageUnit, transaction.packagingType)}</span>
                                 </div>
                             ) : (
-                                <p className="text-xl font-bold text-slate-900">{Number(transaction.quantityKg || 0).toLocaleString("vi-VN")} {transaction.storageUnit === "PIECE" ? "cái" : transaction.storageUnit === "MILLILITER" ? "ml" : "kg"}</p>
+                                <p className="text-xl font-bold text-slate-900">{Number(transaction.quantityKg || 0).toLocaleString("vi-VN")} {formatUnit(transaction.storageUnit, transaction.packagingType)}</p>
                             )}
                         </div>
                     </div>
@@ -202,7 +204,7 @@ export function ApproveTransactionDrawer({ transaction, open, onClose, onApprove
                     <div className="grid grid-cols-2 gap-4">
                         <div className="rounded-xl border border-slate-200 p-4">
                             <p className="text-xs font-medium text-slate-500">Danh mục</p>
-                            <p className="mt-1 font-semibold text-slate-900">{transaction.productCategory}</p>
+                            <p className="mt-1 font-semibold text-slate-900">{formatCategory(transaction.productCategory)}</p>
                         </div>
                         <div className="rounded-xl border border-slate-200 p-4">
                             <p className="text-xs font-medium text-slate-500">Đơn giá</p>
@@ -213,10 +215,10 @@ export function ApproveTransactionDrawer({ transaction, open, onClose, onApprove
                                         value={editData.unitPrice} 
                                         onChange={val => setEditData({...editData, unitPrice: val})}
                                     />
-                                    <span className="text-slate-500">/{transaction.storageUnit === "PIECE" ? "cái" : "kg"}</span>
+                                    <span className="text-slate-500">/{formatUnit(transaction.storageUnit, transaction.packagingType)}</span>
                                 </div>
                             ) : (
-                                <p className="mt-1 font-semibold text-slate-900">{formatCurrency(transaction.unitPrice)}/{transaction.storageUnit === "PIECE" ? "cái" : transaction.storageUnit === "MILLILITER" ? "ml" : "kg"}</p>
+                                <p className="mt-1 font-semibold text-slate-900">{formatCurrency(transaction.unitPrice)}/{formatUnit(transaction.storageUnit, transaction.packagingType)}</p>
                             )}
                         </div>
                         <div className="rounded-xl border border-slate-200 p-4">
@@ -229,12 +231,12 @@ export function ApproveTransactionDrawer({ transaction, open, onClose, onApprove
                         </div>
                     </div>
 
-                    {(transaction.farmName || transaction.seasonName || transaction.deviceId || transaction.macAddress) && (
+                    {(transaction.farmName || transaction.seasonName || transaction.deviceId || transaction.macAddress || transaction.requestedRole) && (
                         <div className="grid grid-cols-2 gap-4">
                             {transaction.farmName && <div className="rounded-xl border border-slate-200 p-4"><p className="text-xs font-medium text-slate-500">Trang trại</p><p className="mt-1 font-semibold text-slate-900">{transaction.farmName}</p></div>}
                             {transaction.seasonName && <div className="rounded-xl border border-slate-200 p-4"><p className="text-xs font-medium text-slate-500">Mùa vụ</p><p className="mt-1 font-semibold text-slate-900">{transaction.seasonName}</p></div>}
                             {transaction.deviceId && <div className="rounded-xl border border-slate-200 p-4"><p className="text-xs font-medium text-slate-500">Thiết bị cân</p><p className="mt-1 font-semibold text-slate-900">{transaction.deviceName || transaction.deviceId}</p><p className="mt-1 text-xs text-slate-500">{transaction.deviceId}{transaction.macAddress ? ` · ${transaction.macAddress}` : ""}</p></div>}
-                            {transaction.requestedRole && <div className="rounded-xl border border-slate-200 p-4"><p className="text-xs font-medium text-slate-500">Vai trò người tạo</p><p className="mt-1 font-semibold text-slate-900">{transaction.requestedRole}</p></div>}
+                            {transaction.requestedRole && <div className="rounded-xl border border-slate-200 p-4"><p className="text-xs font-medium text-slate-500">Vai trò người tạo</p><p className="mt-1 font-semibold text-slate-900">{formatRole(transaction.requestedRole)}</p></div>}
                         </div>
                     )}
 

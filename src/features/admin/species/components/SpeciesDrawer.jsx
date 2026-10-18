@@ -119,7 +119,7 @@ export function SpeciesDrawer({
 
                         <div>
                             <label className="mb-1.5 block text-xs font-medium text-slate-700">
-                                Nhóm species
+                                Nhóm loài
                             </label>
 
                             <select
@@ -130,7 +130,7 @@ export function SpeciesDrawer({
                             >
                                 {CATEGORY_OPTIONS.map((option) => (
                                     <option key={option.value} value={option.value}>
-                                        {option.value}
+                                        {option.label}
                                     </option>
                                 ))}
                             </select>

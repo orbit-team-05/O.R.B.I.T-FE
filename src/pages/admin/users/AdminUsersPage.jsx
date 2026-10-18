@@ -11,6 +11,7 @@ import { useAdminUsers } from "../../../features/admin/users/hooks/useAdminUsers
 import { getUserDetail, uploadUserAvatar } from "../../../features/admin/users/services/userApi";
 import { createFarm } from "../../../features/admin/farms/services/farmApi";
 import { useAuth } from "../../../features/auth/context/AuthContext";
+import { formatRole } from "../../../utils/formatUtils";
 
 function AdminUsersHeader({ onCreate }) {
     return (
@@ -312,7 +313,7 @@ export function AdminUsersPage() {
                     </div>
                     <select value={filters.role} onChange={(event) => updateFilters({ role: event.target.value })} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-[#006948]">
                         <option value="">Tất cả vai trò</option>
-                        {roles.map((role) => <option key={role.id} value={role.roleName}>{role.roleName}</option>)}
+                        {roles.map((role) => <option key={role.id} value={role.roleName}>{formatRole(role.roleName)}</option>)}
                     </select>
                     <select value={filters.status} onChange={(event) => updateFilters({ status: event.target.value })} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-[#006948]">
                         <option value="">Tất cả trạng thái</option>

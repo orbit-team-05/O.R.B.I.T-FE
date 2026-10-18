@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 import { useState } from "react";
 import { ImagePreviewModal } from "../../../../components/ui/ImagePreviewModal";
+import { formatCategory, formatTransactionType } from "../../../../utils/formatUtils";
 
 function formatMoney(value) {
     return `${Number(value || 0).toLocaleString("vi-VN")}đ`;
@@ -147,7 +148,7 @@ export function InventoryStockDetailDrawer({
                         <section className="grid grid-cols-2 gap-3">
                             <DetailItem label="Sản phẩm" value={stock?.productName} />
                             <DetailItem label="Mã sản phẩm" value={stock?.productCode} />
-                            <DetailItem label="Loại" value={stock?.category} />
+                            <DetailItem label="Loại" value={formatCategory(stock?.category)} />
                             <DetailItem label="Đơn vị" value={STORAGE_UNIT_LABELS[stock?.storageUnit] ?? stock?.storageUnit} />
                             <DetailItem
                                 label="Tồn kho"
@@ -306,7 +307,7 @@ export function InventoryStockDetailDrawer({
                                                 </td>
 
                                                 <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
-                                                    {exp.transactionType === 'EXPORT_FEED' ? 'Cho ăn' : exp.transactionType === 'HARVEST_EXPORT' ? 'Thu hoạch' : exp.transactionType === 'RETURN_OUT' ? 'Trả hàng' : exp.transactionType === 'LEND' ? 'Cho mượn' : exp.transactionType}
+                                                    {formatTransactionType(exp.transactionType)}
                                                 </td>
 
                                                 <td className="px-4 py-3 whitespace-nowrap">

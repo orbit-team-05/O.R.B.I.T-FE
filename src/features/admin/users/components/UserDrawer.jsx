@@ -5,6 +5,7 @@ import { UserStatusBadge } from "./UserStatusBadge";
 import { ImagePreviewModal } from "../../../../components/ui/ImagePreviewModal";
 import { PasswordInput } from "../../../../components/common/form/PasswordInput";
 import { NumberInput } from "../../../../components/common/form/NumberInput";
+import { formatRole } from "../../../../utils/formatUtils";
 
 const INITIAL_FORM = {
     username: "",
@@ -527,7 +528,7 @@ export function UserDrawer({
                                             disabled={isViewMode}
                                             className="rounded border-slate-300 text-[#006948] focus:ring-[#006948] cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
                                         />
-                                        <span>{role.roleName}</span>
+                                        <span>{formatRole(role.roleName)}</span>
                                     </label>
                                 ))}
                                 {roles.length === 0 && (

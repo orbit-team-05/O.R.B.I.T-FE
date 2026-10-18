@@ -2,6 +2,7 @@ import { TableLoadingOverlay } from "../../../../components/common/table/TableLo
 import Pagination from "../../../../components/common/pagination/Pagination";
 import { SortSelect } from "../../../../components/common/sort/SortSelect";
 import { UserStatusBadge } from "./UserStatusBadge";
+import { formatRole } from "../../../../utils/formatUtils";
 
 function UserAvatar({ user }) {
     const initials = (user.fullName || user.username || "?")
@@ -139,7 +140,7 @@ export function UserTable({
                                                                 : "bg-blue-100 text-blue-800",
                                                         ].join(" ")}
                                                     >
-                                                        {role}
+                                                        {formatRole(role)}
                                                     </span>
                                                 ))}
                                             </div>

@@ -2,6 +2,15 @@ import { TableLoadingOverlay } from "../../../../components/common/table/TableLo
 import Pagination from "../../../../components/common/pagination/Pagination";
 import { SortSelect } from "../../../../components/common/sort/SortSelect";
 
+const CATEGORY_GROUP_LABELS = {
+    TOM: "Tôm",
+    CA: "Cá",
+    TRAI_CAY: "Trái cây",
+    LUA_GAO: "Lúa gạo",
+    RAU_CU: "Rau củ",
+    KHAC: "Khác",
+};
+
 function SpeciesStatusBadge({ active }) {
     return (
         <span
@@ -112,7 +121,7 @@ export function SpeciesTable({
 
                                 <td className="px-5 py-4">
                     <span className="rounded bg-slate-100 px-2 py-1 text-[11px] text-slate-600">
-                      {item.categoryGroup}
+                      {CATEGORY_GROUP_LABELS[item.categoryGroup] || item.categoryGroup}
                     </span>
                                 </td>
 

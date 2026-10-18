@@ -1,5 +1,5 @@
 import { CheckCircle, Search, Inbox, PackageOpen } from "lucide-react";
-import { formatDateTime } from "../../../../utils/formatUtils";
+import { formatDateTime, formatCategory, formatUnit, formatTransactionType } from "../../../../utils/formatUtils";
 
 export function PendingTransactionList({ transactions, loading, onApprove, onViewDetail }) {
     if (loading) {
@@ -33,18 +33,20 @@ export function PendingTransactionList({ transactions, loading, onApprove, onVie
     }
 
     const getTypeConfig = (type) => {
+        const label = formatTransactionType(type);
         switch (type) {
             case "IMPORT":
-                return { label: "Nhập kho", color: "text-blue-700 bg-blue-50 border-blue-200", icon: Inbox };
+            case "HARVEST_IN":
+            case "RETURN_IN":
+                return { label, color: "text-blue-700 bg-blue-50 border-blue-200", icon: Inbox };
             case "EXPORT_FEED":
             case "HARVEST_EXPORT":
-                return { label: "Xuất kho", color: "text-orange-700 bg-orange-50 border-orange-200", icon: PackageOpen };
-            case "HARVEST_IN":
-                return { label: "Lưu kho thu hoạch", color: "text-emerald-700 bg-emerald-50 border-emerald-200", icon: Inbox };
+            case "RETURN_OUT":
+                return { label, color: "text-orange-700 bg-orange-50 border-orange-200", icon: PackageOpen };
             case "PRODUCT_SALE":
-                return { label: "Bán từ kho sản phẩm", color: "text-emerald-700 bg-emerald-50 border-emerald-200", icon: PackageOpen };
+                return { label, color: "text-emerald-700 bg-emerald-50 border-emerald-200", icon: PackageOpen };
             default:
-                return { label: type, color: "text-slate-700 bg-slate-50 border-slate-200", icon: PackageOpen };
+                return { label, color: "text-slate-700 bg-slate-50 border-slate-200", icon: PackageOpen };
         }
     };
 
@@ -71,14 +73,14 @@ export function PendingTransactionList({ transactions, loading, onApprove, onVie
                                 <h4 className="font-semibold text-slate-900 line-clamp-1" title={tx.productName}>
                                     {tx.productName}
                                 </h4>
-                                <p className="text-xs text-slate-500 mt-0.5">{tx.productCategory}</p>
+                                <p className="text-xs text-slate-500 mt-0.5">{formatCategory(tx.productCategory)}</p>
                             </div>
                             
                             <div className="grid grid-cols-2 gap-3 rounded-xl bg-slate-50 p-3">
                                 <div>
                                     <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Số lượng</p>
                                     <p className="mt-1 font-semibold text-slate-900">
-                                        {Number(tx.quantityKg || 0).toLocaleString("vi-VN")} {tx.storageUnit === "PIECE" ? "cái" : tx.storageUnit === "MILLILITER" ? "ml" : "kg"}
+                                        {Number(tx.quantityKg || 0).toLocaleString("vi-VN")} {formatUnit(tx.storageUnit, tx.packagingType)}
                                     </p>
                                 </div>
                                 <div>
