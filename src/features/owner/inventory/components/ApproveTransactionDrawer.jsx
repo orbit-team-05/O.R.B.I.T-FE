@@ -1,6 +1,6 @@
 import { X, CheckCircle, XCircle, Inbox, PackageOpen, Edit2, Upload, Trash2, Loader2 } from "lucide-react";
-import { formatCurrency, formatDateTime, formatCategory, formatRole, formatUnit, formatTransactionType } from "../../../../utils/formatUtils";
-import { useState, useEffect, useRef } from "react";
+import { formatCurrency, formatDateTime, formatCategory, formatRole, formatUnit, formatTransactionType, formatApprovalStatus } from "../../../../utils/formatUtils";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { ImagePreviewModal } from "../../../../components/ui/ImagePreviewModal";
 import { uploadInventoryEvidence } from "../services/inventoryEvidenceApi";
 import { useToast } from "../../../../components/common/toast/ToastProvider";
@@ -47,6 +47,23 @@ export function ApproveTransactionDrawer({ transaction, open, onClose, onApprove
             setApprovalNote("");
         }
     }, [transaction, open]);
+
+    const editQty = parseLocalizedNumber(editData.quantityKg);
+    const editPrice = parseLocalizedNumber(editData.unitPrice);
+    const initialTotal = useMemo(() => {
+        if (!transaction) return null;
+        if (transaction.totalAmount && Number(transaction.totalAmount) > 0) {
+            return Number(transaction.totalAmount);
+        }
+        if (transaction.unitPrice && Number(transaction.unitPrice) > 0 && transaction.quantityKg) {
+            return Number(transaction.unitPrice) * Number(transaction.quantityKg);
+        }
+        return null;
+    }, [transaction]);
+
+    const currentTotal = isEditing
+        ? (editQty > 0 && editPrice > 0 ? editQty * editPrice : 0)
+        : initialTotal;
 
     if (!transaction) return null;
 
@@ -152,7 +169,18 @@ export function ApproveTransactionDrawer({ transaction, open, onClose, onApprove
 
             <div className={`fixed inset-y-0 right-0 z-50 flex w-full lg:w-2/3 flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out ${open ? 'translate-x-0' : 'translate-x-full'}`}>
                 <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 className="text-lg font-semibold text-slate-900">Chi tiết giao dịch chờ duyệt</h2>
+                    <div className="flex items-center gap-3">
+                        <h2 className="text-lg font-semibold text-slate-900">Giao dịch #{transaction.id}</h2>
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                            transaction.approvalStatus === "APPROVED" || transaction.approvalStatus === "AUTO_APPROVED"
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                : transaction.approvalStatus === "REJECTED"
+                                ? "bg-red-50 text-red-700 border border-red-200"
+                                : "bg-amber-50 text-amber-700 border border-amber-200"
+                        }`}>
+                            {formatApprovalStatus(transaction.approvalStatus || "PENDING")}
+                        </span>
+                    </div>
                     <div className="flex items-center gap-2">
                         {!isEditing && (
                             <button
@@ -183,7 +211,12 @@ export function ApproveTransactionDrawer({ transaction, open, onClose, onApprove
                                 <Icon size={24} />
                             </div>
                             <div>
-                                <h3 className="font-semibold text-slate-900">{transaction.productName}</h3>
+                                <h3 className="font-semibold text-slate-900">
+                                    {transaction.productName}
+                                    {transaction.productCode && (
+                                        <span className="ml-1.5 text-xs font-normal text-slate-500">({transaction.productCode})</span>
+                                    )}
+                                </h3>
                                 <p className="text-sm text-slate-500">{config.label}</p>
                             </div>
                         </div>
@@ -206,8 +239,20 @@ export function ApproveTransactionDrawer({ transaction, open, onClose, onApprove
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="rounded-xl border border-slate-200 p-4">
+                            <p className="text-xs font-medium text-slate-500">Loại giao dịch</p>
+                            <p className="mt-1 font-semibold text-slate-900">{config.label}</p>
+                        </div>
+                        <div className="rounded-xl border border-slate-200 p-4">
+                            <p className="text-xs font-medium text-slate-500">Hành động</p>
+                            <p className="mt-1 font-semibold text-slate-900">{transaction.requestedAction || "—"}</p>
+                        </div>
+                        <div className="rounded-xl border border-slate-200 p-4">
                             <p className="text-xs font-medium text-slate-500">Danh mục</p>
                             <p className="mt-1 font-semibold text-slate-900">{formatCategory(transaction.productCategory)}</p>
+                        </div>
+                        <div className="rounded-xl border border-slate-200 p-4">
+                            <p className="text-xs font-medium text-slate-500">Mùa vụ</p>
+                            <p className="mt-1 font-semibold text-slate-900">{transaction.seasonName || "Không gắn"}</p>
                         </div>
                         <div className="rounded-xl border border-slate-200 p-4">
                             <p className="text-xs font-medium text-slate-500">{transaction.transactionType === "EXPORT_FEED" ? "Định giá xuất kho" : "Đơn giá"}</p>
@@ -220,30 +265,77 @@ export function ApproveTransactionDrawer({ transaction, open, onClose, onApprove
                                         value={editData.unitPrice} 
                                         onChange={val => setEditData({...editData, unitPrice: val})}
                                     />
-                                    <span className="text-slate-500">/{formatUnit(transaction.storageUnit, transaction.packagingType)}</span>
+                                    <span className="text-slate-500 text-sm">/{formatUnit(transaction.storageUnit, transaction.packagingType)}</span>
                                 </div>
                             ) : (
                                 <p className="mt-1 font-semibold text-slate-900">{formatCurrency(transaction.unitPrice)}/{formatUnit(transaction.storageUnit, transaction.packagingType)}</p>
                             )}
                         </div>
                         <div className="rounded-xl border border-slate-200 p-4">
+                            <p className="text-xs font-medium text-slate-500">Tổng tiền</p>
+                            {transaction.transactionType === "EXPORT_FEED" ? (
+                                <p className="mt-1 text-sm font-semibold text-emerald-700">Tự động tính theo FIFO khi duyệt</p>
+                            ) : (
+                                <p className="mt-1 font-semibold text-slate-900">
+                                    {currentTotal != null ? formatCurrency(currentTotal) : "—"}
+                                </p>
+                            )}
+                        </div>
+                        <div className="rounded-xl border border-slate-200 p-4">
                             <p className="text-xs font-medium text-slate-500">Người yêu cầu</p>
-                            <p className="mt-1 font-semibold text-slate-900">{transaction.requestedBy}</p>
+                            <p className="mt-1 font-semibold text-slate-900">{transaction.requestedBy || "—"}</p>
+                            {transaction.requestedRole && (
+                                <p className="mt-0.5 text-xs text-slate-500">{formatRole(transaction.requestedRole)}</p>
+                            )}
+                        </div>
+                        <div className="rounded-xl border border-slate-200 p-4">
+                            <p className="text-xs font-medium text-slate-500">Thiết bị cân</p>
+                            <p className="mt-1 font-semibold text-slate-900">
+                                {transaction.deviceId ? (transaction.deviceName || transaction.deviceId) : (transaction.deviceName || "Không gắn")}
+                            </p>
+                            {transaction.deviceId && (
+                                <p className="mt-0.5 text-xs text-slate-500">{transaction.deviceId}{transaction.macAddress ? ` · ${transaction.macAddress}` : ""}</p>
+                            )}
+                        </div>
+                        <div className="rounded-xl border border-slate-200 p-4">
+                            <p className="text-xs font-medium text-slate-500">Trang trại</p>
+                            <p className="mt-1 font-semibold text-slate-900">{transaction.farmName || "—"}</p>
                         </div>
                         <div className="rounded-xl border border-slate-200 p-4">
                             <p className="text-xs font-medium text-slate-500">Thời gian tạo</p>
-                            <p className="mt-1 font-semibold text-slate-900">{formatDateTime(transaction.createdAt)}</p>
+                            <p className="mt-1 font-semibold text-slate-900">{formatDateTime(transaction.createdAt) || "—"}</p>
                         </div>
                     </div>
 
-                    {(transaction.farmName || transaction.seasonName || transaction.deviceId || transaction.macAddress || transaction.requestedRole) && (
+                    <div className="space-y-3">
+                        <h4 className="font-semibold text-slate-900">Lịch sử duyệt</h4>
                         <div className="grid grid-cols-2 gap-4">
-                            {transaction.farmName && <div className="rounded-xl border border-slate-200 p-4"><p className="text-xs font-medium text-slate-500">Trang trại</p><p className="mt-1 font-semibold text-slate-900">{transaction.farmName}</p></div>}
-                            {transaction.seasonName && <div className="rounded-xl border border-slate-200 p-4"><p className="text-xs font-medium text-slate-500">Mùa vụ</p><p className="mt-1 font-semibold text-slate-900">{transaction.seasonName}</p></div>}
-                            {transaction.deviceId && <div className="rounded-xl border border-slate-200 p-4"><p className="text-xs font-medium text-slate-500">Thiết bị cân</p><p className="mt-1 font-semibold text-slate-900">{transaction.deviceName || transaction.deviceId}</p><p className="mt-1 text-xs text-slate-500">{transaction.deviceId}{transaction.macAddress ? ` · ${transaction.macAddress}` : ""}</p></div>}
-                            {transaction.requestedRole && <div className="rounded-xl border border-slate-200 p-4"><p className="text-xs font-medium text-slate-500">Vai trò người tạo</p><p className="mt-1 font-semibold text-slate-900">{formatRole(transaction.requestedRole)}</p></div>}
+                            <div className="rounded-xl border border-slate-200 p-4">
+                                <p className="text-xs font-medium text-slate-500">Trạng thái trước</p>
+                                <p className="mt-1 font-semibold text-slate-900">{formatApprovalStatus(transaction.approvalStatusBefore)}</p>
+                            </div>
+                            <div className="rounded-xl border border-slate-200 p-4">
+                                <p className="text-xs font-medium text-slate-500">Trạng thái sau</p>
+                                <p className="mt-1 font-semibold text-slate-900">{formatApprovalStatus(transaction.approvalStatusAfter || transaction.approvalStatus)}</p>
+                            </div>
+                            <div className="rounded-xl border border-slate-200 p-4">
+                                <p className="text-xs font-medium text-slate-500">Người quyết định</p>
+                                <p className="mt-1 font-semibold text-slate-900">{transaction.approvedBy || "Chưa quyết định"}</p>
+                            </div>
+                            <div className="rounded-xl border border-slate-200 p-4">
+                                <p className="text-xs font-medium text-slate-500">Vai trò người duyệt</p>
+                                <p className="mt-1 font-semibold text-slate-900">{formatRole(transaction.approvedByRole)}</p>
+                            </div>
+                            <div className="rounded-xl border border-slate-200 p-4">
+                                <p className="text-xs font-medium text-slate-500">Thời gian quyết định</p>
+                                <p className="mt-1 font-semibold text-slate-900">{transaction.approvedAt ? formatDateTime(transaction.approvedAt) : "Chưa quyết định"}</p>
+                            </div>
+                            <div className="rounded-xl border border-slate-200 p-4">
+                                <p className="text-xs font-medium text-slate-500">Ghi chú</p>
+                                <p className="mt-1 font-semibold text-slate-900">{transaction.approvalNote || "—"}</p>
+                            </div>
                         </div>
-                    )}
+                    </div>
 
                     <div className="space-y-3">
                         <h4 className="font-medium text-slate-900">Hình ảnh minh chứng</h4>
