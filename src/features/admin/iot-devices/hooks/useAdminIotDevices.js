@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import {
     createIotDeviceFromMac,
+    discoverIotDeviceMac,
     getIotDeviceSummary,
     getIotDevices,
     getUnassignedIotDevices,
@@ -133,6 +134,21 @@ export function useAdminIotDevices(initialView = DEVICE_TABLE_VIEW.ALL) {
         }
     }
 
+    async function handleDiscoverMac(macAddress) {
+        try {
+            setActionLoading(true);
+            setActionError("");
+            const discovered = await discoverIotDeviceMac(macAddress);
+            await loadAll();
+            return discovered;
+        } catch (err) {
+            setActionError(getErrorMessage(err, "Không thể phát hiện/thêm địa chỉ MAC."));
+            return null;
+        } finally {
+            setActionLoading(false);
+        }
+    }
+
     return {
         activeView,
         setActiveView: handleChangeView,
@@ -156,6 +172,7 @@ export function useAdminIotDevices(initialView = DEVICE_TABLE_VIEW.ALL) {
         actionLoading,
         actionError,
         clearActionError: () => setActionError(""),
+        discoverMac: handleDiscoverMac,
         createFromMac: handleCreateFromMac,
         updateStatus: handleUpdateStatus,
     };

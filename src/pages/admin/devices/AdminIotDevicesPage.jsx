@@ -1,9 +1,10 @@
-import { RefreshCw } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
 import { AdminPageSkeleton } from "../../../components/common/loading/AdminPageSkeleton";
 import { ConfirmDialog } from "../../../components/common/dialog/ConfirmDialog";
 import { useToast } from "../../../components/common/toast/ToastProvider";
+import { DiscoverMacModal } from "../../../features/admin/iot-devices/components/DiscoverMacModal";
 import { IotDeviceDetailDrawer } from "../../../features/admin/iot-devices/components/IotDeviceDetailDrawer";
 import { IotDeviceDrawer } from "../../../features/admin/iot-devices/components/IotDeviceDrawer";
 import { IotDeviceStats } from "../../../features/admin/iot-devices/components/IotDeviceStats";
@@ -14,14 +15,29 @@ import {
 } from "../../../features/admin/iot-devices/hooks/useAdminIotDevices";
 import { getIotDeviceDetail, uploadIotDeviceImage } from "../../../features/admin/iot-devices/services/iotDeviceApi";
 
-function Header({ onReload }) {
+function Header({ onReload, onOpenDiscover }) {
     return (
         <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <h1 className="text-2xl font-semibold text-slate-900">Thiết bị cân</h1>
                 <p className="mt-1 max-w-2xl text-sm text-slate-600">Quản lý thiết bị cân và theo dõi khối lượng gửi lên trong các giao dịch của Farm.</p>
             </div>
-            <button type="button" onClick={onReload} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"><RefreshCw size={15} /> Làm mới</button>
+            <div className="flex flex-wrap items-center gap-3">
+                <button
+                    type="button"
+                    onClick={onReload}
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                >
+                    <RefreshCw size={15} /> Làm mới
+                </button>
+                <button
+                    type="button"
+                    onClick={onOpenDiscover}
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#006948] px-4 text-sm font-semibold text-white shadow-sm hover:bg-[#00583d] transition"
+                >
+                    <Plus size={16} /> Thêm thiết bị cân (MAC)
+                </button>
+            </div>
         </header>
     );
 }
@@ -63,10 +79,12 @@ export function AdminIotDevicesPage() {
         actionLoading,
         actionError,
         clearActionError,
+        discoverMac,
         createFromMac,
         updateStatus,
     } = useAdminIotDevices();
 
+    const [discoverOpen, setDiscoverOpen] = useState(false);
     const [createRecord, setCreateRecord] = useState(null);
     const [detailDevice, setDetailDevice] = useState(null);
     const [confirmState, setConfirmState] = useState({ open: false, device: null, nextStatus: "" });
@@ -80,6 +98,20 @@ export function AdminIotDevicesPage() {
         } finally {
             setUploadingImage(false);
         }
+    }
+
+    async function handleDiscover(macAddress) {
+        clearActionError();
+        const discovered = await discoverMac(macAddress);
+        if (!discovered) {
+            toast.error(actionError || "Không thể phát hiện địa chỉ MAC.");
+            return;
+        }
+
+        toast.success(`Đã phát hiện MAC ${discovered.macAddress}.`);
+        setDiscoverOpen(false);
+        setActiveView(DEVICE_TABLE_VIEW.UNCREATED);
+        setCreateRecord(discovered);
     }
 
     async function handleCreate(payload) {
@@ -130,7 +162,7 @@ export function AdminIotDevicesPage() {
     return (
         <>
             <section className="space-y-5">
-                <Header onReload={reload} />
+                <Header onReload={reload} onOpenDiscover={() => setDiscoverOpen(true)} />
                 {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>}
                 <IotDeviceStats summary={summary} />
                 <Tabs activeView={activeView} onChange={setActiveView} summary={summary} />
@@ -145,8 +177,17 @@ export function AdminIotDevicesPage() {
                     onCreate={setCreateRecord}
                     onViewDetail={openDetail}
                     onToggleStatus={handleToggleStatus}
+                    onOpenDiscover={() => setDiscoverOpen(true)}
                 />
             </section>
+
+            <DiscoverMacModal
+                open={discoverOpen}
+                submitting={actionLoading}
+                error={actionError}
+                onClose={() => { if (!actionLoading) setDiscoverOpen(false); }}
+                onSubmit={handleDiscover}
+            />
 
             <IotDeviceDrawer
                 open={Boolean(createRecord)}

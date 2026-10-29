@@ -37,6 +37,14 @@ export async function getIotDeviceDetail(deviceId) {
     return response.data.data;
 }
 
+export async function discoverIotDeviceMac(macAddress) {
+    const response = await httpClient.post(`${IOT_DEVICE_ENDPOINT}/discovered`, {
+        macAddress,
+    });
+
+    return response.data.data;
+}
+
 export async function createIotDeviceFromMac(macRecordId, payload) {
     const response = await httpClient.post(
         `${IOT_DEVICE_ENDPOINT}/uncreated/${macRecordId}/create`,

@@ -182,6 +182,7 @@ export function ScaleDeviceCardGrid({
     onToggleStatus,
     sortKey = "createdDesc",
     onSortChange,
+    onOpenDiscover,
 }) {
 
     return (
@@ -218,6 +219,16 @@ export function ScaleDeviceCardGrid({
                     <p className="mt-3 text-sm font-semibold text-slate-600">
                         {view === "UNCREATED" ? "Chưa có MAC nào đang chờ tạo." : "Chưa có thiết bị cân để hiển thị."}
                     </p>
+                    {view === "UNCREATED" && onOpenDiscover && (
+                        <button
+                            type="button"
+                            onClick={onOpenDiscover}
+                            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#006948] px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-[#00583d]"
+                        >
+                            <Plus size={14} />
+                            Thêm địa chỉ MAC
+                        </button>
+                    )}
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
