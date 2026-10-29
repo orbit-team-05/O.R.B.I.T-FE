@@ -200,7 +200,13 @@ export function AdminIotDevicesPage() {
                 onSubmit={handleCreate}
             />
 
-            <IotDeviceDetailDrawer open={Boolean(detailDevice)} device={detailDevice} loading={detailLoading} onClose={() => setDetailDevice(null)} />
+            <IotDeviceDetailDrawer
+                open={Boolean(detailDevice)}
+                device={detailDevice}
+                loading={detailLoading}
+                onClose={() => setDetailDevice(null)}
+                onRefreshList={reload}
+            />
 
             <ConfirmDialog
                 open={confirmState.open}

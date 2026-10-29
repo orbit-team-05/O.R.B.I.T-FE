@@ -74,3 +74,20 @@ export async function updateIotDeviceStatus(deviceId, status) {
 
     return response.data.data;
 }
+
+export async function regenerateActivationCode(deviceId) {
+    const response = await httpClient.post(
+        `${IOT_DEVICE_ENDPOINT}/${deviceId}/regenerate-activation-code`,
+    );
+
+    return response.data.data;
+}
+
+export async function regenerateApiKey(deviceId) {
+    const response = await httpClient.post(
+        `${IOT_DEVICE_ENDPOINT}/${deviceId}/regenerate-api-key`,
+    );
+
+    return response.data.data;
+}
+
