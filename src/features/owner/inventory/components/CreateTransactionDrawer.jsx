@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { X, Save, Upload, Loader2, Weight, Info } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { httpClient } from "../../../../services/httpClient";
 import { useAuth } from "../../../auth/context/AuthContext";
 import { useToast } from "../../../../components/common/toast/ToastProvider";
@@ -88,6 +88,59 @@ export function CreateTransactionDrawer({ open, onClose, onSuccess, warehouseTyp
 
     const watchType = watch("transactionType");
     const watchProductId = watch("productId");
+    const watchDeviceId = watch("deviceId");
+    const lastWeightAtRef = useRef(null);
+    const [autoFillNotice, setAutoFillNotice] = useState(null);
+
+    // Tự động lắng nghe và điền khối lượng khi bấm Gửi (#) trên cân IoT
+    useEffect(() => {
+        if (!open || !user?.farmId || !watchDeviceId) {
+            lastWeightAtRef.current = null;
+            setAutoFillNotice(null);
+            return;
+        }
+
+        let isMounted = true;
+
+        // Lấy thời điểm gửi gần nhất hiện tại làm mốc ban đầu
+        httpClient.get(`/farms/${user.farmId}/iot-devices/${watchDeviceId}/latest-weight`)
+            .then((res) => {
+                if (isMounted && res.data?.data) {
+                    lastWeightAtRef.current = res.data.data.capturedAt || "__INITIAL__";
+                }
+            })
+            .catch(() => {});
+
+        const interval = setInterval(async () => {
+            try {
+                const response = await httpClient.get(`/farms/${user.farmId}/iot-devices/${watchDeviceId}/latest-weight`);
+                const data = response.data?.data;
+                if (!isMounted || !data || data.weightGrams == null) return;
+
+                const currentWeightAt = data.capturedAt;
+                if (!lastWeightAtRef.current) {
+                    lastWeightAtRef.current = currentWeightAt || "__SET__";
+                    return;
+                }
+
+                if (currentWeightAt && currentWeightAt !== lastWeightAtRef.current) {
+                    lastWeightAtRef.current = currentWeightAt;
+                    const kg = Number(data.weightGrams) / 1000;
+                    setValue("quantityKg", formatLocalizedNumber(kg), { shouldValidate: true });
+                    setAutoFillNotice(`Vừa nhận ${formatLocalizedNumber(kg)} kg từ cân`);
+                    toast.success(`Đã tự động điền ${formatLocalizedNumber(kg)} kg từ cân IoT`);
+                }
+            } catch {
+                // polling nền im lặng
+            }
+        }, 1500);
+
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
+    }, [open, user?.farmId, watchDeviceId, setValue, toast]);
+
     const selectedProduct = products?.find(p => p.id === Number(watchProductId));
     const isPieceProduct = selectedProduct?.storageUnit === "PIECE";
     const isProductWarehouse = warehouseType === "PRODUCT";
@@ -287,7 +340,14 @@ export function CreateTransactionDrawer({ open, onClose, onSuccess, warehouseTyp
 
                         <div>
                             <label className="mb-1.5 flex justify-between text-sm font-medium text-slate-700">
-                                <span>{isPieceProduct ? `Số lượng (${getProductUnit(selectedProduct)})` : `Khối lượng (${getProductUnit(selectedProduct)})`} <span className="text-red-500">*</span></span>
+                                <span className="flex items-center gap-2">
+                                    <span>{isPieceProduct ? `Số lượng (${getProductUnit(selectedProduct)})` : `Khối lượng (${getProductUnit(selectedProduct)})`} <span className="text-red-500">*</span></span>
+                                    {autoFillNotice && (
+                                        <span className="text-xs bg-emerald-100 text-[#006948] px-2 py-0.5 rounded-full font-normal animate-pulse">
+                                            {autoFillNotice}
+                                        </span>
+                                    )}
+                                </span>
                                 {!isPieceProduct && (
                                     <button type="button" onClick={fetchWeightFromDevice} className="text-[#006948] hover:underline flex items-center gap-1">
                                         <Weight size={14} /> Lấy từ cân
@@ -337,8 +397,17 @@ export function CreateTransactionDrawer({ open, onClose, onSuccess, warehouseTyp
 
                         {!isPieceProduct && (
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                                    Thiết bị cân IoT (Tùy chọn)
+                                <label className="mb-1.5 flex justify-between text-sm font-medium text-slate-700">
+                                    <span>Thiết bị cân IoT (Tùy chọn)</span>
+                                    {watchDeviceId && (
+                                        <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-normal">
+                                            <span className="relative flex h-2 w-2">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                            </span>
+                                            Tự điền khi bấm [#] trên cân
+                                        </span>
+                                    )}
                                 </label>
                                 <select
                                     {...register("deviceId")}
@@ -349,7 +418,11 @@ export function CreateTransactionDrawer({ open, onClose, onSuccess, warehouseTyp
                                         <option key={d.deviceId} value={d.deviceId}>{d.deviceName || d.deviceId}</option>
                                     ))}
                                 </select>
-                                <p className="mt-1 text-xs text-slate-500">Chọn cân nếu bạn muốn lấy khối lượng tự động</p>
+                                <p className="mt-1 text-xs text-slate-500">
+                                    {watchDeviceId
+                                        ? "Chỉ cần đặt hàng lên cân và bấm nút [#] (Gửi), khối lượng sẽ tự động điền vào ô trên."
+                                        : "Chọn cân nếu bạn muốn lấy khối lượng tự động"}
+                                </p>
                             </div>
                         )}
 
